@@ -114,7 +114,7 @@ public class MemberService {
         );
     }
 
-    public void kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -140,7 +140,7 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(kakaoUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
-        return;
+        return kakaoUser;
     }
 
     private String getKakaoAccessToken(String code) throws JsonProcessingException {

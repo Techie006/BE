@@ -1,11 +1,13 @@
 package com.sparta.cookbank.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Member.Member;
 import com.sparta.cookbank.domain.Member.dto.LoginRequestDto;
 import com.sparta.cookbank.domain.Member.dto.SignupRequestDto;
 import com.sparta.cookbank.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -54,5 +56,16 @@ public class MemberController {
     ) {
         Member member = memberService.test();
         return ResponseDto.success(member,"성공적으로 유저정보 가져옴");
+    }
+
+    @GetMapping("/user/kakao/callback")
+    public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
+        Member member = memberService.kakaoLogin(code,response);
+        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+    }
+
+    @GetMapping("/user/google/callback")
+    public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
+        Member member = memberService.googleLogin(code, response);
     }
 }
