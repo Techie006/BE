@@ -3,7 +3,9 @@ package com.sparta.cookbank.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Member.Member;
+import com.sparta.cookbank.domain.Member.dto.GoogleUserInfoDto;
 import com.sparta.cookbank.domain.Member.dto.KakaoUserInfoDto;
 import com.sparta.cookbank.domain.Member.dto.LoginRequestDto;
 import com.sparta.cookbank.domain.Member.dto.SignupRequestDto;
@@ -49,6 +51,13 @@ public class MemberService {
 
     @Value("${kakao.client.id}")
     private String KAKAO_CLIENT_ID;
+
+    @Value("${google.client.id}")
+    private String GOOGLE_CLIENT_ID;
+    @Value("${google.client.pw}")
+    private String GOOGLE_CLIENT_SECRET;
+    @Value("${google.redirect.url}")
+    private String GOOGLE_REDIRECT_URI;
 
     public Long signup(SignupRequestDto requestDto) {
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -198,5 +207,75 @@ public class MemberService {
         String email = jsonNode.get("kakao_account")
                 .get("email").asText();
         return new KakaoUserInfoDto(id, nickname, email);
+    }
+
+    public Member googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+        // 1. "인가 코드"로 "액세스 토큰" 요청
+        String accessToken = getGoogleAccessToken(code);
+        // 2. 토큰으로 카카오 API 호출
+        GoogleUserInfoDto googleUserInfo = getGoogleUserInfo(accessToken);
+
+        // DB 에 중복된 Kakao Id 가 있는지 확인
+        String googleId = googleUserInfo.getId();
+        Member googleUser = memberRepository.findByGoogleId(googleId)
+                .orElse(null);
+        if(googleUser == null){
+            // 회원가입
+            Member member = Member.builder()
+                    .email(googleUserInfo.getEmail())
+                    .username(googleUserInfo.getName())
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .googleId(googleId)
+                    .build();
+            memberRepository.save(member);
+            googleUser = member;
+        }
+        TokenDto tokenDto = tokenProvider.generateTokenDto(googleUser);
+        response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
+        response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
+        return googleUser;
+    }
+
+    private String getGoogleAccessToken(String code) throws JsonProcessingException {
+        String url = "https://oauth2.googleapis.com/token";
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("code", code);
+        params.add("client_id", GOOGLE_CLIENT_ID);
+        params.add("client_secret", GOOGLE_CLIENT_SECRET);
+        params.add("redirect_uri", GOOGLE_REDIRECT_URI);
+        params.add("grant_type", "authorization_code");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded");
+
+
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
+        ResponseEntity<String> accessTokenResponse = rt.exchange(url, HttpMethod.POST, httpEntity, String.class);
+
+        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
+        String responseBody = accessTokenResponse.getBody();//바디부분
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);//json형태를 객체형태로 바꾸기
+        return jsonNode.get("access_token").asText();
+    }
+
+    private GoogleUserInfoDto getGoogleUserInfo(String accessToken) throws JsonProcessingException {
+        String url = "https://www.googleapis.com/oauth2/v1/userinfo";
+        // HTTP Header 생성
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+        // HTTP 요청 보내기
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity(headers);
+        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
+        ResponseEntity<String> response = rt.exchange(url, HttpMethod.GET, request, String.class);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        String id = jsonNode.get("id").toString();
+        String name = jsonNode.get("name").toString();
+        String email = jsonNode.get("email").toString();
+        return new GoogleUserInfoDto(id,name,email);
     }
 }

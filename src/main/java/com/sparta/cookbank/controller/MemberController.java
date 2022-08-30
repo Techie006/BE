@@ -67,5 +67,6 @@ public class MemberController {
     @GetMapping("/user/google/callback")
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         Member member = memberService.googleLogin(code, response);
+        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
     }
 }
