@@ -25,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -46,6 +47,8 @@ public class MemberService {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
+    private final MailService mailService;
+
     @Value("${kakao.redirect.url}")
     private String KAKAO_REDIRECT_URI;
 
@@ -63,12 +66,15 @@ public class MemberService {
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         // 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
-
+        String key = UUID.randomUUID().toString().substring(0,10);
         Member member = Member.builder()
                 .email(requestDto.getEmail())
                 .username(requestDto.getUsername())
                 .password(encodedPassword)
+                .mail_auth(false)
+                .mail_key(key)
                 .build();
+        mailService.sendSimpleMessage(requestDto,key);
         return memberRepository.save(member).getId();
     }
 
@@ -277,5 +283,20 @@ public class MemberService {
         String name = jsonNode.get("name").toString();
         String email = jsonNode.get("email").toString();
         return new GoogleUserInfoDto(id,name,email);
+    }
+
+    @Transactional
+    public String emailCheck(String memberEmail, String key) {
+        Member member = memberRepository.findByEmail(memberEmail).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 이메일입니다.")
+        );
+        if(member.getMail_key().equals(key)) {
+            if (!member.isMail_auth()) {
+                return "already";
+            }
+            member.EmailCheck();
+            return "success";
+        }
+        return "fail";
     }
 }

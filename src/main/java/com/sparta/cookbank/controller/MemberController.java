@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,4 +70,14 @@ public class MemberController {
         Member member = memberService.googleLogin(code, response);
         return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
     }
+
+    @GetMapping("/api/user/email")
+    public String emailConfirm(@RequestParam String memberEmail, @RequestParam String key)throws Exception{
+        String result = memberService.emailCheck(memberEmail,key);
+        //result가 false이면 인증실패 페이지
+        //result가 success면 인증 성공 페이지
+        //result가 already이면 인증이 이미 완료됬다는 페이지
+        return "/member/registerEmail";
+    }
+
 }
