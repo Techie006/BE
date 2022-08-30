@@ -16,7 +16,6 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     public static final String ACCESS_HEADER = "Authorization";
-    public static final String REFRESH_HEADER = "Refresh-Token";
     public static final String BEARER_PREFIX = "Bearer ";
 
     private final TokenProvider tokenProvider;
@@ -29,7 +28,7 @@ public class JwtFilter extends OncePerRequestFilter {
     // 1. Request Header 에서 토큰을 꺼냄
     String accessJWT = resolveAccessToken(request);
 
-    if (StringUtils.hasText(accessJWT) && tokenProvider.validateToken(accessJWT)) {
+        if (StringUtils.hasText(accessJWT) && tokenProvider.validateToken(accessJWT)) {
             // 토큰으로부터 Authentication 객체 얻어오기
             Authentication authentication = tokenProvider.getAuthentication(accessJWT);
             // 받아온 Authentication 객체 시큐리티 컨텍스트 홀더에 저장
