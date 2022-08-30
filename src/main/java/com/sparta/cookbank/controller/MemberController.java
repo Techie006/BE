@@ -77,7 +77,7 @@ public class MemberController {
         //result가 false이면 인증실패 페이지
         //result가 success면 인증 성공 페이지
         //result가 already이면 인증이 이미 완료됬다는 페이지
-        return "/member/registerEmail";
+        return result;
     }
 
 }

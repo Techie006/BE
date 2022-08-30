@@ -66,7 +66,7 @@ public class MemberService {
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         // 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
-        String key = UUID.randomUUID().toString().substring(0,10);
+        String key = UUID.randomUUID().toString();
         Member member = Member.builder()
                 .email(requestDto.getEmail())
                 .username(requestDto.getUsername())
@@ -148,6 +148,7 @@ public class MemberService {
                     .username(kakaoUserInfo.getNickname())
                     .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .kakaoId(kakaoId)
+                    .mail_auth(true)
                     .build();
             memberRepository.save(member);
             kakaoUser = member;
@@ -232,6 +233,7 @@ public class MemberService {
                     .username(googleUserInfo.getName())
                     .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .googleId(googleId)
+                    .mail_auth(true)
                     .build();
             memberRepository.save(member);
             googleUser = member;
@@ -291,7 +293,7 @@ public class MemberService {
                 () -> new IllegalArgumentException("존재하지 않는 이메일입니다.")
         );
         if(member.getMail_key().equals(key)) {
-            if (!member.isMail_auth()) {
+            if (member.isMail_auth()) {
                 return "already";
             }
             member.EmailCheck();
