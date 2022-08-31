@@ -29,7 +29,7 @@ public class MemberController {
         return ResponseDto.success(memberId,"회원가입에 성공했습니다.");
     }
 
-    @PostMapping("/api/user/login")
+    @PostMapping("/api/user/signin")
     public ResponseDto<?> login(
             @RequestBody LoginRequestDto requestDto
             ,HttpServletResponse response
@@ -45,19 +45,13 @@ public class MemberController {
         return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
     }
 
-    @DeleteMapping("/api/logout")
+    @DeleteMapping("/api/user/signout")
     public ResponseDto<?> logout(
     ) {
         memberService.logout();
         return ResponseDto.success(null,"성공적으로 로그아웃 되었습니다.");
     }
     
-    @GetMapping("/api/test")
-    public ResponseDto<?> test(
-    ) {
-        Member member = memberService.test();
-        return ResponseDto.success(member,"성공적으로 유저정보 가져옴");
-    }
 
     @GetMapping("/user/kakao/callback")
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
