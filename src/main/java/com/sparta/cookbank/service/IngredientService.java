@@ -1,12 +1,14 @@
 package com.sparta.cookbank.service;
 
-import com.sparta.cookbank.controller.ResponseDto;
+import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Ingredient.Ingredient;
 import com.sparta.cookbank.domain.Ingredient.dto.IngredientResponseDto;
 import com.sparta.cookbank.domain.Ingredient.dto.SearchIngredientDto;
 import com.sparta.cookbank.domain.Member.Member;
+import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
+import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
@@ -29,6 +31,7 @@ public class IngredientService {
     private final MyIngredientsRepository myIngredientsRepository;
     private final TokenProvider tokenProvider;
 
+
     @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
@@ -47,7 +50,7 @@ public class IngredientService {
                     .build());
         }
 
-        return ResponseDto.success(dtoList);
+        return ResponseDto.success(dtoList,"자동완성 리스트 제공에 성공하였습니다.");
     }
 
     @Transactional(readOnly = true)
@@ -61,18 +64,18 @@ public class IngredientService {
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
 
-        for(int i=0; i<ingredients.size(); i++){
+        for (Ingredient ingredient : ingredients) {
             dtoList.add(IngredientResponseDto.builder()
-                            .id(ingredients.get(i).getId())
-                            .food_name(ingredients.get(i).getFoodName())
-                            .group_name(ingredients.get(i).getFoodCategory())
+                    .id(ingredient.getId())
+                    .food_name(ingredient.getFoodName())
+                    .group_name(ingredient.getFoodCategory())
                     .build());
         }
 
 
-        return SearchIngredientDto.success(dtoList,ingredients.size());
+        return SearchIngredientDto.success(dtoList,ingredients.size(),"식재료 검색에 성공하였습니다.");
     }
-
+    @Transactional
     public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
 
         //토큰 유효성 검사
@@ -98,10 +101,37 @@ public class IngredientService {
                 .build();
         myIngredientsRepository.save(myIngredients);
 
-
-        return ResponseDto.success("작성완료");
+        return ResponseDto.success("","작성완료");
     }
 
+
+    @Transactional(readOnly = true)
+    public ResponseDto<?> getMyIngredient(Storage storage, HttpServletRequest request) {
+        //토큰 유효성 검사
+        String token = request.getHeader("Authorization");
+        token = resolveToken(token);
+        tokenProvider.validateToken(token);
+
+        // 멤버 유효성 검사
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
+        );
+
+        List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage);
+        List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+
+        for (MyIngredients myIngredient : myIngredients) {
+            dtoList.add(MyIngredientResponseDto.builder()
+                    .id(myIngredient.getId())
+                    .food_name(myIngredient.getIngredient().getFoodName())
+                    .group_name(myIngredient.getIngredient().getFoodCategory())
+                    .in_date(myIngredient.getInDate())
+                    .d_date(myIngredient.getExpDate())
+                    .build());
+        }
+
+        return ResponseDto.success(dtoList,"리스트 제공에 성공하였습니다.");
+    }
 
 
 
@@ -116,6 +146,4 @@ public class IngredientService {
             return token.substring(7);
         throw new RuntimeException("not valid token !!");
     }
-
-
 }
