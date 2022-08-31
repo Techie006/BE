@@ -70,7 +70,7 @@ public class RecipeInputController {
                         .MANUAL_IMG08(jsonRecipe.get("MANUAL_IMG08").toString())
                         .build();
 
-//                recipeRepository.save(recipe);     저장완료료
+//                recipeRepository.save(recipe);     저장완료로 주석
             }
        }catch (Exception e){
             e.printStackTrace();
