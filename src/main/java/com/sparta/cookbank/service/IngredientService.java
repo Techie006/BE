@@ -30,7 +30,7 @@ public class IngredientService {
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
         // 5개만 보여주기
-        for(int i=0; i<4; i++){
+        for(int i=0; i<5; i++){
             dtoList.add(IngredientResponseDto.builder()
                     .id(ingredients.get(i).getId())
                     .food_name(ingredients.get(i).getFoodName())
