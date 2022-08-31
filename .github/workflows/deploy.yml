@@ -29,14 +29,14 @@ jobs:
         run: ./gradlew build
         shell: bash
         env:
-          kakao.client.id: ${{SECRETS.KAKAO_CLIENT_ID}}
-          kakao.redirect.url: ${{SECRETS.KAKAO_REDIRECT_URL}}
-          google.client.id: ${{SECRETS.GOOGLE_CLIENT_ID}}
-          google.client.pw: ${{SECRETS.GOOGLE_CLIENT_PW}}
-          google.redirect.url: ${{SECRETS.GOOGLE_REDIRECT_URL}}
-          spring.mail.username: ${{SECRETS.MAIL_USERNAME}}
-          spring.mail.password: ${{SECRETS.MAIL_PASSWORD}}
-          jwt.secret: ${{SECRETS.JWT_SECRET}}
+          kakao.client.id: ${{secrets.KAKAO_CLIENT_ID}}
+          kakao.redirect.url: ${{secrets.KAKAO_REDIRECT_URL}}
+          google.client.id: ${{secrets.GOOGLE_CLIENT_ID}}
+          google.client.pw: ${{secrets.GOOGLE_CLIENT_PW}}
+          google.redirect.url: ${{secrets.GOOGLE_REDIRECT_URL}}
+          spring.mail.username: ${{secrets.MAIL_USERNAME}}
+          spring.mail.password: ${{secrets.MAIL_PASSWORD}}
+          jwt.secret: ${{secrets.JWT_SECRET}}
           
       - name: Make zip file
         run: zip -qq -r ./$GITHUB_SHA.zip .
@@ -45,7 +45,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-region: ap-northeast-2
+          aws-region: ${{secrets.AWS_REGION}}
           aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
 
