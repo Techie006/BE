@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -154,7 +155,7 @@ public class IngredientService {
         return ResponseDto.success(dtoList,"리스트 제공에 성공하였습니다.");
     }
 
-
+    @Transactional(readOnly = true)
     public ResponseDto<?> getMyWarningIngredient(HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         String token = request.getHeader("Authorization");
@@ -201,7 +202,6 @@ public class IngredientService {
                         .d_date("D"+ d_day)
                         .build());
             }
-
         }
 
         WarningResponseDto responseDto = WarningResponseDto.builder()
@@ -214,8 +214,27 @@ public class IngredientService {
         return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다");
     }
 
+    @Transactional
+    public ResponseDto<?> deleteMyIngredient(Long myIngredientId, HttpServletRequest request) {
+        //토큰 유효성 검사
+        String token = request.getHeader("Authorization");
+        token = resolveToken(token);
+        tokenProvider.validateToken(token);
 
+        // 멤버 유효성 검사
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
+        );
 
+        //재료 유효성 검사
+        MyIngredients myIngredients = myIngredientsRepository.findById(myIngredientId).orElseThrow(
+                () -> new IllegalArgumentException("이미 삭제된 재료입니다.")
+        );
+
+        myIngredientsRepository.delete(myIngredients);
+
+        return ResponseDto.success("","재료 삭제가 성공하였습니다.");
+    }
 
 
     private String resolveToken(String token){

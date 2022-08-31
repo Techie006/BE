@@ -46,5 +46,10 @@ public class IngredientController {
     }
 
     //나의 냉장고 식재료 삭제
+    @DeleteMapping("/api/ingredient")
+    public ResponseDto<?> deleteMyIngredient(@RequestParam("id") Long myIngredientId,HttpServletRequest request){
+        return ingredientService.deleteMyIngredient(myIngredientId,request);
+    }
+
 
 }
