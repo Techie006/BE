@@ -47,7 +47,7 @@ jobs:
         env:
           aws-access-key-id: ${{SECRETS.AWS_ACCESS_KEY_ID}}
           aws-secret-access-key: ${{SECRETS.AWS_SECRET_ACCESS_KEY}}
-          aws-region: ap-northeast-2
+          aws-region: ${{SECRETS.AWS_REGION}}
 
       - name: Upload to S3
         run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://magorosc/$PROJECT_NAME/$GITHUB_SHA.zip
