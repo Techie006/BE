@@ -95,7 +95,7 @@ public class TokenProvider {//토큰 만듬
                         .collect(Collectors.toList());
 
         // UserDetails 객체를 만들어서 Authentication 리턴
-        UserDetails principal = new User(claims.getId(), "", authorities);
+        UserDetails principal = new User(claims.getId() + "," + claims.getSubject(), "", authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }

@@ -36,6 +36,13 @@ dependencies {
 
     //이메일 인증
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    //웹 클라이언트
+    compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation 'org.json:json:20160810'
+
+
 }
 
 tasks.named('test') {

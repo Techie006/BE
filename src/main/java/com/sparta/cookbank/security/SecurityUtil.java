@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.List;
+
 @Slf4j
 public class SecurityUtil {
 
@@ -18,7 +20,17 @@ public class SecurityUtil {
         if (authentication == null || authentication.getName() == null) {
             throw  new RuntimeException("Security Context 에 인증 정보가 없습니다.");
         }
+        String[] auth = authentication.getName().split(",");
+        return Long.parseLong(auth[0]);//id 반환
+    }
 
-        return Long.parseLong(authentication.getName());//id 반환
+    public static String getCurrentUsername() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getName() == null) {
+            throw  new RuntimeException("Security Context 에 인증 정보가 없습니다.");
+        }
+        String[] auth = authentication.getName().split(",");
+        return auth[1];//id 반환
     }
 }

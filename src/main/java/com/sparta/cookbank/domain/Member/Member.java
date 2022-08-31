@@ -29,7 +29,7 @@ public class Member {
     @Column
     private String googleId;
 
-    @Column
+    @Column(nullable = false)
     private boolean mail_auth;
 
     @Column

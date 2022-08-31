@@ -16,11 +16,10 @@ import com.sparta.cookbank.repository.RefreshTokenRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import netscape.javascript.JSObject;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,9 +29,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -48,6 +52,8 @@ public class MemberService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     private final MailService mailService;
+
+
 
     @Value("${kakao.redirect.url}")
     private String KAKAO_REDIRECT_URI;
@@ -130,6 +136,7 @@ public class MemberService {
     }
 
     public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+        System.out.println(code);
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -160,58 +167,43 @@ public class MemberService {
     }
 
     private String getKakaoAccessToken(String code) throws JsonProcessingException {
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        // 카카오에 보낼 api
+        WebClient client = WebClient.builder()
+                .baseUrl("https://kauth.kakao.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
 
-        // HTTP Body 생성
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", KAKAO_CLIENT_ID);//내 api키
-        body.add("redirect_uri", KAKAO_REDIRECT_URI);
-        body.add("code", code);//카카오로부터 받은 인가코드
-
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
-                new HttpEntity<>(body, headers);//httpentity객체를 만들어서 보냄
-        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
-        ResponseEntity<String> response = rt.exchange(
-                "https://kauth.kakao.com/oauth/token",
-                HttpMethod.POST,
-                kakaoTokenRequest,
-                String.class
-        );//리스폰스 받기
-
-        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
-        String responseBody = response.getBody();//바디부분
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);//json형태를 객체형태로 바꾸기
-        return jsonNode.get("access_token").asText();
+        // 카카오 서버에 요청 보내기 & 응답 받기
+        JsonNode response = client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/oauth/token")
+                        .queryParam("grant_type", "authorization_code")
+                        .queryParam("client_id", KAKAO_CLIENT_ID)
+                        .queryParam("redirect_uri", KAKAO_REDIRECT_URI)
+                        .queryParam("code", code)
+                        .build())
+                .retrieve().bodyToMono(JsonNode.class).block();
+        return response.get("access_token").asText();
     }
 
     private KakaoUserInfoDto getKakaoUserInfo(String accessToken) throws JsonProcessingException {
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+        // 카카오에 보낼 api
+        WebClient client = WebClient.builder()
+                .baseUrl("https://kapi.kakao.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
 
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> kakaoUserInfoRequest = new HttpEntity<>(headers);
-        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
-        ResponseEntity<String> response = rt.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                kakaoUserInfoRequest,
-                String.class
-        );
-
-        String responseBody = response.getBody();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-        Long id = jsonNode.get("id").asLong();
-        String nickname = jsonNode.get("properties")
+        // 카카오 서버에 요청 보내기 & 응답 받기
+        JsonNode response = client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/v2/user/me")
+                        .build())
+                .header("Authorization","Bearer " + accessToken)
+                .retrieve().bodyToMono(JsonNode.class).block();
+        Long id = response.get("id").asLong();
+        String nickname = response.get("properties")
                 .get("nickname").asText();
-        String email = jsonNode.get("kakao_account")
+        String email = response.get("kakao_account")
                 .get("email").asText();
         return new KakaoUserInfoDto(id, nickname, email);
     }
@@ -245,45 +237,44 @@ public class MemberService {
     }
 
     private String getGoogleAccessToken(String code) throws JsonProcessingException {
-        String url = "https://oauth2.googleapis.com/token";
+        // 구글에 보낼 api
+        WebClient client = WebClient.builder()
+                .baseUrl("https://oauth2.googleapis.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
 
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("code", code);
-        params.add("client_id", GOOGLE_CLIENT_ID);
-        params.add("client_secret", GOOGLE_CLIENT_SECRET);
-        params.add("redirect_uri", GOOGLE_REDIRECT_URI);
-        params.add("grant_type", "authorization_code");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/x-www-form-urlencoded");
-
-
-        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
-        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
-        ResponseEntity<String> accessTokenResponse = rt.exchange(url, HttpMethod.POST, httpEntity, String.class);
-
-        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
-        String responseBody = accessTokenResponse.getBody();//바디부분
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(responseBody);//json형태를 객체형태로 바꾸기
-        return jsonNode.get("access_token").asText();
+        // 구글 서버에 요청 보내기 & 응답 받기
+        JsonNode response = client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/token")
+                        .queryParam("code", code)
+                        .queryParam("client_id", GOOGLE_CLIENT_ID)
+                        .queryParam("client_secret", GOOGLE_CLIENT_SECRET)
+                        .queryParam("redirect_uri", GOOGLE_REDIRECT_URI)
+                        .queryParam("grant_type", "authorization_code")
+                        .build())
+                .retrieve().bodyToMono(JsonNode.class).block();
+        return response.get("access_token").asText();
     }
 
     private GoogleUserInfoDto getGoogleUserInfo(String accessToken) throws JsonProcessingException {
-        String url = "https://www.googleapis.com/oauth2/v1/userinfo";
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity(headers);
-        RestTemplate rt = new RestTemplate();//서버 대 서버 요청을 보냄
-        ResponseEntity<String> response = rt.exchange(url, HttpMethod.GET, request, String.class);
+        // 구글에 보낼 api
+        WebClient client = WebClient.builder()
+                .baseUrl("https://www.googleapis.com")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(response.getBody());
-        String id = jsonNode.get("id").toString();
-        String name = jsonNode.get("name").toString();
-        String email = jsonNode.get("email").toString();
+        // 구글 서버에 요청 보내기 & 응답 받기
+        JsonNode response = client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/oauth2/v1/userinfo")
+                        .build())
+                .header("Authorization","Bearer " + accessToken)
+                .retrieve().bodyToMono(JsonNode.class).block();
+
+        String id = response.get("id").toString();
+        String name = response.get("name").toString();
+        String email = response.get("email").toString();
         return new GoogleUserInfoDto(id,name,email);
     }
 
