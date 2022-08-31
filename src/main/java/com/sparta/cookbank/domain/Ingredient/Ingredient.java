@@ -1,6 +1,6 @@
 package com.sparta.cookbank.domain.Ingredient;
 
-import com.sparta.cookbank.domain.FoodCategory;
+import com.sparta.cookbank.domain.Ingredient.enums.FoodCategory;
 import lombok.*;
 
 import javax.persistence.*;
