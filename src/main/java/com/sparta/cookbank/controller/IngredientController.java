@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,12 +35,21 @@ public class IngredientController {
 
     // 저장소별 식재료 조회
     @GetMapping("/api/ingredients")
-    public ResponseDto<?> getMyIngredient(@RequestParam("storage") Storage storage, HttpServletRequest request){
+    public ResponseDto<?> getMyIngredient(@RequestParam("storage") Storage storage, HttpServletRequest request) throws ParseException {
         return ingredientService.getMyIngredient(storage,request);
     }
 
     // 임박 식재료 조회(시간데이터..)
+    @GetMapping("/api/ingredients/warning")
+    public ResponseDto<?> getMyWarningIngredient(HttpServletRequest request) throws ParseException {
+        return ingredientService.getMyWarningIngredient(request);
+    }
 
     //나의 냉장고 식재료 삭제
+    @DeleteMapping("/api/ingredient")
+    public ResponseDto<?> deleteMyIngredient(@RequestParam("id") Long myIngredientId,HttpServletRequest request){
+        return ingredientService.deleteMyIngredient(myIngredientId,request);
+    }
+
 
 }
