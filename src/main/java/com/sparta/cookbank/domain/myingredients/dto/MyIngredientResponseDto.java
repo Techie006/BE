@@ -1,21 +1,19 @@
 package com.sparta.cookbank.domain.myingredients.dto;
 
-import com.sparta.cookbank.domain.Storage;
+import com.sparta.cookbank.domain.Ingredient.enums.FoodCategory;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class IngredientRequestDto {
+@Builder
+public class MyIngredientResponseDto {
     private Long id;
     private String food_name;
-    private String group_name;
-    private Storage storage;
+    private FoodCategory group_name;
     private String in_date;
-    private String exp_date;
-
+    private String d_date;
 }

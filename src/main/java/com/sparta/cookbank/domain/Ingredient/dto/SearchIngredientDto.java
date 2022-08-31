@@ -10,10 +10,17 @@ public class SearchIngredientDto<T> {
     private boolean result;
     private T content;
     private int total_count;
-    private Error error;
+    private Status status;
 
-    public static <T> SearchIngredientDto<T> success(T content, int count) {
-        return new SearchIngredientDto<>(true, content, count,null);
+    public static <T> SearchIngredientDto<T> success(T content, int count,String message) {
+        return new SearchIngredientDto<>(true, content, count,new Status("200",message));
+    }
+
+    @Getter
+    @AllArgsConstructor
+    static class Status {
+        private String code;
+        private String message;
     }
 
 

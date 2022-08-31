@@ -1,13 +1,12 @@
 package com.sparta.cookbank.controller;
 
+import com.sparta.cookbank.ResponseDto;
+import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.domain.Ingredient.dto.SearchIngredientDto;
 import com.sparta.cookbank.service.IngredientService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,14 +28,15 @@ public class IngredientController {
     }
 
     @PostMapping("/api/ingredient")  // 식재료 작성
-    public ResponseDto<?> enterIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
-
-        return ingredientService.enterIngredient(requestDto,request);
+    public ResponseDto<?> saveMyIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
+        return ingredientService.saveMyIngredient(requestDto,request);
     }
 
     // 저장소별 식재료 조회
-
-
+    @GetMapping("/api/ingredients")
+    public ResponseDto<?> getMyIngredient(@RequestParam("storage") Storage storage, HttpServletRequest request){
+        return ingredientService.getMyIngredient(storage,request);
+    }
 
     // 임박 식재료 조회(시간데이터..)
 
