@@ -68,6 +68,7 @@ public class MemberService {
     @Value("${google.redirect.url}")
     private String GOOGLE_REDIRECT_URI;
 
+    @Transactional
     public Long signup(SignupRequestDto requestDto) {
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         // 패스워드 인코딩
@@ -83,7 +84,7 @@ public class MemberService {
         mailService.sendSimpleMessage(requestDto,key);
         return memberRepository.save(member).getId();
     }
-
+    @Transactional
     public Member login(LoginRequestDto requestDto, HttpServletResponse response) {
         Member member = memberRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
@@ -95,10 +96,10 @@ public class MemberService {
         }
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
-        response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
+        response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
         return member;
     }
-
+    @Transactional
     public Member reissue(HttpServletRequest request, HttpServletResponse response){
         String accessToken = request.getHeader("Authorization");
         if (StringUtils.hasText(accessToken) && accessToken.startsWith("Bearer ")) {
@@ -107,7 +108,7 @@ public class MemberService {
         if (!tokenProvider.validateTokenWithoutTime(accessToken)){
             throw new IllegalArgumentException("엑세스토큰이 잘못되었습니다.");
         }
-        String refreshToken = request.getHeader("Refresh-Token");
+        String refreshToken = request.getHeader("Refresh_Token");
         System.out.println(refreshToken);
         // 서버에 해당 리프레시 토큰이 존재하는지 확인
         RefreshToken refreshTokenObj = refreshTokenRepository.findByTokenValue(refreshToken)
@@ -115,25 +116,22 @@ public class MemberService {
         // Member 객체 가져오기
         Member member = refreshTokenObj.getMember();
 
-        //토큰 생성 및 헤더에 저장
+        //토큰 생성 및 헤더에 저장      -> 2번 누르니 에러가 발생 why? 서버에 존재하지 않는 토큰.
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
-        response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
+        response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
         return member;
     }
 
+    @Transactional
     public void logout() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
+        System.out.println("member.getEmail() = " + member.getEmail());
         refreshTokenRepository.deleteByMember(member);
     }
 
-    public Member test(){
-        return memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
-    }
 
     public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         System.out.println(code);
@@ -162,7 +160,7 @@ public class MemberService {
         }
         TokenDto tokenDto = tokenProvider.generateTokenDto(kakaoUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
-        response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
+        response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
         return kakaoUser;
     }
 
@@ -232,7 +230,7 @@ public class MemberService {
         }
         TokenDto tokenDto = tokenProvider.generateTokenDto(googleUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
-        response.setHeader("Refresh-Token",tokenDto.getRefreshToken());
+        response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
         return googleUser;
     }
 

@@ -9,6 +9,7 @@ import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class IngredientService {
     private final IngredientsRepository ingredientsRepository;
 
 
+    @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
@@ -41,8 +43,7 @@ public class IngredientService {
         return ResponseDto.success(dtoList);
     }
 
-
-
+    @Transactional(readOnly = true)
     public SearchIngredientDto<?> findIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
