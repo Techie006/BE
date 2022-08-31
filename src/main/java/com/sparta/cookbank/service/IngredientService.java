@@ -4,9 +4,14 @@ import com.sparta.cookbank.controller.ResponseDto;
 import com.sparta.cookbank.domain.Ingredient.Ingredient;
 import com.sparta.cookbank.domain.Ingredient.dto.IngredientResponseDto;
 import com.sparta.cookbank.domain.Ingredient.dto.SearchIngredientDto;
+import com.sparta.cookbank.domain.Member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.repository.IngredientsRepository;
+import com.sparta.cookbank.repository.MemberRepository;
+import com.sparta.cookbank.repository.MyIngredientsRepository;
+import com.sparta.cookbank.security.SecurityUtil;
+import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +25,9 @@ import java.util.List;
 public class IngredientService {
 
     private final IngredientsRepository ingredientsRepository;
-
+    private final MemberRepository memberRepository;
+    private final MyIngredientsRepository myIngredientsRepository;
+    private final TokenProvider tokenProvider;
 
     @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
@@ -66,25 +73,49 @@ public class IngredientService {
         return SearchIngredientDto.success(dtoList,ingredients.size());
     }
 
-    public ResponseDto<?> enterIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
+    public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
 
-        // Token 유효성 검사
+        //토큰 유효성 검사
+        String token = request.getHeader("Authorization");
+        token = resolveToken(token);
+        tokenProvider.validateToken(token);
 
+        // 멤버 유효성 검사
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
+        );
+        //재료찾기
+        Ingredient ingredient = ingredientsRepository.findById(requestDto.getId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 음식 재료가 존재 하지 않습니다.")
+        );
 
-
-        
-        //
         MyIngredients myIngredients = MyIngredients.builder()
-
-
-
+                .member(member)
+                .ingredient(ingredient)
+                .storage(requestDto.getStorage())
+                .inDate(requestDto.getIn_date())
+                .expDate(requestDto.getExp_date())
                 .build();
-
+        myIngredientsRepository.save(myIngredients);
 
 
         return ResponseDto.success("작성완료");
     }
 
+
+
+
+
+
+
+
+
+
+    private String resolveToken(String token){
+        if(token.startsWith("Bearer "))
+            return token.substring(7);
+        throw new RuntimeException("not valid token !!");
+    }
 
 
 }

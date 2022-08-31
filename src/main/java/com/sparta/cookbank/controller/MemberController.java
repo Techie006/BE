@@ -51,7 +51,7 @@ public class MemberController {
         memberService.logout();
         return ResponseDto.success(null,"성공적으로 로그아웃 되었습니다.");
     }
-    
+
 
     @GetMapping("/user/kakao/callback")
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {

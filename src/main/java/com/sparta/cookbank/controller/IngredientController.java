@@ -29,9 +29,9 @@ public class IngredientController {
     }
 
     @PostMapping("/api/ingredient")  // 식재료 작성
-    public ResponseDto<?> enterIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
+    public ResponseDto<?> saveMyIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
 
-        return ingredientService.enterIngredient(requestDto,request);
+        return ingredientService.saveMyIngredient(requestDto,request);
     }
 
     // 저장소별 식재료 조회
