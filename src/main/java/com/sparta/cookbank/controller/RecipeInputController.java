@@ -69,28 +69,11 @@ public class RecipeInputController {
                         .MANUAL08(jsonRecipe.get("MANUAL08").toString())
                         .MANUAL_IMG08(jsonRecipe.get("MANUAL_IMG08").toString())
                         .build();
-                recipeRepository.save(recipe);
+
+//                recipeRepository.save(recipe);     저장완료료
             }
-
-
-
-
-
-
-        }catch (Exception e){
+       }catch (Exception e){
             e.printStackTrace();
         }
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

@@ -1,7 +1,8 @@
-package com.sparta.cookbank.domain;
+package com.sparta.cookbank.domain.myingredients;
 
 import com.sparta.cookbank.domain.Ingredient.Ingredient;
 import com.sparta.cookbank.domain.Member.Member;
+import com.sparta.cookbank.domain.Storage;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
