@@ -29,5 +29,14 @@ public class Member {
     @Column
     private String googleId;
 
+    @Column(nullable = false)
+    private boolean mail_auth;
+
+    @Column
+    private String mail_key;
+
+    public void EmailCheck(){
+        this.mail_auth = true;
+    }
 
 }
