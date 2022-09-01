@@ -39,7 +39,7 @@ public class IngredientService {
     private final TokenProvider tokenProvider;
 
 
-    @Transactional(readOnly = true)   //DTO 수정..
+    @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
@@ -120,8 +120,8 @@ public class IngredientService {
     }
 
 
-    @Transactional(readOnly = true)  // 스토리지별 조회 DTO 수정..
-    public ResponseDto<?> getMyIngredient(Storage storage, HttpServletRequest request) throws ParseException {
+    @Transactional(readOnly = true)
+    public ResponseDto<?> getMyIngredient(String storage, HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         String token = request.getHeader("Authorization");
         token = resolveToken(token);
@@ -132,40 +132,25 @@ public class IngredientService {
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
 
-        List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage);
-        List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+        // 나의 재료 전체조회
+        if(storage.equals("")){
+            List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
 
-        //현재시각으로 d_day 구하기
-        LocalDate now = LocalDate.now();
-        String nowString = now.toString();
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+        }else {
+            // Storage별 조회
+            Storage storage1 = Storage.valueOf(storage);
+            List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage1);
+            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
 
-        for (MyIngredients myIngredient : myIngredients) {
-            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
-            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
-            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
-            Long diffDays = diffSec / (24*60*60); // 일자수 차이
-            String d_day;
-            if(diffDays < 0){
-                diffDays = -diffDays;
-                d_day ="+"+diffDays.toString();
-            }else {
-                d_day ="-"+diffDays.toString();
-            }
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
 
-            dtoList.add(MyIngredientResponseDto.builder()
-                    .id(myIngredient.getId())
-                    .food_name(myIngredient.getIngredient().getFoodName())
-                    .group_name(myIngredient.getIngredient().getFoodCategory())
-                    .in_date(myIngredient.getInDate())
-                    .d_date("D"+ d_day)
-                    .build());
         }
 
-        StorageResponseDto responseDto = StorageResponseDto.builder()
-                .storage(dtoList)
-                .build();
 
-        return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
     }
 
     @Transactional(readOnly = true)
@@ -254,5 +239,38 @@ public class IngredientService {
         if(token.startsWith("Bearer "))
             return token.substring(7);
         throw new RuntimeException("not valid token !!");
+    }
+
+    private StorageResponseDto getStorageResponseDto(List<MyIngredients> myIngredients, List<MyIngredientResponseDto> dtoList) throws ParseException {
+        //현재시각으로 d_day 구하기
+        LocalDate now = LocalDate.now();
+        String nowString = now.toString();
+
+        for (MyIngredients myIngredient : myIngredients) {
+            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
+            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
+            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffDays = diffSec / (24*60*60); // 일자수 차이
+            String d_day;
+            if(diffDays < 0){
+                diffDays = -diffDays;
+                d_day ="+"+diffDays.toString();
+            }else {
+                d_day ="-"+diffDays.toString();
+            }
+
+            dtoList.add(MyIngredientResponseDto.builder()
+                    .id(myIngredient.getId())
+                    .food_name(myIngredient.getIngredient().getFoodName())
+                    .group_name(myIngredient.getIngredient().getFoodCategory())
+                    .in_date(myIngredient.getInDate())
+                    .d_date("D"+ d_day)
+                    .build());
+        }
+
+        StorageResponseDto responseDto = StorageResponseDto.builder()
+                .storage(dtoList)
+                .build();
+        return responseDto;
     }
 }
