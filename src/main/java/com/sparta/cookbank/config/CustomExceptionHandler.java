@@ -15,6 +15,12 @@ public class CustomExceptionHandler {
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("400",errorMessage);
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseDto<?> handleRuntimeException(RuntimeException exception){
+        String errorMessage = exception.getMessage();
+        return ResponseDto.fail("400",errorMessage);
+    }
     
     @ExceptionHandler(JsonProcessingException.class)
     public ResponseDto<?> handleJsonProcessingException(JsonProcessingException exception){

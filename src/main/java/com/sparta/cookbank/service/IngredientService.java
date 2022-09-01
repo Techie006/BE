@@ -94,18 +94,16 @@ public class IngredientService {
     public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
 
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
         //재료찾기
         Ingredient ingredient = ingredientsRepository.findById(requestDto.getId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 음식 재료가 존재 하지 않습니다.")
         );
+
+
 
         MyIngredients myIngredients = MyIngredients.builder()
                 .member(member)
@@ -123,14 +121,11 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public ResponseDto<?> getMyIngredient(String storage, HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
+
 
         // 나의 재료 전체조회
         if(storage.equals("")){
@@ -156,14 +151,10 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public ResponseDto<?> getMyWarningIngredient(HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
 
         List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
         List<MyIngredientResponseDto> outList = new ArrayList<>();
@@ -215,23 +206,39 @@ public class IngredientService {
     @Transactional
     public ResponseDto<?> deleteMyIngredient(Long myIngredientId, HttpServletRequest request) {
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        getMember();
+
+
 
         //재료 유효성 검사
         MyIngredients myIngredients = myIngredientsRepository.findById(myIngredientId).orElseThrow(
                 () -> new IllegalArgumentException("이미 삭제된 재료입니다.")
         );
 
+        //로그인한 멤버 id와 작성된 재료의 멤버 id와 다를시 예외처리
+        if(!getMember().getId().equals(myIngredients.getMember().getId())){
+            throw new RuntimeException("타인의 식재료를 삭제할 수 없습니다.");
+        }
+
         myIngredientsRepository.delete(myIngredients);
 
         return ResponseDto.success("","재료 삭제가 성공하였습니다.");
+    }
+
+    private void extracted(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        token = resolveToken(token);
+        tokenProvider.validateToken(token);
+    }
+
+    private Member getMember() {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
+        );
+        return member;
     }
 
 
