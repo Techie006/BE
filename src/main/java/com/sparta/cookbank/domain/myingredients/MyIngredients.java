@@ -28,6 +28,7 @@ public class MyIngredients {
     @JoinColumn(name = "ingredient_id", nullable = false)
     private Ingredient ingredient;
 
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Storage storage;
