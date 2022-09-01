@@ -28,7 +28,7 @@ public class MailService {
                     "<br/>"+requestDto.getUsername()+"님 "+
                     "<br/>FOODRECIPE에 회원가입해주셔서 감사합니다."+
                     "<br/>아래 [이메일 인증 확인]을 눌러주세요."+
-                    "<br/><a href='http://localhost:8080/api/user/email?memberEmail=" + requestDto.getEmail() +
+                    "<br/><a href='http://3.36.56.125/api/user/email?memberEmail=" + requestDto.getEmail() +
                     "&key=" + key +
                     "' target='_blenk'>이메일 인증 확인</a>";
             message.setText(htmlContent, "UTF-8", "html");
