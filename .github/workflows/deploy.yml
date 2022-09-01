@@ -27,20 +27,20 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
+        
+    ## create application-secret.properties
+    - name: make application-secret.properties
+      run: |
+        cd ./src/main/resources
+        touch ./application-secret.properties
+        echo "${{ secrets.PROPERTIES_SECRET }}" > ./application-secret.properties
+      shell: bash
+      
     - name: Build with Gradle
       run: chmod +x ./gradlew
     - uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
       with:
         arguments: build
-      env:
-        kakao.client.id: ${{secrets.KAKAO_CLIENT_ID}}
-        kakao.redirect.url: ${{secrets.KAKAO_REDIRECT_URL}}
-        google.client.id: ${{secrets.GOOGLE_CLIENT_ID}}
-        google.client.pw: ${{secrets.GOOGLE_CLIENT_PW}}
-        google.redirect.url: ${{secrets.GOOGLE_REDIRECT_URL}}
-        spring.mail.username: ${{secrets.MAIL_USERNAME}}
-        spring.mail.password: ${{secrets.MAIL_PASSWORD}}
-        jwt.secret: ${{secrets.JWT_SECRET}}
 
       
         # (4) AWS 인증 (IAM 사용자 Access Key, Secret Key 활용)
