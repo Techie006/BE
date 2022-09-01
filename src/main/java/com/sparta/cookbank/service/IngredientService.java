@@ -7,8 +7,10 @@ import com.sparta.cookbank.domain.Ingredient.dto.TotalIngredientResponseDto;
 import com.sparta.cookbank.domain.Member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
+import com.sparta.cookbank.domain.Ingredient.dto.AutoIngredientResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
+import com.sparta.cookbank.domain.myingredients.dto.StorageResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.WarningResponseDto;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
@@ -37,7 +39,7 @@ public class IngredientService {
     private final TokenProvider tokenProvider;
 
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)   //DTO 수정..
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
@@ -55,7 +57,12 @@ public class IngredientService {
                     .build());
         }
 
-        return ResponseDto.success(dtoList,"자동완성 리스트 제공에 성공하였습니다.");
+        AutoIngredientResponseDto responseDto = AutoIngredientResponseDto.builder()
+                .auto_complete(dtoList)
+                .build();
+
+
+        return ResponseDto.success(responseDto,"자동완성 리스트 제공에 성공하였습니다.");
     }
 
     @Transactional(readOnly = true)
@@ -113,7 +120,7 @@ public class IngredientService {
     }
 
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)  // 스토리지별 조회 DTO 수정..
     public ResponseDto<?> getMyIngredient(Storage storage, HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         String token = request.getHeader("Authorization");
@@ -154,7 +161,11 @@ public class IngredientService {
                     .build());
         }
 
-        return ResponseDto.success(dtoList,"리스트 제공에 성공하였습니다.");
+        StorageResponseDto responseDto = StorageResponseDto.builder()
+                .storage(dtoList)
+                .build();
+
+        return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
     }
 
     @Transactional(readOnly = true)
