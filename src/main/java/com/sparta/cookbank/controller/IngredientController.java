@@ -34,7 +34,7 @@ public class IngredientController {
 
     // 저장소별 식재료 조회
     @GetMapping("/api/ingredients")
-    public ResponseDto<?> getMyIngredient(@RequestParam("storage") Storage storage, HttpServletRequest request) throws ParseException {
+    public ResponseDto<?> getMyIngredient(@RequestParam("storage") String storage, HttpServletRequest request) throws ParseException {
         return ingredientService.getMyIngredient(storage,request);
     }
 
