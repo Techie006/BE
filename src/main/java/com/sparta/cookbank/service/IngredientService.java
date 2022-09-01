@@ -3,7 +3,7 @@ package com.sparta.cookbank.service;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Ingredient.Ingredient;
 import com.sparta.cookbank.domain.Ingredient.dto.IngredientResponseDto;
-import com.sparta.cookbank.domain.Ingredient.dto.SearchIngredientDto;
+import com.sparta.cookbank.domain.Ingredient.dto.TotalIngredientResponseDto;
 import com.sparta.cookbank.domain.Member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
@@ -26,7 +26,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +59,7 @@ public class IngredientService {
     }
 
     @Transactional(readOnly = true)
-    public SearchIngredientDto<?> findIngredient(String food_name, HttpServletRequest request) {
+    public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
 
@@ -78,8 +77,11 @@ public class IngredientService {
                     .build());
         }
 
-
-        return SearchIngredientDto.success(dtoList,ingredients.size(),"식재료 검색에 성공하였습니다.");
+        TotalIngredientResponseDto responseDto = TotalIngredientResponseDto.builder()
+                .total_count(dtoList.size())
+                .search_list(dtoList)
+                .build();
+        return ResponseDto.success(responseDto,"식재료 검색에 성공하였습니다.");
     }
     @Transactional
     public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
