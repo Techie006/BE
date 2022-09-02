@@ -39,7 +39,7 @@ public class IngredientService {
     private final TokenProvider tokenProvider;
 
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)   //DTO 수정..
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
@@ -118,8 +118,10 @@ public class IngredientService {
     }
 
 
+
     @Transactional(readOnly = true)
     public ResponseDto<?> getMyIngredient(String storage, HttpServletRequest request) throws ParseException {
+
         //토큰 유효성 검사
         extracted(request);
 
@@ -144,6 +146,7 @@ public class IngredientService {
             return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
 
         }
+
 
 
     }
