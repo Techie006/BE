@@ -1,7 +1,7 @@
 package com.sparta.cookbank.controller;
 
 import com.sparta.cookbank.ResponseDto;
-import com.sparta.cookbank.domain.DoneRecipe.dto.DoneRecipeRequestDto;
+import com.sparta.cookbank.domain.doneRecipe.dto.DoneRecipeRequestDto;
 import com.sparta.cookbank.service.DoneRecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
