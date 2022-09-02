@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.Ingredient.enums;
+package com.sparta.cookbank.domain.ingredient.enums;
 
 public enum FoodCategory {
 

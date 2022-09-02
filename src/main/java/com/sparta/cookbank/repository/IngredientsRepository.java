@@ -1,6 +1,6 @@
 package com.sparta.cookbank.repository;
 
-import com.sparta.cookbank.domain.Ingredient.Ingredient;
+import com.sparta.cookbank.domain.ingredient.Ingredient;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

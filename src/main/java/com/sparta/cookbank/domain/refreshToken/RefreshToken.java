@@ -1,6 +1,6 @@
-package com.sparta.cookbank.domain.RefreshToken;
+package com.sparta.cookbank.domain.refreshToken;
 
-import com.sparta.cookbank.domain.Member.Member;
+import com.sparta.cookbank.domain.member.Member;
 import lombok.*;
 
 import javax.persistence.*;

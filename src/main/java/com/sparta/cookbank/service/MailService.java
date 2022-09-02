@@ -1,9 +1,8 @@
 package com.sparta.cookbank.service;
 
-import com.sparta.cookbank.domain.Member.dto.SignupRequestDto;
+import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
 import lombok.AllArgsConstructor;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 

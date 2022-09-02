@@ -2,15 +2,11 @@ package com.sparta.cookbank.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.Member.dto.LoginRequestDto;
-import com.sparta.cookbank.domain.Member.dto.SignupRequestDto;
+import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
+import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
 import com.sparta.cookbank.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;

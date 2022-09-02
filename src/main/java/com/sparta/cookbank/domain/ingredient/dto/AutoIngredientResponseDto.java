@@ -1,6 +1,5 @@
-package com.sparta.cookbank.domain.Ingredient.dto;
+package com.sparta.cookbank.domain.ingredient.dto;
 
-import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
 import lombok.*;
 
 import java.util.List;

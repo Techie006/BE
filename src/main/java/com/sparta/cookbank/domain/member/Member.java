@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.Member;
+package com.sparta.cookbank.domain.member;
 
 import lombok.*;
 
