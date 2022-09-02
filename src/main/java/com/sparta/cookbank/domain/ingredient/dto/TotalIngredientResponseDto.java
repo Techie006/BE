@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.Ingredient.dto;
+package com.sparta.cookbank.domain.ingredient.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

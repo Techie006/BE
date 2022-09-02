@@ -1,8 +1,6 @@
-package com.sparta.cookbank.domain.Recipe.dto;
+package com.sparta.cookbank.domain.recipe.dto;
 
 import lombok.*;
-
-import javax.persistence.Column;
 
 @Getter
 @Setter

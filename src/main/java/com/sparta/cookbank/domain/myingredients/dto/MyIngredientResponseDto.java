@@ -1,6 +1,6 @@
 package com.sparta.cookbank.domain.myingredients.dto;
 
-import com.sparta.cookbank.domain.Ingredient.enums.FoodCategory;
+import com.sparta.cookbank.domain.ingredient.enums.FoodCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.sparta.cookbank.repository;
 
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.RefreshToken.RefreshToken;
+import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

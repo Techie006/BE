@@ -1,8 +1,8 @@
 package com.sparta.cookbank.security;
 
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.RefreshToken.DTO.TokenDto;
-import com.sparta.cookbank.domain.RefreshToken.RefreshToken;
+import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
+import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
@@ -19,7 +19,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;

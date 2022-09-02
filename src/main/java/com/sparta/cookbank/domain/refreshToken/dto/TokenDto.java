@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.RefreshToken.DTO;
+package com.sparta.cookbank.domain.refreshToken.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -2,41 +2,28 @@ package com.sparta.cookbank.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sparta.cookbank.ResponseDto;
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.Member.dto.GoogleUserInfoDto;
-import com.sparta.cookbank.domain.Member.dto.KakaoUserInfoDto;
-import com.sparta.cookbank.domain.Member.dto.LoginRequestDto;
-import com.sparta.cookbank.domain.Member.dto.SignupRequestDto;
-import com.sparta.cookbank.domain.RefreshToken.DTO.TokenDto;
-import com.sparta.cookbank.domain.RefreshToken.RefreshToken;
+import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.member.dto.GoogleUserInfoDto;
+import com.sparta.cookbank.domain.member.dto.KakaoUserInfoDto;
+import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
+import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
+import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
+import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RefreshTokenRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
-import netscape.javascript.JSObject;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
 import java.util.UUID;
 
 @Service

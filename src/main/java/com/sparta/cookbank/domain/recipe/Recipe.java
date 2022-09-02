@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.Recipe;
+package com.sparta.cookbank.domain.recipe;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

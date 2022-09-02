@@ -1,9 +1,8 @@
-package com.sparta.cookbank.domain.Member.dto;
+package com.sparta.cookbank.domain.member.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 @Getter
 @NoArgsConstructor

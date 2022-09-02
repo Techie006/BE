@@ -1,7 +1,7 @@
 package com.sparta.cookbank.controller;
 
 
-import com.sparta.cookbank.domain.Recipe.Recipe;
+import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;

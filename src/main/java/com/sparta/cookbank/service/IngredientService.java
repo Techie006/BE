@@ -1,13 +1,13 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.ResponseDto;
-import com.sparta.cookbank.domain.Ingredient.Ingredient;
-import com.sparta.cookbank.domain.Ingredient.dto.IngredientResponseDto;
-import com.sparta.cookbank.domain.Ingredient.dto.TotalIngredientResponseDto;
-import com.sparta.cookbank.domain.Member.Member;
+import com.sparta.cookbank.domain.ingredient.Ingredient;
+import com.sparta.cookbank.domain.ingredient.dto.IngredientResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.TotalIngredientResponseDto;
+import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
-import com.sparta.cookbank.domain.Ingredient.dto.AutoIngredientResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.AutoIngredientResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.StorageResponseDto;
