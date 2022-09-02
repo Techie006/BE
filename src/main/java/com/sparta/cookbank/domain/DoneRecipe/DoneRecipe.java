@@ -1,8 +1,9 @@
 package com.sparta.cookbank.domain.DoneRecipe;
 
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.Recipe.Recipe;
+
 import com.sparta.cookbank.domain.Timestamped;
+import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.recipe.Recipe;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -2,15 +2,14 @@ package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.DoneRecipe.DoneRecipe;
 import com.sparta.cookbank.domain.DoneRecipe.dto.DoneRecipeRequestDto;
-import com.sparta.cookbank.domain.Member.Member;
-import com.sparta.cookbank.domain.Recipe.Recipe;
+import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
+import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.repository.DoneRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
 import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.security.SecurityUtil;
-import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
