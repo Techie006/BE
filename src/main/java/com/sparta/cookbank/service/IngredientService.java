@@ -94,18 +94,16 @@ public class IngredientService {
     public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
 
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
         //재료찾기
         Ingredient ingredient = ingredientsRepository.findById(requestDto.getId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 음식 재료가 존재 하지 않습니다.")
         );
+
+
 
         MyIngredients myIngredients = MyIngredients.builder()
                 .member(member)
@@ -120,65 +118,46 @@ public class IngredientService {
     }
 
 
-    @Transactional(readOnly = true)  // 스토리지별 조회 DTO 수정..
-    public ResponseDto<?> getMyIngredient(Storage storage, HttpServletRequest request) throws ParseException {
+
+    @Transactional(readOnly = true)
+    public ResponseDto<?> getMyIngredient(String storage, HttpServletRequest request) throws ParseException {
+
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
 
-        List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage);
-        List<MyIngredientResponseDto> dtoList = new ArrayList<>();
 
-        //현재시각으로 d_day 구하기
-        LocalDate now = LocalDate.now();
-        String nowString = now.toString();
+        // 나의 재료 전체조회
+        if(storage.equals("")){
+            List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
 
-        for (MyIngredients myIngredient : myIngredients) {
-            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
-            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
-            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
-            Long diffDays = diffSec / (24*60*60); // 일자수 차이
-            String d_day;
-            if(diffDays < 0){
-                diffDays = -diffDays;
-                d_day ="+"+diffDays.toString();
-            }else {
-                d_day ="-"+diffDays.toString();
-            }
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+        }else {
+            // Storage별 조회
+            Storage storage1 = Storage.valueOf(storage);
+            List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage1);
+            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
 
-            dtoList.add(MyIngredientResponseDto.builder()
-                    .id(myIngredient.getId())
-                    .food_name(myIngredient.getIngredient().getFoodName())
-                    .group_name(myIngredient.getIngredient().getFoodCategory())
-                    .in_date(myIngredient.getInDate())
-                    .d_date("D"+ d_day)
-                    .build());
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+
         }
 
-        StorageResponseDto responseDto = StorageResponseDto.builder()
-                .storage(dtoList)
-                .build();
 
-        return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+
     }
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getMyWarningIngredient(HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        Member member = getMember();
 
         List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
         List<MyIngredientResponseDto> outList = new ArrayList<>();
@@ -230,23 +209,39 @@ public class IngredientService {
     @Transactional
     public ResponseDto<?> deleteMyIngredient(Long myIngredientId, HttpServletRequest request) {
         //토큰 유효성 검사
-        String token = request.getHeader("Authorization");
-        token = resolveToken(token);
-        tokenProvider.validateToken(token);
+        extracted(request);
 
         // 멤버 유효성 검사
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
-        );
+        getMember();
+
+
 
         //재료 유효성 검사
         MyIngredients myIngredients = myIngredientsRepository.findById(myIngredientId).orElseThrow(
                 () -> new IllegalArgumentException("이미 삭제된 재료입니다.")
         );
 
+        //로그인한 멤버 id와 작성된 재료의 멤버 id와 다를시 예외처리
+        if(!getMember().getId().equals(myIngredients.getMember().getId())){
+            throw new RuntimeException("타인의 식재료를 삭제할 수 없습니다.");
+        }
+
         myIngredientsRepository.delete(myIngredients);
 
         return ResponseDto.success("","재료 삭제가 성공하였습니다.");
+    }
+
+    private void extracted(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        token = resolveToken(token);
+        tokenProvider.validateToken(token);
+    }
+
+    private Member getMember() {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
+        );
+        return member;
     }
 
 
@@ -254,5 +249,38 @@ public class IngredientService {
         if(token.startsWith("Bearer "))
             return token.substring(7);
         throw new RuntimeException("not valid token !!");
+    }
+
+    private StorageResponseDto getStorageResponseDto(List<MyIngredients> myIngredients, List<MyIngredientResponseDto> dtoList) throws ParseException {
+        //현재시각으로 d_day 구하기
+        LocalDate now = LocalDate.now();
+        String nowString = now.toString();
+
+        for (MyIngredients myIngredient : myIngredients) {
+            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
+            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
+            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffDays = diffSec / (24*60*60); // 일자수 차이
+            String d_day;
+            if(diffDays < 0){
+                diffDays = -diffDays;
+                d_day ="+"+diffDays.toString();
+            }else {
+                d_day ="-"+diffDays.toString();
+            }
+
+            dtoList.add(MyIngredientResponseDto.builder()
+                    .id(myIngredient.getId())
+                    .food_name(myIngredient.getIngredient().getFoodName())
+                    .group_name(myIngredient.getIngredient().getFoodCategory())
+                    .in_date(myIngredient.getInDate())
+                    .d_date("D"+ d_day)
+                    .build());
+        }
+
+        StorageResponseDto responseDto = StorageResponseDto.builder()
+                .storage(dtoList)
+                .build();
+        return responseDto;
     }
 }
