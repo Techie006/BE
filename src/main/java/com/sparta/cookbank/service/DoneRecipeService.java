@@ -1,7 +1,7 @@
 package com.sparta.cookbank.service;
 
-import com.sparta.cookbank.domain.DoneRecipe.DoneRecipe;
-import com.sparta.cookbank.domain.DoneRecipe.dto.DoneRecipeRequestDto;
+import com.sparta.cookbank.domain.doneRecipe.DoneRecipe;
+import com.sparta.cookbank.domain.doneRecipe.dto.DoneRecipeRequestDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.recipe.Recipe;
