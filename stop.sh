@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PROJECT_ROOT="/home/ubuntu/app"
-JAR_FILE="$PROJECT_ROOT/*SNAPSHOT.jar.jar"
+JAR_FILE="$PROJECT_ROOT/build/libs/*SNAPSHOT.jar.jar"
 
 DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 
