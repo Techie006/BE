@@ -28,19 +28,19 @@ public class Recipe {
     private String RCP_PAT2;//요리종류 ex)반찬
 
     @Column
-    private String INFO_ENG;//열량
+    private Long INFO_ENG;//열량
 
     @Column
-    private String INFO_CAR;//탄수화물
+    private Long INFO_CAR;//탄수화물
 
     @Column
-    private String INFO_PRO;//단백질
+    private Long INFO_PRO;//단백질
 
     @Column
-    private String INFO_FAT;//지방
+    private Long INFO_FAT;//지방
 
     @Column
-    private String INFO_NA;//나트륨
+    private Long INFO_NA;//나트륨
 
     @Column
     private String ATT_FILE_NO_MAIN;//이미지경로 소
