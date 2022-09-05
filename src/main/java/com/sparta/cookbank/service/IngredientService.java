@@ -2,12 +2,10 @@ package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.ingredient.Ingredient;
-import com.sparta.cookbank.domain.ingredient.dto.IngredientResponseDto;
-import com.sparta.cookbank.domain.ingredient.dto.TotalIngredientResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
-import com.sparta.cookbank.domain.ingredient.dto.AutoIngredientResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.StorageResponseDto;
@@ -277,5 +275,168 @@ public class IngredientService {
                 .storage(dtoList)
                 .build();
         return responseDto;
+    }
+
+    // 나만의 냉장고 상태 표시
+    @Transactional(readOnly = true)
+    public RefrigeratorStateResponseDto MyRefrigeratorState() {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
+        });
+        List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+
+        List<Double> percentage = new ArrayList<>();
+        List<Integer> count = new ArrayList<>();
+
+        int worningCount = 0;
+        int in_hurryCount = 0;
+        int fineCount = 0;
+        for (MyIngredients myIngredients : myIngredientsList) {
+            String match = "[^0-9]";
+            int exp_date = Integer.parseInt(myIngredients.getExpDate().replaceAll(match,""));
+            int in_date = Integer.parseInt(myIngredients.getInDate().replaceAll(match,""));
+            if ((exp_date - in_date) <= 3 && (exp_date - in_date) > 0) { // 남은 유통기한이 3일 이내일때
+                worningCount++;
+            } else if ((exp_date - in_date) <= 5 && (exp_date - in_date) > 3) { // 남은 유통기한이 5일 이하 3일 미만일때
+                in_hurryCount++;
+            } else if ((exp_date - in_date) > 5) { // 남은 유통기한이 5일 이상일때
+                fineCount++;
+            } else if ((exp_date - in_date) < 0) { // 유통기한이 지난 재료
+                throw new IllegalArgumentException("유통기한이 지난 재료 입니다.");
+            }
+        }
+        // 백분율을 구하고 거기에 Math.round 메소드를 이용해서 소수점 두번째자리까지 구함
+        percentage.add (Math.round ((((double) worningCount / (double) myIngredientsList.size() * 100))*100)/100.0);
+        percentage.add (Math.round ((((double) in_hurryCount / (double) myIngredientsList.size() * 100))*100)/100.0);
+        percentage.add (Math.round ((((double) fineCount / (double) myIngredientsList.size() * 100))*100)/100.0);
+        count.add(worningCount);
+        count.add(in_hurryCount);
+        count.add(fineCount);
+
+        RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
+                .percentage(percentage)
+                .count(count)
+                .build();
+        return refrigeratorStateResponseDto;
+    }
+
+    // 제품류 나눠서 보여주기
+    @Transactional(readOnly = true)
+    public IngredientsByCategoryResponseDto ingredientsByCategory() {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
+        });
+        int starch_num = 0;
+        int nut_num = 0;
+        int cereal_num = 0;
+        int fruit_num = 0;
+        int etc_num = 0;
+        int nan_num = 0;
+        int sugar_num = 0;
+        int pulses_num = 0;
+        int mushroom_num = 0;
+        int fish_num = 0;
+        int milkProducts_num = 0;
+        int fatAndOils_num = 0;
+        int meat_num = 0;
+        int drink_num = 0;
+        int processedFood_num = 0;
+        int seasoning_num = 0;
+        int alcohol_num = 0;
+        int tea_num = 0;
+        int vegetable_num = 0;
+        int seaweed_num = 0;
+        List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+        if (myIngredientsList.isEmpty()) {
+            throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
+        }
+        for (MyIngredients myIngredients : myIngredientsList) {
+            switch (myIngredients.getIngredient().getFoodCategory()){
+                case 전분류:
+                    starch_num++;
+                    break;
+                case 견과류:
+                    nut_num++;
+                    break;
+                case 곡류:
+                    cereal_num++;
+                    break;
+                case 과실류:
+                    fruit_num++;
+                    break;
+                case 기타:
+                    etc_num++;
+                    break;
+                case 난류:
+                    nan_num++;
+                    break;
+                case 당류:
+                    sugar_num++;
+                    break;
+                case 두류:
+                    pulses_num++;
+                    break;
+                case 버섯류:
+                    mushroom_num++;
+                    break;
+                case 어패류:
+                    fish_num++;
+                    break;
+                case 유제품류:
+                    milkProducts_num++;
+                    break;
+                case 유지류:
+                    fatAndOils_num++;
+                    break;
+                case 육류:
+                    meat_num++;
+                    break;
+                case 음료류:
+                    drink_num++;
+                    break;
+                case 조리가공품류:
+                    processedFood_num++;
+                    break;
+                case 조미료류:
+                    seasoning_num++;
+                    break;
+                case 주류:
+                    alcohol_num++;
+                    break;
+                case 차류:
+                    tea_num++;
+                    break;
+                case 채소류:
+                    vegetable_num++;
+                    break;
+                case 해조류:
+                    seaweed_num++;
+                    break;
+                default:
+            }
+        }
+        IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
+                .starch_num(starch_num)
+                .nut_num(nut_num)
+                .cereal_num(cereal_num)
+                .fruit_num(fruit_num)
+                .etc_num(etc_num)
+                .nan_num(nan_num)
+                .sugar_num(sugar_num)
+                .pulses_num(pulses_num)
+                .mushroom_num(mushroom_num)
+                .fish_num(fish_num)
+                .milkProducts_num(milkProducts_num)
+                .fatAndOils_num(fatAndOils_num)
+                .meat_num(meat_num)
+                .drink_num(drink_num)
+                .processedFood_num(processedFood_num)
+                .seasoning_num(seasoning_num)
+                .alcohol_num(alcohol_num)
+                .tea_num(tea_num)
+                .vegetable_num(vegetable_num)
+                .seaweed_num(seaweed_num)
+                .build();
+        return ingredientsByCategoryResponseDto;
     }
 }

@@ -2,6 +2,8 @@ package com.sparta.cookbank.controller;
 
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Storage;
+import com.sparta.cookbank.domain.ingredient.dto.IngredientsByCategoryResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.RefrigeratorStateResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.service.IngredientService;
 import lombok.RequiredArgsConstructor;
@@ -51,4 +53,18 @@ public class IngredientController {
     }
 
 
+    // 우리집 냉장고 상태표시
+    @GetMapping("/api/statistics/state")
+    public ResponseDto<?> MyRefrigeratorState(){
+        RefrigeratorStateResponseDto stateResponseDto =ingredientService.MyRefrigeratorState();
+
+        return ResponseDto.success(stateResponseDto, "냉장고 상태 제공에 성공하였습니다.");
+    }
+
+    // (통계)제품류 나눠서 보여주기
+    @GetMapping("/api/statistics/category")
+    public ResponseDto<?> ingredientsByCategory() {
+        IngredientsByCategoryResponseDto categoryResponseDto = ingredientService.ingredientsByCategory();
+        return ResponseDto.success(categoryResponseDto,"성공");
+    }
 }
