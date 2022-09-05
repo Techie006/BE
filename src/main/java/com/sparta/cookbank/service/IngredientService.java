@@ -6,10 +6,7 @@ import com.sparta.cookbank.domain.ingredient.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
-import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
-import com.sparta.cookbank.domain.myingredients.dto.MyIngredientResponseDto;
-import com.sparta.cookbank.domain.myingredients.dto.StorageResponseDto;
-import com.sparta.cookbank.domain.myingredients.dto.WarningResponseDto;
+import com.sparta.cookbank.domain.myingredients.dto.*;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
@@ -440,5 +437,52 @@ public class IngredientService {
                 .seaweed_num(seaweed_num)
                 .build();
         return ingredientsByCategoryResponseDto;
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseDto<?> getAllMyIngredient(HttpServletRequest request) throws ParseException {
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+
+        List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<TotalMyIngredientDto> dtoList = new ArrayList<>();
+
+        //현재시각으로 d_day 구하기
+        LocalDate now = LocalDate.now();
+        String nowString = now.toString();
+
+
+        for (MyIngredients myIngredient : myIngredients) {
+            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
+            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
+            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffDays = diffSec / (24*60*60); // 일자수 차이
+            String d_day;
+            if(diffDays < 0){
+                diffDays = -diffDays;
+                d_day ="+"+diffDays.toString();
+            }else {
+                d_day ="-"+diffDays.toString();
+            }
+
+            dtoList.add(TotalMyIngredientDto.builder()
+                    .id(myIngredient.getId())
+                    .food_name(myIngredient.getIngredient().getFoodName())
+                    .group_name(myIngredient.getIngredient().getFoodCategory())
+                    .in_date(myIngredient.getInDate())
+                    .d_date("D"+ d_day)
+                    .category(myIngredient.getStorage())
+                    .build());
+        }
+
+        ListTotalMyIngredientsDto responseDto = ListTotalMyIngredientsDto.builder()
+                .ingredients_num(dtoList.size())
+                .storage(dtoList)
+                .build();
+
+        return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
     }
 }

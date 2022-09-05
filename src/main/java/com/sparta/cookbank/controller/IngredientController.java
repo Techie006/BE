@@ -34,7 +34,13 @@ public class IngredientController {
         return ingredientService.saveMyIngredient(requestDto,request);
     }
 
-    // 저장소별 식재료 조회
+    //식재료 전체 조회회
+    @GetMapping("/api/ingredient")
+    public ResponseDto<?> getAllMyIngredient(HttpServletRequest request) throws ParseException {
+        return ingredientService.getAllMyIngredient(request);
+    }
+
+   // 저장소별 식재료 조회
     @GetMapping("/api/ingredients")
     public ResponseDto<?> getMyIngredient(@RequestParam("storage") String storage, HttpServletRequest request) throws ParseException {
         return ingredientService.getMyIngredient(storage,request);
