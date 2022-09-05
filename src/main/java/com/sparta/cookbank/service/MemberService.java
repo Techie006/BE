@@ -25,6 +25,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -61,6 +62,15 @@ public class MemberService {
         // 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         String key = UUID.randomUUID().toString();
+
+        String emailPattern = "\\\\w+@\\\\w+\\\\.\\\\w+(\\\\.\\\\w+)?";
+        if(!Pattern.matches(emailPattern,requestDto.getEmail())){
+            throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
+        }
+        String userPattern = "^[a-zA-Z\\d]*$";
+        if(!Pattern.matches(userPattern,requestDto.getUsername())){
+            throw new IllegalArgumentException("적절하지 않은 사용자 이름 형식입니다.");
+        }
         Member member = Member.builder()
                 .email(requestDto.getEmail())
                 .username(requestDto.getUsername())
