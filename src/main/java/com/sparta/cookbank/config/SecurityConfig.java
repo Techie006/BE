@@ -60,6 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/user/signup").permitAll()
                 .antMatchers("/api/user/signin").permitAll()
                 .antMatchers("/api/reissue").permitAll()
+                .antMatchers("/api/recipe/fix/**").permitAll()
                 .antMatchers("/api/user/email/**").permitAll()
                 .antMatchers("/user/kakao/callback/**").permitAll()
                 .antMatchers("/user/google/callback/**").permitAll()

@@ -1,5 +1,6 @@
 package com.sparta.cookbank.domain.recipe;
 
+import com.sparta.cookbank.domain.recipe.dto.RecipeFixRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -77,21 +78,11 @@ public class Recipe {
     @Column
     private String MANUAL_IMG06;
     @Column
-    private String MANUAL07;
-    @Column
-    private String MANUAL_IMG07;
-    @Column
-    private String MANUAL08;
-    @Column
-    private String MANUAL_IMG08;
+    private String MAIN_INGREDIENTS;
 
 
-
-
-
-
-
-
-
-
+    public void SetMainRecipe(RecipeFixRequestDto requestDto) {
+        this.MAIN_INGREDIENTS = requestDto.getMainIngredients();
+        this.RCP_PARTS_DTLS = requestDto.getIngredients();
+    }
 }
