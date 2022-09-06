@@ -1,4 +1,3 @@
-
 //package com.sparta.cookbank.controller;
 //
 //
@@ -22,7 +21,7 @@
 //    private final RecipeRepository recipeRepository;
 //
 //    @GetMapping("api/save")  // 공공api 레시피 저장
-////    public void saveTotalRecipe() throws IOException {
+//    public void saveTotalRecipe() throws IOException {
 //        String result = "";
 //
 //        try {
@@ -65,10 +64,6 @@
 //                        .MANUAL_IMG05(jsonRecipe.get("MANUAL_IMG05").toString())
 //                        .MANUAL06(jsonRecipe.get("MANUAL06").toString())
 //                        .MANUAL_IMG06(jsonRecipe.get("MANUAL_IMG06").toString())
-//                        .MANUAL07(jsonRecipe.get("MANUAL07").toString())
-//                        .MANUAL_IMG07(jsonRecipe.get("MANUAL_IMG07").toString())
-//                        .MANUAL08(jsonRecipe.get("MANUAL08").toString())
-//                        .MANUAL_IMG08(jsonRecipe.get("MANUAL_IMG08").toString())
 //                        .build();
 //
 ////                recipeRepository.save(recipe);     저장완료로 주석
@@ -78,4 +73,3 @@
 //        }
 //    }
 //}
-

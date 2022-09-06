@@ -26,44 +26,54 @@ public class RecipeService {
     private final MemberRepository memberRepository;
 
     // 추천 레시피 조회
-    // TODO: 수정 필요
     @Transactional(readOnly = true)
-    public List<RecipeRecommendResponseDto> getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
-        List<Recipe> recipeList  = recipeRepository.findAll();
-        List<RecipeRecommendResponseDto> recipeRecommendResponseDtoList = new ArrayList<>();
-        System.out.println(requestDto.getFoods());
-        for (Recipe recipe : recipeList) {
-            // 레시피의 재료에 소고기가 있으면
-            if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getBase())) {
-                for (int i = 0; i < requestDto.getFoods().size(); i++) {
-                    if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
-                        recipeRecommendResponseDtoList.add(
-                                RecipeRecommendResponseDto.builder()
-                                        .id(recipe.getId())
-                                        .recipe_name(recipe.getRCP_NM())
-                                        .ingredients(recipe.getRCP_PARTS_DTLS())
-                                        .method(recipe.getRCP_WAY2())
-                                        .category(recipe.getRCP_PAT2())
-                                        .calorie(recipe.getINFO_ENG())
-                                        .build()
-                        );
-                    } else {
-                        recipeRecommendResponseDtoList.add(
-                                RecipeRecommendResponseDto.builder()
-                                        .id(recipe.getId())
-                                        .recipe_name(recipe.getRCP_NM())
-                                        .ingredients(recipe.getRCP_PARTS_DTLS())
-                                        .method(recipe.getRCP_WAY2())
-                                        .category(recipe.getRCP_PAT2())
-                                        .calorie(recipe.getINFO_ENG())
-                                        .build()
-                        );
-                    }
-                }
+    public RecipeRecommendResultResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
+        });
 
+        // base 재료가 포함된 모든 레시피를 가져옴
+        List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto);
+        List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+        for (Recipe recipe : recipeList) {
+            // 메인 재료들을  리스트에 담음
+            List<String> mainIngredientsList = new ArrayList<>();
+            mainIngredientsList.add(recipe.getMAIN_INGREDIENTS());
+            // 모든 재료들을 리스트에 담음
+            List<String> ingredientsList = new ArrayList<>();
+            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+            for (int i = 0; i < requestDto.getFoods().size(); i++) {
+                if (recipe.getRCP_PARTS_DTLS().matches(requestDto.getFoods().get(i))) {
+                    recipeRecommendResponseDto.add(
+                            RecipeRecommendResponseDto.builder()
+                                    .id(recipe.getId())
+                                    .recipe_name(recipe.getRCP_NM())
+                                    .common_ingredients(mainIngredientsList)
+                                    .ingredients(ingredientsList)
+                                    .method(recipe.getRCP_WAY2())
+                                    .category(recipe.getRCP_PAT2())
+                                    .calorie(recipe.getINFO_ENG())
+                                    .build()
+                    );
+                }
             }
+            recipeRecommendResponseDto.add(
+                    RecipeRecommendResponseDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .common_ingredients(mainIngredientsList)
+                            .ingredients(ingredientsList)
+                            .method(recipe.getRCP_WAY2())
+                            .category(recipe.getRCP_PAT2())
+                            .calorie(recipe.getINFO_ENG())
+                            .build()
+            );
         }
-        return recipeRecommendResponseDtoList;
+        RecipeRecommendResultResponseDto responseDto = RecipeRecommendResultResponseDto.builder()
+                .recipes(recipeRecommendResponseDto)
+                .build();
+
+        return responseDto;
     }
 
     // 레시피 상세 조회

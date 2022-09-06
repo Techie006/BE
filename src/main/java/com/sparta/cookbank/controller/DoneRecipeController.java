@@ -1,15 +1,13 @@
 package com.sparta.cookbank.controller;
 
 import com.sparta.cookbank.ResponseDto;
+import com.sparta.cookbank.domain.donerecipe.dto.*;
+import com.sparta.cookbank.domain.donerecipe.dto.DoneRecipeRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixResponseDto;
-import com.sparta.cookbank.domain.donerecipe.dto.DoneRecipeRequestDto;
 import com.sparta.cookbank.service.DoneRecipeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,5 +25,26 @@ public class DoneRecipeController {
     public ResponseDto<?> RecipeFix(@RequestParam Long id, @RequestBody RecipeFixRequestDto requestDto){
         RecipeFixResponseDto responseDto = doneRecipeService.FixRecipe(id,requestDto);
         return ResponseDto.success(responseDto,"다음 레시피 정보");
+    }
+
+    // 탄단지나 통계
+    @GetMapping("/api/statistics/ratio/nutrients")
+    public ResponseDto<?> getNutrientsRatio(@RequestBody NutrientsRatioRequestDto requestDto ) {
+        NutrientsRatioResponseDto nutrientsRatio = doneRecipeService.getNutrientsRatio(requestDto);
+        return ResponseDto.success(nutrientsRatio, "통계자료 제공에 성공하였습니다.");
+    }
+
+    // 열량 통계
+    @GetMapping("/api/statistics/ratio/calories")
+    public ResponseDto<?> getCaloriesRatio(@RequestBody CaloriesRatioRequestDto requestDto) {
+        CaloriesRatioResponseDto caloriesRatio = doneRecipeService.getCaloriesRatio(requestDto);
+        return ResponseDto.success(caloriesRatio, "통계자료 제공에 성공하였습니다.");
+    }
+
+    //어제 대비 오늘 데이터 조회 통계
+    @GetMapping("/api/statistics/daily")
+    public ResponseDto<?> getDailyRatio() {
+        DailyRatioResponseDto dailyRatio = doneRecipeService.getDailyRatio();
+        return ResponseDto.success(dailyRatio, "통계자료 제공에 성공하였습니다.");
     }
 }
