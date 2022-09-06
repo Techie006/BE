@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.doneRecipe.dto;
+package com.sparta.cookbank.domain.donerecipe.dto;
 
 import lombok.Getter;
 import lombok.Setter;
