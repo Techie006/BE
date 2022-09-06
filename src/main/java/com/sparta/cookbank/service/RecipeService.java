@@ -38,7 +38,7 @@ public class RecipeService {
         for (Recipe recipe : recipeList) {
             // 메인 재료들을  리스트에 담음
             List<String> mainIngredientsList = new ArrayList<>();
-            mainIngredientsList.add(recipe.getMain_ingredients());
+            mainIngredientsList.add(recipe.getMAIN_INGREDIENTS());
             // 모든 재료들을 리스트에 담음
             List<String> ingredientsList = new ArrayList<>();
             ingredientsList.add(recipe.getRCP_PARTS_DTLS());
