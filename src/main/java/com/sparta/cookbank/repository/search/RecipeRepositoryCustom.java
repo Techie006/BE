@@ -1,3 +1,4 @@
+
 package com.sparta.cookbank.repository.search;
 
 import com.sparta.cookbank.domain.recipe.Recipe;

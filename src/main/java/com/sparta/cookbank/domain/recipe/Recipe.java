@@ -37,8 +37,6 @@ public class Recipe {
     @Column
     private Long INFO_PRO;//단백질
 
-    @Column
-    private String main_ingredients;
 
     @Column
     private Long INFO_FAT;//지방
