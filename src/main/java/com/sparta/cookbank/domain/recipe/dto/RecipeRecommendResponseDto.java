@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -12,7 +14,8 @@ import lombok.NoArgsConstructor;
 public class RecipeRecommendResponseDto {
     private Long id;
     private String recipe_name;
-    private String ingredients;
+    private List<String> common_ingredients;
+    private List<String> ingredients;
     private String method;
     private String category;
     private Long calorie;

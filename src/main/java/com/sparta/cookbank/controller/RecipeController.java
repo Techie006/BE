@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 public class RecipeController {
@@ -18,9 +16,8 @@ public class RecipeController {
     // 추천 레시피 조회
     @GetMapping("/api/recipes/recommend")
     public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto) {
-        List<RecipeRecommendResponseDto> recommendResponseDto = recipeService.getRecommendRecipe(requestDto);
-
-        return ResponseDto.success(recommendResponseDto,"추천레시피 제공에 성공하였습니다.");
+        RecipeRecommendResultResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
+        return ResponseDto.success(resultResponseDto,"추천레시피 제공에 성공하였습니다.");
     }
 
     // 레시피 상세 조회
