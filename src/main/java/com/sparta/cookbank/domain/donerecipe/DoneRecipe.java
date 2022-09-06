@@ -1,4 +1,4 @@
-package com.sparta.cookbank.domain.doneRecipe;
+package com.sparta.cookbank.domain.donerecipe;
 
 
 import com.sparta.cookbank.domain.Timestamped;
