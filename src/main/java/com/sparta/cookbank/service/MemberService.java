@@ -68,6 +68,9 @@ public class MemberService {
             throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
         }
         String userPattern = "^[a-zA-Z\\d]*$";
+        if(requestDto.getUsername().length()<2 || requestDto.getUsername().length()>16){
+            throw new IllegalArgumentException("사용자 이름이 너무 깁니다.");
+        }
         if(!Pattern.matches(userPattern,requestDto.getUsername())){
             throw new IllegalArgumentException("적절하지 않은 사용자 이름 형식입니다.");
         }
