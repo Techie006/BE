@@ -31,6 +31,9 @@ public class CalendarController {
         return calendarService.updateSpecificDayDiet(id, requestDto, request);
     }
 
-
+    @DeleteMapping("/api/calendar/{id}")
+    public ResponseDto<?> deleteSpecificDayDiet(@PathVariable Long id,HttpServletRequest request){
+        return calendarService.deleteSpecificDayDiet(id,request);
+    }
 
 }

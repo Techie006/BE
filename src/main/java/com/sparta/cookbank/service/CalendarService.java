@@ -130,6 +130,13 @@ public class CalendarService {
                 () -> new NullPointerException("해당 날짜에 작성된 식캘린더가 없습니다.")
         );
 
+        //타인 캘린더일시 차단
+        if(!getMember().getId().equals(calendar.getMember().getId())){
+            throw new RuntimeException("타인의 캘린더를 변경할 수 없습니다.");
+        }
+
+
+
         // Request 에서 레시피에서 찾아야됨
         Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
 
@@ -156,17 +163,30 @@ public class CalendarService {
                 .build();
 
 
-        return ResponseDto.success(calendarResponseDto,"준식");
+        return ResponseDto.success(calendarResponseDto,"성공적으로 해당 날짜의 식단을 변경하였습니다.");
     }
 
 
+    public ResponseDto<?> deleteSpecificDayDiet(Long id, HttpServletRequest request) {
+        //토큰 유효성 검사
+        extracted(request);
 
+        // 멤버 유효성 검사
+        Member member = getMember();
 
+        Calendar calendar = calendarRepository.findById(id).orElseThrow(
+                () -> new NullPointerException("해당 날짜에 작성된 식캘린더가 없습니다.")
+        );
 
+        //타인 캘린더일시 차단
+        if(!getMember().getId().equals(calendar.getMember().getId())){
+            throw new RuntimeException("타인의 캘린더를 삭제할 수 없습니다.");
+        }
 
+        calendarRepository.delete(calendar);
 
-
-
+        return ResponseDto.success("","성공적으로 해당 날짜에 식단을 삭제하였습니다.");
+    }
 
     private void extracted(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
