@@ -58,7 +58,6 @@ public class MemberService {
 
     @Transactional
     public Long signup(SignupRequestDto requestDto) {
-        System.out.println("1");
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         // 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
@@ -72,7 +71,6 @@ public class MemberService {
         if(!Pattern.matches(userPattern,requestDto.getUsername())){
             throw new IllegalArgumentException("적절하지 않은 사용자 이름 형식입니다.");
         }
-        System.out.println("2");
         Member member = Member.builder()
                 .email(requestDto.getEmail())
                 .username(requestDto.getUsername())
@@ -80,9 +78,7 @@ public class MemberService {
                 .mail_auth(false)
                 .mail_key(key)
                 .build();
-        System.out.println("3");
         mailService.sendSimpleMessage(requestDto,key);
-        System.out.println("9");
         return memberRepository.save(member).getId();
     }
     @Transactional
