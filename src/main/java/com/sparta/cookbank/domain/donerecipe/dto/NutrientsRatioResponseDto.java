@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -12,9 +13,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NutrientsRatioResponseDto {
-    private List<String> days;
-    private long[] carbohydrates;
-    private long[] proteins;
-    private long[] fats;
-    private long[] sodium;
+    private List<LocalDate> days;
+    private List<Long> carbohydrates;
+    private List<Long> proteins;
+    private List<Long> fats;
+    private List<Long> sodium;
 }

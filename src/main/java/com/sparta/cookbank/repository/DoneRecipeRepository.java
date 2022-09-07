@@ -12,4 +12,6 @@ public interface DoneRecipeRepository extends JpaRepository<DoneRecipe, Long > {
     List<DoneRecipe> findByMember_IdAndCreatedAt(Long id, LocalDate today);
 
     List<DoneRecipe> findByCreatedAtBetween(LocalDateTime startDay, LocalDateTime endDay);
+
+    List<DoneRecipe> findAllByMember_IdOrderByCreatedAtDesc(Long id);
 }
