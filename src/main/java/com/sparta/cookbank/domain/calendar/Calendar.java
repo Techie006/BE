@@ -1,6 +1,6 @@
 package com.sparta.cookbank.domain.calendar;
 
-import com.sparta.cookbank.domain.Timestamped;
+import com.sparta.cookbank.domain.calendar.dto.CalendarRequestDto;
 import com.sparta.cookbank.domain.calendar.enums.MealCategory;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
@@ -36,4 +36,10 @@ public class Calendar{
     @Column(nullable = false)
     private String mealDay;
 
+    public void update(CalendarRequestDto requestDto, Recipe recipe) {
+        this.recipe = recipe;
+        this.mealDivision = requestDto.getCategory();
+        this.mealDay=requestDto.getDay();
+
+    }
 }

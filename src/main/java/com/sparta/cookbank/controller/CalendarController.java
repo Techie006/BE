@@ -19,9 +19,18 @@ public class CalendarController {
         return calendarService.getSpecificDayDiet(day,request);
     }
 
-    @PostMapping("/api/calendar")
+    @PostMapping("/api/calendar")    // 캘린더 생성
     public ResponseDto<?> createSpecificDayDiet(@RequestBody CalendarRequestDto requestDto,HttpServletRequest request){
         return calendarService.createSpecificDayDiet(requestDto,request);
     }
+
+    @PutMapping("/api/calendar/{id}")   // 캘린더 수정
+    public ResponseDto<?> updateSpecificDayDiet(@PathVariable Long id,
+                                                HttpServletRequest request,
+                                                @RequestBody CalendarRequestDto requestDto){
+        return calendarService.updateSpecificDayDiet(id, requestDto, request);
+    }
+
+
 
 }

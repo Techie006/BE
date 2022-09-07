@@ -32,6 +32,7 @@ public class CalendarService {
     private final CalendarRepository calendarRepository;
 
 
+    @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
 
         //토큰 유효성 검사
@@ -68,9 +69,10 @@ public class CalendarService {
         }
 
         CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                .day(day)
                 .meals(dtoList)
                 .build();
-        
+
         return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
     }
 
@@ -115,6 +117,56 @@ public class CalendarService {
 
         return ResponseDto.success(calendarResponseDto,"성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
+
+    @Transactional
+    public ResponseDto<?> updateSpecificDayDiet(Long id, CalendarRequestDto requestDto, HttpServletRequest request) {
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+
+        Calendar calendar = calendarRepository.findById(id).orElseThrow(
+                () -> new NullPointerException("해당 날짜에 작성된 식캘린더가 없습니다.")
+        );
+
+        // Request 에서 레시피에서 찾아야됨
+        Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
+
+        calendar.update(requestDto, recipe);
+
+
+        //북마크 확인하기
+        boolean liked = false;
+        LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
+        if(!(likedRecipe==null)){
+            liked = true;
+        }
+
+
+        CalendarResponseDto calendarResponseDto = CalendarResponseDto.builder()
+                .id(calendar.getId())
+                .recipe_name(calendar.getRecipe().getRCP_NM())
+                .time(calendar.getMealDivision().toString())
+                .day(calendar.getMealDay())
+                .liked(liked)
+                .category(calendar.getRecipe().getRCP_PAT2())
+                .calorie(calendar.getRecipe().getINFO_ENG())
+                .method(calendar.getRecipe().getRCP_WAY2())
+                .build();
+
+
+        return ResponseDto.success(calendarResponseDto,"준식");
+    }
+
+
+
+
+
+
+
+
+
 
     private void extracted(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
