@@ -63,7 +63,7 @@ public class MemberService {
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         String key = UUID.randomUUID().toString();
 
-        String emailPattern = "^[a-zA-Z\\d]+@[a-zA-Z\\d]+\\.[a-z]+$";
+        String emailPattern = "^\\w+@\\w+\\.\\w+(\\.\\w)?$";
         if(!Pattern.matches(emailPattern,requestDto.getEmail())){
             throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
         }
@@ -279,12 +279,8 @@ public class MemberService {
                 () -> new IllegalArgumentException("존재하지 않는 이메일입니다.")
         );
         if(member.getMail_key().equals(key)) {
-            if (member.isMail_auth()) {
-                return "already";
-            }
-            member.EmailCheck();
-            return "success";
+            if (!member.isMail_auth()) member.EmailCheck();
         }
-        return "fail";
+        return "http://localhost:3000/auth";
     }
 }
