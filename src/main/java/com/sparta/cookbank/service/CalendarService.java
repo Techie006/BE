@@ -3,6 +3,7 @@ package com.sparta.cookbank.service;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.LikeRecipe;
 import com.sparta.cookbank.domain.calendar.Calendar;
+import com.sparta.cookbank.domain.calendar.dto.CalendarListResponseDto;
 import com.sparta.cookbank.domain.calendar.dto.CalendarRequestDto;
 import com.sparta.cookbank.domain.calendar.dto.CalendarResponseDto;
 import com.sparta.cookbank.domain.donerecipe.DoneRecipe;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -36,12 +39,39 @@ public class CalendarService {
 
         // 멤버 유효성 검사
         Member member = getMember();
+        //해당 날짜 캘린더 다 찾기
+        List<Calendar> calendarList = calendarRepository.findAllByMealDay(day);
+        List<CalendarResponseDto> dtoList = new ArrayList<>();
 
 
+        for(int i = 0 ; i < calendarList.size() ; i++){
 
+            //나의 레시피 찾기
+            Recipe recipe = recipeRepository.findByRCP_NM(calendarList.get(i).getRecipe().getRCP_NM());
+            //북마크 확인하기
+            boolean liked = false;
+            LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
+            if(!(likedRecipe==null)){
+                liked = true;
+            }
 
+            dtoList.add(CalendarResponseDto.builder()
+                            .id(calendarList.get(i).getId())
+                            .recipe_name(calendarList.get(i).getRecipe().getRCP_NM())
+                            .time(calendarList.get(i).getMealDivision().toString())
+                            .day(calendarList.get(i).getMealDay())
+                            .liked(liked)
+                            .category(calendarList.get(i).getRecipe().getRCP_PAT2())
+                            .calorie(calendarList.get(i).getRecipe().getINFO_ENG())
+                            .method(calendarList.get(i).getRecipe().getRCP_WAY2())
+                    .build());
+        }
 
-        return ResponseDto.success("엄","준식");
+        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                .meals(dtoList)
+                .build();
+        
+        return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
     }
 
 
@@ -64,6 +94,7 @@ public class CalendarService {
                 .build();
         calendarRepository.save(calendar);
 
+        //북마크 확인하기
         boolean liked = false;
         LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
         if(!(likedRecipe==null)){
