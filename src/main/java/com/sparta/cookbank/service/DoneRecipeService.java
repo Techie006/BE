@@ -65,10 +65,10 @@ public class DoneRecipeService {
         stack.addAll(doneRecipeList);
 
         //시작날짜와 끝날짜 설정
-        LocalDate str = LocalDate.parse(requestDto.getStartDay());
+        LocalDate str = doneRecipeList.get(doneRecipeList.size() - 1).getCreatedAt();
         if (requestDto.getFilter().equals("month")) str = str.minusDays(str.getDayOfMonth() - 1);
         else if (requestDto.getFilter().equals("week")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
-        LocalDate end = LocalDate.parse(requestDto.getEndDay());
+        LocalDate end = doneRecipeList.get(0).getCreatedAt();
         LocalDate cur = str;
 
         //총합을 담을 리스트
@@ -100,12 +100,10 @@ public class DoneRecipeService {
                 DoneRecipe d = stack.pop();
                 Recipe dr = d.getRecipe();
                 if (d.getCreatedAt().isBefore(cur)) {
-                    if(!d.getCreatedAt().isBefore(str)) {
-                        csum += dr.getINFO_CAR();
-                        psum += dr.getINFO_PRO();
-                        fsum += dr.getINFO_FAT();
-                        ssum += dr.getINFO_NA();
-                    }
+                    csum += dr.getINFO_CAR();
+                    psum += dr.getINFO_PRO();
+                    fsum += dr.getINFO_FAT();
+                    ssum += dr.getINFO_NA();
                 } else {
                     stack.add(d);
                     break;
