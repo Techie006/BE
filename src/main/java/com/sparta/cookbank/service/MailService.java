@@ -18,7 +18,9 @@ public class MailService {
     private JavaMailSender emailSender;
 
     public void sendSimpleMessage(SignupRequestDto requestDto, String key) {
+        System.out.println("4");
         MimeMessage message = emailSender.createMimeMessage();
+        System.out.println("5");
         try {
             message.setFrom(new InternetAddress("food531335@gmail.com"));
             message.addRecipient(MimeMessage.RecipientType.TO, new InternetAddress(requestDto.getEmail()));
@@ -31,8 +33,11 @@ public class MailService {
                     "&key=" + key +
                     "' target='_blenk'>이메일 인증 확인</a>";
             message.setText(htmlContent, "UTF-8", "html");
+            System.out.println("6");
             emailSender.send(message);
+            System.out.println("7");
         } catch (MessagingException | MailException e) {
+            System.out.println("8");
             e.printStackTrace();
         }
     }
