@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
 
 @RequiredArgsConstructor
 @RestController
@@ -36,4 +37,8 @@ public class CalendarController {
         return calendarService.deleteSpecificDayDiet(id,request);
     }
 
+    @GetMapping("/api/calendar/week")
+    public ResponseDto<?> getSpecificWeekDiet(@RequestParam("day") String day,HttpServletRequest request ) throws ParseException {
+        return calendarService.getSpecificWeekDiet(day, request);
+    }
 }
