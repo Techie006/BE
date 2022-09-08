@@ -3,10 +3,7 @@ package com.sparta.cookbank.service;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.LikeRecipe;
 import com.sparta.cookbank.domain.calendar.Calendar;
-import com.sparta.cookbank.domain.calendar.dto.CalendarListResponseDto;
-import com.sparta.cookbank.domain.calendar.dto.CalendarRequestDto;
-import com.sparta.cookbank.domain.calendar.dto.CalendarResponseDto;
-import com.sparta.cookbank.domain.calendar.dto.CalendarWeekResponseDto;
+import com.sparta.cookbank.domain.calendar.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.repository.CalendarRepository;
@@ -25,6 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -150,6 +148,28 @@ public class CalendarService {
     }
 
 
+    public ResponseDto<?> deleteSpecificDayDiet(Long id, HttpServletRequest request) {
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+
+        Calendar calendar = calendarRepository.findById(id).orElseThrow(
+                () -> new NullPointerException("해당 날짜에 작성된 식캘린더가 없습니다.")
+        );
+
+        //타인 캘린더일시 차단
+        if(!getMember().getId().equals(calendar.getMember().getId())){
+            throw new RuntimeException("타인의 캘린더를 삭제할 수 없습니다.");
+        }
+
+        calendarRepository.delete(calendar);
+
+        return ResponseDto.success("","성공적으로 해당 날짜에 식단을 삭제하였습니다.");
+    }
+
+    @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificWeekDiet(String day, HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         extracted(request);
@@ -221,6 +241,52 @@ public class CalendarService {
         return ResponseDto.success(weekList,"준식");
     }
 
+    @Transactional(readOnly = true)
+    public ResponseDto<?> getSpecificMonthDiet(String day, HttpServletRequest request) throws ParseException {
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+
+        // date 구하기      2022-09
+        int year = Integer.parseInt(day.substring(0, 4));
+        int month = Integer.parseInt(day.substring(5, 7));
+        int dayOfMonth = 1;
+        // 해당월의 일수 구하기
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int daysInMonth = yearMonth.lengthOfMonth();
+
+        LocalDate date = LocalDate.of(year, month, dayOfMonth);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+
+        List<CalendarListResponseDto> calendarList = new ArrayList<>();
+        List<String> daysList = new ArrayList<>();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
+
+        for(int i =1 ; i<daysInMonth+1 ; i++){
+            String stringDay = String.valueOf(i);
+            Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day+"-"+stringDay);
+            String oneDay = df.format(inPutDay);
+            // 해당월 캘린더 들고오기
+            List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
+            daysList.add(oneDay);
+            calendarList.add(CalendarListResponseDto.builder()
+                    .day(oneDay)
+                    .meals(dtoList)
+                    .build());
+        }
+
+        CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
+                .days(daysList)
+                .monthMeals(calendarList)
+                .build();
+
+
+
+        return ResponseDto.success(monthList,"준식");
+    }
+
     private void inputWeekDiet(Member member, List<CalendarListResponseDto> calendarList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
         for(int i = 0 ; i < 7  ; i++){
             String oneDay = df.format(cal.getTime());  // oneDay "Mon Sep 05 00:00:00 KST 2022",
@@ -234,27 +300,6 @@ public class CalendarService {
                     .build());
             cal.add(java.util.Calendar.DATE, +1);
         }
-    }
-
-    public ResponseDto<?> deleteSpecificDayDiet(Long id, HttpServletRequest request) {
-        //토큰 유효성 검사
-        extracted(request);
-
-        // 멤버 유효성 검사
-        Member member = getMember();
-
-        Calendar calendar = calendarRepository.findById(id).orElseThrow(
-                () -> new NullPointerException("해당 날짜에 작성된 식캘린더가 없습니다.")
-        );
-
-        //타인 캘린더일시 차단
-        if(!getMember().getId().equals(calendar.getMember().getId())){
-            throw new RuntimeException("타인의 캘린더를 삭제할 수 없습니다.");
-        }
-
-        calendarRepository.delete(calendar);
-
-        return ResponseDto.success("","성공적으로 해당 날짜에 식단을 삭제하였습니다.");
     }
 
     private void extracted(HttpServletRequest request) {
@@ -276,7 +321,7 @@ public class CalendarService {
     }
 
     private List<CalendarResponseDto> getCalendar(String day, Member member) {
-        List<Calendar> calendarList = calendarRepository.findAllByMealDay(day);
+        List<Calendar> calendarList = calendarRepository.findAllByMealDayAndMember_Id(day, member.getId());
         List<CalendarResponseDto> dtoList = new ArrayList<>();
 
 
