@@ -98,8 +98,6 @@ public class IngredientService {
                 () -> new IllegalArgumentException("해당 음식 재료가 존재 하지 않습니다.")
         );
 
-
-
         MyIngredients myIngredients = MyIngredients.builder()
                 .member(member)
                 .ingredient(ingredient)
