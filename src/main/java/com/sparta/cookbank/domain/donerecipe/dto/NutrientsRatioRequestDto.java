@@ -11,6 +11,4 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NutrientsRatioRequestDto {
     private String filter;
-    private String startDay;
-    private String endDay;
 }

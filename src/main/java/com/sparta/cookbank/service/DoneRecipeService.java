@@ -19,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class DoneRecipeService {
 
 
     public void UsedIngredient(Long recipeId, DoneRecipeRequestDto requestDto) {
-        for(Long id : requestDto.getIngredients_id()){
+        for (Long id : requestDto.getIngredients_id()) {
             MyIngredients ingredients = myIngredientsRepository.findById(id).orElseThrow(
                     () -> new IllegalArgumentException("해당 재료가 없습니다.")
             );
@@ -44,7 +46,7 @@ public class DoneRecipeService {
             Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(
                     () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
             );
-            DoneRecipe doneRecipe = new DoneRecipe(member,recipe);
+            DoneRecipe doneRecipe = new DoneRecipe(member, recipe);
             doneRecipeRepository.save(doneRecipe);
         }
     }
@@ -56,67 +58,124 @@ public class DoneRecipeService {
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
 
+        //내림차순으로 받아와 스택에 저장
+        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_IdOrderByCreatedAtDesc(member.getId());
+        if (doneRecipeList.isEmpty()) throw new NullPointerException("완료한 레시피가 없습니다");
+        Stack<DoneRecipe> stack = new Stack<>();
+        stack.addAll(doneRecipeList);
 
-        List<String> days = List.of("2022.01", "2022.02", "2022.03", "2022.04", "2022.05", "2022.06", "2022.07", "2022.08", "2022.09", "2022.10", "2022.11", "2022.12");
-        long[] carbohydrates = new long[]{0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L};
-        long[] proteins = new long[]{0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L};
-        long[] fats = new long[]{0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L};
-        long[] sodium = new long[]{0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L};
+        //시작날짜와 끝날짜 설정
+        LocalDate str = doneRecipeList.get(doneRecipeList.size() - 1).getCreatedAt();
+        if (requestDto.getFilter().equals("month")) str = str.minusDays(str.getDayOfMonth() - 1);
+        else if (requestDto.getFilter().equals("week")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
+        LocalDate end = doneRecipeList.get(0).getCreatedAt();
+        LocalDate cur = str;
 
-        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_Id(member.getId());
-        for (DoneRecipe doneRecipe : doneRecipeList) {
-            if (requestDto.getFilter().equals("month")) {
-                for (int i = 0; i < 12; i++) {
-                    if (doneRecipe.getCreatedAt().getMonth().getValue() == i+1) {
-                        carbohydrates[i] += doneRecipe.getRecipe().getINFO_CAR();
-                        proteins[i] += doneRecipe.getRecipe().getINFO_PRO();
-                        fats[i] += doneRecipe.getRecipe().getINFO_FAT();
-                        sodium[i] += doneRecipe.getRecipe().getINFO_NA();
-                    } else {
-                        carbohydrates[i] += 0;
-                        proteins[i] += 0;
-                        fats[i] += 0;
-                        sodium[i] += 0;
-                    }
+        //총합을 담을 리스트
+        List<LocalDate> days = new ArrayList<>();
+        List<Long> carbohydrates = new ArrayList<>();
+        List<Long> proteins = new ArrayList<>();
+        List<Long> fats = new ArrayList<>();
+        List<Long> sodium = new ArrayList<>();
+
+        //cur>end될때까지 반복
+        while (!cur.isAfter(end)) {
+            days.add(cur);
+            switch (requestDto.getFilter()) {
+                case "month":
+                    cur = cur.plusMonths(1);
+                    break;
+                case "week":
+                    cur = cur.plusWeeks(1);
+                    break;
+                case "day":
+                    cur = cur.plusDays(1);
+                    break;
+            }
+            long csum = 0;
+            long psum = 0;
+            long fsum = 0;
+            long ssum = 0;
+            while (!stack.isEmpty()) {
+                DoneRecipe d = stack.pop();
+                Recipe dr = d.getRecipe();
+                if (d.getCreatedAt().isBefore(cur)) {
+                    csum += dr.getINFO_CAR();
+                    psum += dr.getINFO_PRO();
+                    fsum += dr.getINFO_FAT();
+                    ssum += dr.getINFO_NA();
+                } else {
+                    stack.add(d);
+                    break;
                 }
             }
-
+            carbohydrates.add(csum);
+            proteins.add(psum);
+            fats.add(fsum);
+            sodium.add(ssum);
         }
-        NutrientsRatioResponseDto nutrientsRatioResponseDto = NutrientsRatioResponseDto.builder()
+
+        return NutrientsRatioResponseDto.builder()
                 .days(days)
                 .carbohydrates(carbohydrates)
                 .proteins(proteins)
                 .fats(fats)
                 .sodium(sodium)
                 .build();
-        return nutrientsRatioResponseDto;
     }
 
     public CaloriesRatioResponseDto getCaloriesRatio(CaloriesRatioRequestDto requestDto) {
-
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
 
-        List<String> days = List.of("2022.01", "2022.02", "2022.03", "2022.04", "2022.05", "2022.06", "2022.07", "2022.08", "2022.09", "2022.10", "2022.11", "2022.12");
-        long[] calories = new long[]{0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L};
-        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_Id(member.getId());
-        for (DoneRecipe doneRecipe : doneRecipeList) {
-            if (requestDto.getFilter().equals("month")) {
-                for (int i = 0; i < 12; i++) {
-                    if (doneRecipe.getCreatedAt().getMonth().getValue() == i+1) {
-                        calories[i] += doneRecipe.getRecipe().getINFO_ENG();
-                    } else {
-                        calories[i] += 0;
-                    }
+        //내림차순으로 받아와 스택에 저장
+        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_IdOrderByCreatedAtDesc(member.getId());
+        if (doneRecipeList.isEmpty()) throw new NullPointerException("완료한 레시피가 없습니다");
+        Stack<DoneRecipe> stack = new Stack<>();
+        stack.addAll(doneRecipeList);
+
+        //시작날짜와 끝날짜 설정
+        LocalDate str = doneRecipeList.get(doneRecipeList.size() - 1).getCreatedAt();
+        if (requestDto.getFilter().equals("month")) str = str.minusDays(str.getDayOfMonth() - 1);
+        else if (requestDto.getFilter().equals("week")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
+        LocalDate end = doneRecipeList.get(0).getCreatedAt();
+        LocalDate cur = str;
+
+        //총합을 담을 리스트
+        List<LocalDate> days = new ArrayList<>();
+        List<Long> calories = new ArrayList<>();
+
+        while (!cur.isAfter(end)) {
+            days.add(cur);
+            switch (requestDto.getFilter()) {
+                case "month":
+                    cur = cur.plusMonths(1);
+                    break;
+                case "week":
+                    cur = cur.plusWeeks(1);
+                    break;
+                case "day":
+                    cur = cur.plusDays(1);
+                    break;
+            }
+            long csum = 0;
+            while (!stack.isEmpty()) {
+                DoneRecipe d = stack.pop();
+                Recipe dr = d.getRecipe();
+                if (d.getCreatedAt().isBefore(cur)) {
+                    csum += dr.getINFO_ENG();
+                } else {
+                    stack.add(d);
+                    break;
                 }
             }
+            calories.add(csum);
         }
-        CaloriesRatioResponseDto caloriesRatioResponseDto = CaloriesRatioResponseDto.builder()
+        return CaloriesRatioResponseDto.builder()
                 .days(days)
                 .calories(calories)
                 .build();
-        return caloriesRatioResponseDto;
     }
 
     @Transactional
@@ -125,7 +184,7 @@ public class DoneRecipeService {
                 () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
         );
         recipe.SetMainRecipe(requestDto);
-        Recipe nextRecipe = recipeRepository.findById(id+1).orElseThrow(
+        Recipe nextRecipe = recipeRepository.findById(id + 1).orElseThrow(
                 () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
         );
         return new RecipeFixResponseDto(nextRecipe);
@@ -138,60 +197,35 @@ public class DoneRecipeService {
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
 
-        List<List<Long>> today = new ArrayList<>();
-        Long todayCalorie = 0L;
-        Long todayCarbohydrates = 0L;
-        Long todayProteins = 0L;
-        Long todayFats = 0L;
-        Long todaySodium = 0L;
-        List<Long> todayNutrients = new ArrayList<>();
-        List<Long> todayCalories = new ArrayList<>();
-        List<List<Long>> yesterday = new ArrayList<>();
-        Long yesterdayCalorie = 0L;
-        Long yesterdayCarbohydrates = 0L;
-        Long yesterdayProteins = 0L;
-        Long yesterdayFats = 0L;
-        Long yesterdaySodium = 0L;
-        List<Long> yesterdayNutrients = new ArrayList<>();
-        List<Long> yesterdayCalories = new ArrayList<>();
-        LocalDate getToday = LocalDate.now();
-        LocalDate getYesterday = LocalDate.now().minusDays(1);
-        List<DoneRecipe> todayRecipeList = doneRecipeRepository.findByMember_IdAndCreatedAt(member.getId(), getToday);
-        for (DoneRecipe doneRecipe : todayRecipeList) {
-            todayCalorie += doneRecipe.getRecipe().getINFO_ENG();
-            todayCarbohydrates += doneRecipe.getRecipe().getINFO_CAR();
-            todayProteins += doneRecipe.getRecipe().getINFO_PRO();
-            todayFats += doneRecipe.getRecipe().getINFO_FAT();
-            todaySodium += doneRecipe.getRecipe().getINFO_NA();
-        }
-        todayCalories.add(todayCalorie);
-        todayNutrients.add(todayCarbohydrates);
-        todayNutrients.add(todayProteins);
-        todayNutrients.add(todayFats);
-        todayNutrients.add(todaySodium);
-        today.add(todayCalories);
-        today.add(todayNutrients);
-        List<DoneRecipe> yesterdayRecipeList = doneRecipeRepository.findByMember_IdAndCreatedAt(member.getId(), getYesterday);
-        for (DoneRecipe doneRecipe : yesterdayRecipeList) {
-            yesterdayCalorie += doneRecipe.getRecipe().getINFO_ENG();
-            yesterdayCarbohydrates += doneRecipe.getRecipe().getINFO_CAR();
-            yesterdayProteins += doneRecipe.getRecipe().getINFO_PRO();
-            yesterdayFats += doneRecipe.getRecipe().getINFO_FAT();
-            yesterdaySodium += doneRecipe.getRecipe().getINFO_NA();
-        }
-        yesterdayCalories.add(yesterdayCalorie);
-        yesterdayNutrients.add(yesterdayCarbohydrates);
-        yesterdayNutrients.add(yesterdayProteins);
-        yesterdayNutrients.add(yesterdayFats);
-        yesterdayNutrients.add(yesterdaySodium);
-        yesterday.add(yesterdayCalories);
-        yesterday.add(yesterdayNutrients);
+        // 현재 날짜 구하기
+        LocalDate today = LocalDate.now();
+        List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
+        List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
 
-        DailyRatioResponseDto dailyRatioResponseDto = DailyRatioResponseDto.builder()
-                .today(today)
-                .yesterday(yesterday)
+
+        return DailyRatioResponseDto.builder()
+                .today(getDayNutrientData(todayList))
+                .yesterday(getDayNutrientData(yesterdayList))
                 .build();
-        return dailyRatioResponseDto;
     }
 
+    public DayRatioDto getDayNutrientData(List<DoneRecipe> list){
+        long[] info = {0,0,0,0,0};
+        for (DoneRecipe d : list) {
+            Recipe r = d.getRecipe();
+            info[0] += r.getINFO_ENG();
+            info[1] += r.getINFO_CAR();
+            info[2] += r.getINFO_PRO();
+            info[3] += r.getINFO_FAT();
+            info[4] += r.getINFO_NA();
+        }
+        List<Long> nutrients = new ArrayList<>();
+        for(int i=1; i<5; i++) nutrients.add(info[i]);
+
+        return DayRatioDto.builder()
+                .calories(info[0])
+                .nutrients(nutrients)
+                .build();
+    }
 }
+
