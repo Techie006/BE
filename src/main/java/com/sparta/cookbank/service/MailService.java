@@ -25,7 +25,7 @@ public class MailService {
             message.setSubject("회원가입 인증메일");
             String htmlContent = "<h1>메일인증</h1>" +
                     "<br/>"+requestDto.getUsername()+"님 "+
-                    "<br/>FOODRECIPE에 회원가입해주셔서 감사합니다."+
+                    "<br/><i>Frigo</i>에 회원가입해주셔서 감사합니다."+
                     "<br/>아래 [이메일 인증 확인]을 눌러주세요."+
                     "<br/><a href='https://magorosc.shop/api/user/email?memberEmail=" + requestDto.getEmail() +
                     "&key=" + key +

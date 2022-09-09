@@ -52,6 +52,7 @@ dependencies {
 
     //웹 클라이언트
     compileOnly 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // https://mvnrepository.com/artifact/org.json/json
     implementation 'org.json:json:20160810'
     
