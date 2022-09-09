@@ -26,6 +26,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -187,8 +188,9 @@ public class CalendarService {
 
         // 리스트 넣기..
 
-        List<CalendarListResponseDto> calendarList = new ArrayList<>();
+
         List<String> daysList = new ArrayList<>();
+        List<List> list = new ArrayList<>();
 
         // 현재 날짜 Calendar사용
         Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day);
@@ -196,45 +198,41 @@ public class CalendarService {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
         cal.setTime(inPutDay); // 입력한 날짜로 계산 함!
 
+
         switch (dayOfWeekNumber) {
             case 1:  //월요일 , 앞 1
                 cal.add(java.util.Calendar.DATE, -1);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
             case 2:  //화요일, 앞 2
                 cal.add(java.util.Calendar.DATE, -2);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
-
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
             case 3:  //수요일 앞 3
                 cal.add(java.util.Calendar.DATE, -3);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
-
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
             case 4:  //목요일 앞 4
                 cal.add(java.util.Calendar.DATE, -4);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
-
-
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
             case 5:  //금요일 앞 5
                 cal.add(java.util.Calendar.DATE, -5);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
-
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
             case 6:  //토요일 앞 6
                 cal.add(java.util.Calendar.DATE, -6);
-                inputWeekDiet(member, calendarList, daysList, cal, df);
+                inputWeekDiet(member, list, daysList, cal, df);
 
                 break;
             case 7:  //일요일
-                inputWeekDiet(member, calendarList, daysList, cal, df);
+                inputWeekDiet(member, list, daysList, cal, df);
                 break;
         }
 
         CalendarWeekResponseDto weekList =  CalendarWeekResponseDto.builder()
                 .days(daysList)
-                .meals(calendarList)
+                .meals(list)
                 .build();
 
         return ResponseDto.success(weekList,"준식");
@@ -257,8 +255,8 @@ public class CalendarService {
         int daysInMonth = yearMonth.lengthOfMonth();
 
 
-        List<CalendarListResponseDto> calendarList = new ArrayList<>();
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
+        List<List> list = new ArrayList<>();
 
         for(int i =1 ; i<daysInMonth+1 ; i++){
             String stringDay = String.valueOf(i);
@@ -268,33 +266,26 @@ public class CalendarService {
             List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
 
             if(!dtoList.isEmpty()){
-                calendarList.add(CalendarListResponseDto.builder()
-                        .meals(dtoList)
-                        .build());
+                list.add(dtoList);
             }
-
 
         }
 
         CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
-                .meals(calendarList)
+                .meals(list)
                 .build();
-
-
-
         return ResponseDto.success(monthList,"준식");
     }
 
-    private void inputWeekDiet(Member member, List<CalendarListResponseDto> calendarList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
+    private void inputWeekDiet(Member member, List<List> calendarList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
         for(int i = 0 ; i < 7  ; i++){
             String oneDay = df.format(cal.getTime());  // oneDay "Mon Sep 05 00:00:00 KST 2022",
             //해당 하루 캘린더 식단 리스트 만들기
             List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
 
             daysList.add(oneDay);
-            calendarList.add(CalendarListResponseDto.builder()
-                    .meals(dtoList)
-                    .build());
+            calendarList.add(dtoList);
+
             cal.add(java.util.Calendar.DATE, +1);
         }
     }
