@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DailyRatioResponseDto {
-    private List<List<Long>> today;
-    private List<List<Long>> yesterday;
+    private DayRatioDto today;
+    private DayRatioDto yesterday;
 }
