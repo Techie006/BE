@@ -50,7 +50,6 @@ public class CalendarService {
         List<CalendarResponseDto> dtoList = getCalendar(day, member);
 
         CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
-                .day(day)
                 .meals(dtoList)
                 .build();
 
@@ -233,9 +232,9 @@ public class CalendarService {
                 break;
         }
 
-        CalendarWeekResponseDto weekList = CalendarWeekResponseDto.builder()
+        CalendarWeekResponseDto weekList =  CalendarWeekResponseDto.builder()
                 .days(daysList)
-                .weekMeals(calendarList)
+                .meals(calendarList)
                 .build();
 
         return ResponseDto.success(weekList,"준식");
@@ -257,11 +256,8 @@ public class CalendarService {
         YearMonth yearMonth = YearMonth.of(year, month);
         int daysInMonth = yearMonth.lengthOfMonth();
 
-        LocalDate date = LocalDate.of(year, month, dayOfMonth);
-        java.util.Calendar cal = java.util.Calendar.getInstance();
 
         List<CalendarListResponseDto> calendarList = new ArrayList<>();
-        List<String> daysList = new ArrayList<>();
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
 
         for(int i =1 ; i<daysInMonth+1 ; i++){
@@ -270,16 +266,18 @@ public class CalendarService {
             String oneDay = df.format(inPutDay);
             // 해당월 캘린더 들고오기
             List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
-            daysList.add(oneDay);
-            calendarList.add(CalendarListResponseDto.builder()
-                    .day(oneDay)
-                    .meals(dtoList)
-                    .build());
+
+            if(!dtoList.isEmpty()){
+                calendarList.add(CalendarListResponseDto.builder()
+                        .meals(dtoList)
+                        .build());
+            }
+
+
         }
 
         CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
-                .days(daysList)
-                .monthMeals(calendarList)
+                .meals(calendarList)
                 .build();
 
 
@@ -295,7 +293,6 @@ public class CalendarService {
 
             daysList.add(oneDay);
             calendarList.add(CalendarListResponseDto.builder()
-                    .day(oneDay)
                     .meals(dtoList)
                     .build());
             cal.add(java.util.Calendar.DATE, +1);
