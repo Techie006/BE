@@ -109,7 +109,6 @@ public class MemberService {
             throw new IllegalArgumentException("엑세스토큰이 잘못되었습니다.");
         }
         String refreshToken = request.getHeader("Refresh_Token");
-        System.out.println(refreshToken);
         // 서버에 해당 리프레시 토큰이 존재하는지 확인
         RefreshToken refreshTokenObj = refreshTokenRepository.findByTokenValue(refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("서버에 존재하지 않는 리프레시 토큰입니다."));
@@ -128,23 +127,19 @@ public class MemberService {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
-        System.out.println("member.getEmail() = " + member.getEmail());
         refreshTokenRepository.deleteByMember(member);
     }
 
 
     public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
-        System.out.println("코드: " + code);
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
-        System.out.println("엑세스 토큰: " + accessToken);
         // 2. 토큰으로 카카오 API 호출
         KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(accessToken);
 
 
         // DB 에 중복된 Kakao Id 가 있는지 확인
         String kakaoId = kakaoUserInfo.getId().toString();
-        System.out.println("유저정보: " + kakaoId);
         Member kakaoUser = memberRepository.findByKakaoId(kakaoId)
                 .orElse(null);
         if (kakaoUser == null) {
@@ -173,7 +168,6 @@ public class MemberService {
                 .baseUrl("https://kauth.kakao.com")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
-
         // 카카오 서버에 요청 보내기 & 응답 받기
         JsonNode response = client.post()
                 .uri(uriBuilder -> uriBuilder
@@ -184,7 +178,6 @@ public class MemberService {
                         .queryParam("code", code)
                         .build())
                 .retrieve().bodyToMono(JsonNode.class).block();
-        System.out.println("응답받음");
         return response.get("access_token").asText();
     }
 
@@ -202,7 +195,6 @@ public class MemberService {
                         .build())
                 .header("Authorization","Bearer " + accessToken)
                 .retrieve().bodyToMono(JsonNode.class).block();
-        System.out.println("응답 또받음");
         Long id = response.get("id").asLong();
         String nickname = response.get("properties")
                 .get("nickname").asText();
