@@ -12,5 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CalendarMonthResponseDto {
-    private List<CalendarListResponseDto> meals;
+    private List<List> meals;
 }

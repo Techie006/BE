@@ -13,18 +13,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice     // 글로벌로 적용된다.
 public class CustomExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleIllegalArgumentException(IllegalArgumentException exception) {
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("400",errorMessage);
     }
 
     @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleRuntimeException(RuntimeException exception){
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("400",errorMessage);
     }
     
     @ExceptionHandler(JsonProcessingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleJsonProcessingException(JsonProcessingException exception){
         String errorMessage = "readTree Fail" + exception.getMessage();
         return ResponseDto.fail("400",errorMessage);
@@ -32,6 +35,7 @@ public class CustomExceptionHandler {
 
     //시간초과 예외 만들기
     @ExceptionHandler(ExpiredJwtException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseDto<?> handleExpiredJwtException(ExpiredJwtException exception){
         String errorMessage = "토큰이 만료되었습니다.";
         return ResponseDto.fail("401",errorMessage);

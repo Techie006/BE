@@ -13,5 +13,5 @@ import java.util.List;
 @Builder
 public class CalendarWeekResponseDto {
     private List<String> days;
-    private  List<CalendarListResponseDto> meals;
+    private List<List> meals;
 }
