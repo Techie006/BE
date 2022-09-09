@@ -134,14 +134,17 @@ public class MemberService {
 
 
     public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
-        System.out.println(code);
+        System.out.println("코드: " + code);
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
+        System.out.println("엑세스 토큰: " + accessToken);
         // 2. 토큰으로 카카오 API 호출
         KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(accessToken);
 
+
         // DB 에 중복된 Kakao Id 가 있는지 확인
         String kakaoId = kakaoUserInfo.getId().toString();
+        System.out.println("유저정보: " + kakaoId);
         Member kakaoUser = memberRepository.findByKakaoId(kakaoId)
                 .orElse(null);
         if (kakaoUser == null) {
@@ -181,6 +184,7 @@ public class MemberService {
                         .queryParam("code", code)
                         .build())
                 .retrieve().bodyToMono(JsonNode.class).block();
+        System.out.println("응답받음");
         return response.get("access_token").asText();
     }
 
@@ -198,11 +202,13 @@ public class MemberService {
                         .build())
                 .header("Authorization","Bearer " + accessToken)
                 .retrieve().bodyToMono(JsonNode.class).block();
+        System.out.println("응답 또받음");
         Long id = response.get("id").asLong();
         String nickname = response.get("properties")
                 .get("nickname").asText();
         String email = response.get("kakao_account")
                 .get("email").asText();
+        if(email.isEmpty()) email = UUID.randomUUID().toString();
         return new KakaoUserInfoDto(id, nickname, email);
     }
 
