@@ -212,7 +212,6 @@ public class MemberService {
                 .get("email").asText();
         String image = response.get("properties")
                 .get("profile_image").asText();
-        if(email.isEmpty()) email = UUID.randomUUID().toString();
         return new KakaoUserInfoDto(id, nickname, email, image);
     }
 
