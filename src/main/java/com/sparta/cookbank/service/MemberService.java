@@ -53,7 +53,7 @@ public class MemberService {
     @Value("${google.redirect.url}")
     private String GOOGLE_REDIRECT_URI;
 
-    @Value("${default.profile.img")
+    @Value("${default.profile.img}")
     private String DEFAULT_PROFILE_IMG;
 
     @Transactional
