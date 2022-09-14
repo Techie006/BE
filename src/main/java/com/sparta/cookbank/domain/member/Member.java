@@ -23,6 +23,9 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String image;
+
     @Column
     private String kakaoId;
 
