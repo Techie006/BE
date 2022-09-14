@@ -87,6 +87,9 @@ public class RecipeService {
             throw new IllegalArgumentException("해당 레시피가 존재하지 않습니다.");
         });
 
+        // 해당 내용을 Redis에 저장
+
+
         // 재료들을 리스트에 담음
         List<String> ingredientsList = new ArrayList<>();
         ingredientsList.add(recipe.getRCP_PARTS_DTLS());

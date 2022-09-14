@@ -7,6 +7,7 @@ import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.*;
+import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
@@ -17,6 +18,8 @@ import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +39,8 @@ public class IngredientService {
     private final MemberRepository memberRepository;
     private final MyIngredientsRepository myIngredientsRepository;
     private final TokenProvider tokenProvider;
-
+    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisIngredientRepo redisIngredientRepo;
 
     @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
@@ -68,6 +72,12 @@ public class IngredientService {
     public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
+
+        // Redis  찾기를 할때 ingredient db를 캐시에 저장한다면??
+        HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
+        String key = "hashKey";
+        hashOperations.put(key, "ingredient",food_name);
+        List<Ingredient> ingredientList = redisIngredientRepo.findAllByFoodNameIsContaining(food_name);
 
         //해당 검색 찾기
         List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContaining(food_name);
