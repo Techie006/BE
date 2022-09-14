@@ -76,14 +76,13 @@ public class DoneRecipeService {
         List<Long> carbohydrates = new ArrayList<>();
         List<Long> proteins = new ArrayList<>();
         List<Long> fats = new ArrayList<>();
-        List<Long> sodium = new ArrayList<>();
 
         //cur>end될때까지 반복
         while (!cur.isAfter(end)) {
             days.add(cur);
             switch (requestDto.getFilter()) {
                 case "month":
-                    cur = cur.plusMonths(1);
+                        cur = cur.plusMonths(1);
                     break;
                 case "week":
                     cur = cur.plusWeeks(1);
@@ -95,7 +94,6 @@ public class DoneRecipeService {
             long csum = 0;
             long psum = 0;
             long fsum = 0;
-            long ssum = 0;
             while (!stack.isEmpty()) {
                 DoneRecipe d = stack.pop();
                 Recipe dr = d.getRecipe();
@@ -103,7 +101,6 @@ public class DoneRecipeService {
                     csum += dr.getINFO_CAR();
                     psum += dr.getINFO_PRO();
                     fsum += dr.getINFO_FAT();
-                    ssum += dr.getINFO_NA();
                 } else {
                     stack.add(d);
                     break;
@@ -112,7 +109,6 @@ public class DoneRecipeService {
             carbohydrates.add(csum);
             proteins.add(psum);
             fats.add(fsum);
-            sodium.add(ssum);
         }
 
         return NutrientsRatioResponseDto.builder()
@@ -120,7 +116,6 @@ public class DoneRecipeService {
                 .carbohydrates(carbohydrates)
                 .proteins(proteins)
                 .fats(fats)
-                .sodium(sodium)
                 .build();
     }
 
@@ -210,17 +205,16 @@ public class DoneRecipeService {
     }
 
     public DayRatioDto getDayNutrientData(List<DoneRecipe> list){
-        long[] info = {0,0,0,0,0};
+        long[] info = {0,0,0,0};
         for (DoneRecipe d : list) {
             Recipe r = d.getRecipe();
             info[0] += r.getINFO_ENG();
             info[1] += r.getINFO_CAR();
             info[2] += r.getINFO_PRO();
             info[3] += r.getINFO_FAT();
-            info[4] += r.getINFO_NA();
         }
         List<Long> nutrients = new ArrayList<>();
-        for(int i=1; i<5; i++) nutrients.add(info[i]);
+        for(int i=1; i<4; i++) nutrients.add(info[i]);
 
         return DayRatioDto.builder()
                 .calories(info[0])

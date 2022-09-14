@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
+import com.sparta.cookbank.domain.member.dto.MemberResponseDto;
 import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
 import com.sparta.cookbank.service.MemberService;
 import lombok.RequiredArgsConstructor;
@@ -30,9 +31,9 @@ public class MemberController {
             @RequestBody LoginRequestDto requestDto
             ,HttpServletResponse response
     ) {
-        Member member = memberService.login(requestDto,response);
+        MemberResponseDto responseDto = memberService.login(requestDto,response);
 
-        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+        return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
     }
 
     @PostMapping("/api/reissue")
@@ -51,14 +52,14 @@ public class MemberController {
 
     @GetMapping("/user/kakao/callback")
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        Member member = memberService.kakaoLogin(code,response);
-        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+        MemberResponseDto member = memberService.kakaoLogin(code,response);
+        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
     @GetMapping("/user/google/callback")
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        Member member = memberService.googleLogin(code, response);
-        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+        MemberResponseDto member = memberService.googleLogin(code, response);
+        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
     @GetMapping("/api/user/email")

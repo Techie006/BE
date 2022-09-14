@@ -3,10 +3,7 @@ package com.sparta.cookbank.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sparta.cookbank.domain.member.Member;
-import com.sparta.cookbank.domain.member.dto.GoogleUserInfoDto;
-import com.sparta.cookbank.domain.member.dto.KakaoUserInfoDto;
-import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
-import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
+import com.sparta.cookbank.domain.member.dto.*;
 import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
 import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import com.sparta.cookbank.repository.MemberRepository;
@@ -56,6 +53,9 @@ public class MemberService {
     @Value("${google.redirect.url}")
     private String GOOGLE_REDIRECT_URI;
 
+    @Value("${default.profile.img}")
+    private String DEFAULT_PROFILE_IMG;
+
     @Transactional
     public Long signup(SignupRequestDto requestDto) {
         if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -78,6 +78,7 @@ public class MemberService {
                 .email(requestDto.getEmail())
                 .username(requestDto.getUsername())
                 .password(encodedPassword)
+                .image(DEFAULT_PROFILE_IMG)
                 .mail_auth(false)
                 .mail_key(key)
                 .build();
@@ -85,7 +86,7 @@ public class MemberService {
         return memberRepository.save(member).getId();
     }
     @Transactional
-    public Member login(LoginRequestDto requestDto, HttpServletResponse response) {
+    public MemberResponseDto login(LoginRequestDto requestDto, HttpServletResponse response) {
         Member member = memberRepository.findByEmail(requestDto.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
 
@@ -97,7 +98,11 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
-        return member;
+        return MemberResponseDto.builder()
+                .member_id(member.getId())
+                .username(member.getUsername())
+                .profile_img(member.getImage())
+                .build();
     }
     @Transactional
     public Member reissue(HttpServletRequest request, HttpServletResponse response){
@@ -131,7 +136,7 @@ public class MemberService {
     }
 
 
-    public Member kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public MemberResponseDto kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -150,6 +155,7 @@ public class MemberService {
                     .email(kakaoUserInfo.getEmail())
                     .username(kakaoUserInfo.getNickname())
                     .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .image(kakaoUserInfo.getImage())
                     .kakaoId(kakaoId)
                     .mail_auth(true)
                     .build();
@@ -159,7 +165,11 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(kakaoUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
-        return kakaoUser;
+        return MemberResponseDto.builder()
+                .member_id(kakaoUser.getId())
+                .username(kakaoUser.getUsername())
+                .profile_img(kakaoUser.getImage())
+                .build();
     }
 
     private String getKakaoAccessToken(String code) throws JsonProcessingException {
@@ -200,11 +210,12 @@ public class MemberService {
                 .get("nickname").asText();
         String email = response.get("kakao_account")
                 .get("email").asText();
-        if(email.isEmpty()) email = UUID.randomUUID().toString();
-        return new KakaoUserInfoDto(id, nickname, email);
+        String image = response.get("properties")
+                .get("profile_image").asText();
+        return new KakaoUserInfoDto(id, nickname, email, image);
     }
 
-    public Member googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public MemberResponseDto googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getGoogleAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -220,6 +231,7 @@ public class MemberService {
                     .email(googleUserInfo.getEmail())
                     .username(googleUserInfo.getName())
                     .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .image(googleUserInfo.getImage())
                     .googleId(googleId)
                     .mail_auth(true)
                     .build();
@@ -229,7 +241,11 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(googleUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
-        return googleUser;
+        return MemberResponseDto.builder()
+                .member_id(googleUser.getId())
+                .username(googleUser.getUsername())
+                .profile_img(googleUser.getImage())
+                .build();
     }
 
     private String getGoogleAccessToken(String code) throws JsonProcessingException {
@@ -271,7 +287,8 @@ public class MemberService {
         String id = response.get("id").toString();
         String name = response.get("name").toString();
         String email = response.get("email").toString();
-        return new GoogleUserInfoDto(id,name,email);
+        String image = response.get("picture").toString();
+        return new GoogleUserInfoDto(id,name,email,image);
     }
 
     @Transactional
