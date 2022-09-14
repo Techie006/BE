@@ -17,5 +17,4 @@ public class NutrientsRatioResponseDto {
     private List<Long> carbohydrates;
     private List<Long> proteins;
     private List<Long> fats;
-    private List<Long> sodium;
 }

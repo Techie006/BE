@@ -12,6 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefrigeratorStateResponseDto {
-    private List<Double> percentage;
     private List<Integer>count;
+    private String status_msg;
 }
