@@ -33,7 +33,7 @@ public class MemberController {
     ) {
         MemberResponseDto responseDto = memberService.login(requestDto,response);
 
-        return ResponseDto.success(null,responseDto.getUsername() + "님 환영합니다.");
+        return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
     }
 
     @PostMapping("/api/reissue")
@@ -53,13 +53,13 @@ public class MemberController {
     @GetMapping("/user/kakao/callback")
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         MemberResponseDto member = memberService.kakaoLogin(code,response);
-        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
     @GetMapping("/user/google/callback")
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         MemberResponseDto member = memberService.googleLogin(code, response);
-        return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
+        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
     @GetMapping("/api/user/email")
