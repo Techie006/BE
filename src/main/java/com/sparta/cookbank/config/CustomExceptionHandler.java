@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,6 +39,12 @@ public class CustomExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseDto<?> handleExpiredJwtException(ExpiredJwtException exception){
         String errorMessage = "토큰이 만료되었습니다.";
+        return ResponseDto.fail("401",errorMessage);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseDto<?> handleUsernameNotFoundException(UsernameNotFoundException exception) {
+        String errorMessage = exception.getMessage();
         return ResponseDto.fail("401",errorMessage);
     }
 }

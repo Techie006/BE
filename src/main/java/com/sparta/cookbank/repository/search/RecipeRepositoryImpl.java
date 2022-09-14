@@ -7,6 +7,7 @@ import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeSearchRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,7 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
     // 검색 조건
     private BooleanExpression eqName(RecipeSearchRequestDto requestDto) {
         if (requestDto.getRecipe_name() == null || requestDto.getRecipe_name().isEmpty()) {
-            return null;
+            throw new InvalidDataAccessApiUsageException("검색어를 입력해주세요!");
         }
         return recipe.RCP_NM.containsIgnoreCase(requestDto.getRecipe_name());
     }

@@ -79,6 +79,9 @@ public class RecipeService {
     // 레시피 상세 조회
     @Transactional(readOnly = true)
     public RecipeDetailResultResponseDto getDetailRecipe(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("id를 입력해주세요!");
+        }
 
         Recipe recipe = recipeRepository.findById(id).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 레시피가 존재하지 않습니다.");
@@ -132,24 +135,10 @@ public class RecipeService {
     // 레시피 전체 조회
     @Transactional(readOnly = true)
     public RecipeResponseDto getAllRecipe(Pageable pageable) {
-        Page<Recipe> recipePage = recipeRepository.findAll(pageable);
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
 
-        for (Recipe recipe : recipePage) {
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
-            recipeAllResponseDtoList.add(
-                    RecipeAllResponseDto.builder()
-                            .id(recipe.getId())
-                            .recipe_name(recipe.getRCP_NM())
-                            .ingredients(ingredientsList)
-                            .final_img(recipe.getATT_FILE_NO_MK())
-                            .method(recipe.getRCP_WAY2())
-                            .category(recipe.getRCP_PAT2())
-                            .calorie(recipe.getINFO_ENG())
-                            .build()
-            );
-        }
+        Page<Recipe> recipePage = recipeRepository.findAll(pageable);
+
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = ConverterAllResponseDto(recipePage);
 
         RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
@@ -164,23 +153,13 @@ public class RecipeService {
     @Transactional(readOnly = true)
     public RecipeResponseDto searchRecipe(RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
 
+        // pageable과 requestdto를 이용해서 조회
         Page<Recipe> recipePage = recipeRepository.findBySearchOption(searchRequestDto,pageable);
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
-        List<String> ingredientsList = new ArrayList<>();
-        for (Recipe recipe : recipePage){
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
-            recipeAllResponseDtoList.add(
-                    RecipeAllResponseDto.builder()
-                            .id(recipe.getId())
-                            .recipe_name(recipe.getRCP_NM())
-                            .ingredients(ingredientsList)
-                            .final_img(recipe.getATT_FILE_NO_MK())
-                            .method(recipe.getRCP_WAY2())
-                            .category(recipe.getRCP_PAT2())
-                            .calorie(recipe.getINFO_ENG())
-                            .build()
-            );
-        }
+
+        // List형태로 각각 분리
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = ConverterAllResponseDto(recipePage);
+
+        // api 설계형식에 맞게 담아줌
         RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
@@ -199,8 +178,8 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(id).orElseThrow(() -> {
             throw  new IllegalArgumentException("해당 레시피를 찾을 수 없습니다.");
         });
-        LikeRecipe likeRecipe1 = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), recipe.getId());
-        if (!(likeRecipe1 == null)) {
+        LikeRecipe findLikeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), recipe.getId());
+        if (!(findLikeRecipe == null)) {
             throw new IllegalArgumentException("이미 북마크된 레시피 입니다.");
         }
         LikeRecipe likeRecipe = LikeRecipe.builder()
@@ -224,5 +203,25 @@ public class RecipeService {
             throw new IllegalArgumentException("이미 삭제한 레시피입니다.");
         }
         likeRecipeRepository.delete(likeRecipe);
+    }
+
+    private List<RecipeAllResponseDto> ConverterAllResponseDto(Page<Recipe> recipes) {
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
+        List<String> ingredientsList = new ArrayList<>();
+        for (Recipe recipe : recipes){
+            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+            recipeAllResponseDtoList.add(
+                    RecipeAllResponseDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .ingredients(ingredientsList)
+                            .final_img(recipe.getATT_FILE_NO_MK())
+                            .method(recipe.getRCP_WAY2())
+                            .category(recipe.getRCP_PAT2())
+                            .calorie(recipe.getINFO_ENG())
+                            .build()
+            );
+        }
+        return recipeAllResponseDtoList;
     }
 }

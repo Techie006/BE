@@ -10,9 +10,13 @@ import com.sparta.cookbank.domain.myingredients.dto.*;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
+import com.sparta.cookbank.security.JwtAccessDeniedHandler;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -278,16 +282,16 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public RefrigeratorStateResponseDto MyRefrigeratorState() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
+            throw new UsernameNotFoundException("로그인 한 유저를 찾을 수 없습니다.");
         });
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
 
-        List<Double> percentage = new ArrayList<>();
-        List<Integer> count = new ArrayList<>();
+        List<Integer> countList = new ArrayList<>();
 
         int worningCount = 0;
         int in_hurryCount = 0;
         int fineCount = 0;
+
         for (MyIngredients myIngredients : myIngredientsList) {
             String match = "[^0-9]";
             int exp_date = Integer.parseInt(myIngredients.getExpDate().replaceAll(match,""));
@@ -302,17 +306,27 @@ public class IngredientService {
                 throw new IllegalArgumentException("유통기한이 지난 재료 입니다.");
             }
         }
-        // 백분율을 구하고 거기에 Math.round 메소드를 이용해서 소수점 두번째자리까지 구함
-        percentage.add (Math.round ((((double) worningCount / (double) myIngredientsList.size() * 100))*100)/100.0);
-        percentage.add (Math.round ((((double) in_hurryCount / (double) myIngredientsList.size() * 100))*100)/100.0);
-        percentage.add (Math.round ((((double) fineCount / (double) myIngredientsList.size() * 100))*100)/100.0);
-        count.add(worningCount);
-        count.add(in_hurryCount);
-        count.add(fineCount);
+        int sumCount = worningCount + in_hurryCount + fineCount;
+
+        countList.add(in_hurryCount);
+        countList.add(worningCount);
+        countList.add(fineCount);
+
+        String statusMsg = "";
+
+        if (fineCount/sumCount >= 0.7) {
+            statusMsg = "아주 바람직한 상테네요!";
+        } else if (fineCount/sumCount >= 0.4 && fineCount/sumCount < 0.7 && worningCount/sumCount < 0.3) {
+            statusMsg = "상태가 양호해요!";
+        } else if (fineCount/sumCount < 0.4 && in_hurryCount/sumCount >=0.7) {
+            statusMsg = "냉장고에 조금 더 신경을 써보는 것이 좋을 것 같아요!";
+        } else if (worningCount/sumCount >= fineCount/sumCount ) {
+            statusMsg = "냉장고 관리가 필요합니다!";
+        }
 
         RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
-                .percentage(percentage)
-                .count(count)
+                .count(countList)
+                .status_msg(statusMsg)
                 .build();
         return refrigeratorStateResponseDto;
     }
@@ -321,118 +335,70 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public IngredientsByCategoryResponseDto ingredientsByCategory() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
+            throw new UsernameNotFoundException("로그인 한 유저를 찾을 수 없습니다.");
         });
-        int starch_num = 0;
-        int nut_num = 0;
-        int cereal_num = 0;
-        int fruit_num = 0;
-        int etc_num = 0;
-        int nan_num = 0;
-        int sugar_num = 0;
-        int pulses_num = 0;
-        int mushroom_num = 0;
-        int fish_num = 0;
-        int milkProducts_num = 0;
-        int fatAndOils_num = 0;
-        int meat_num = 0;
-        int drink_num = 0;
-        int processedFood_num = 0;
-        int seasoning_num = 0;
-        int alcohol_num = 0;
-        int tea_num = 0;
-        int vegetable_num = 0;
-        int seaweed_num = 0;
+        // 농산물
+        int produceNum = 0;
+        // 축산물
+        int livestockNum = 0;
+        // 수산물
+        int marineNum = 0;
+        // 음료류
+        int drinkNum = 0;
+        // 기타
+        int etcNum = 0;
+        // TODO: msg 출력 예시일뿐
+        String statusMsg = "";
+
+        // 개수를 담을 list 생성
+        List<Integer> countList = new ArrayList<>();
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
         if (myIngredientsList.isEmpty()) {
             throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
         }
+        // 카테고리별 재료 분류
         for (MyIngredients myIngredients : myIngredientsList) {
             switch (myIngredients.getIngredient().getFoodCategory()){
-                case 전분류:
-                    starch_num++;
+                // 농산물
+                case 전분류: case 견과류: case 곡류: case 과실류: case 두류: case 버섯류: case 채소류:
+                    produceNum++;
                     break;
-                case 견과류:
-                    nut_num++;
+                // 축산물
+                case 난류: case 육류:
+                    livestockNum++;
                     break;
-                case 곡류:
-                    cereal_num++;
+                // 수산물
+                case 어패류: case 해조류:
+                    marineNum++;
                     break;
-                case 과실류:
-                    fruit_num++;
+                // 음료류
+                case 음료류: case 주류: case 차류:
+                    drinkNum++;
                     break;
-                case 기타:
-                    etc_num++;
+                // 기타
+                case 기타: case 당류: case 유제품류: case 조리가공품류: case 유지류: case 조미료류:
+                    etcNum++;
                     break;
-                case 난류:
-                    nan_num++;
-                    break;
-                case 당류:
-                    sugar_num++;
-                    break;
-                case 두류:
-                    pulses_num++;
-                    break;
-                case 버섯류:
-                    mushroom_num++;
-                    break;
-                case 어패류:
-                    fish_num++;
-                    break;
-                case 유제품류:
-                    milkProducts_num++;
-                    break;
-                case 유지류:
-                    fatAndOils_num++;
-                    break;
-                case 육류:
-                    meat_num++;
-                    break;
-                case 음료류:
-                    drink_num++;
-                    break;
-                case 조리가공품류:
-                    processedFood_num++;
-                    break;
-                case 조미료류:
-                    seasoning_num++;
-                    break;
-                case 주류:
-                    alcohol_num++;
-                    break;
-                case 차류:
-                    tea_num++;
-                    break;
-                case 채소류:
-                    vegetable_num++;
-                    break;
-                case 해조류:
-                    seaweed_num++;
-                    break;
-                default:
             }
         }
+        countList.add(produceNum);
+        countList.add(livestockNum);
+        countList.add(marineNum);
+        countList.add(drinkNum);
+        countList.add(etcNum);
+
+        // 합계
+        int myIngredientsSumCount = produceNum + livestockNum + marineNum + drinkNum + etcNum;
+
+        for (int i = 0; i < countList.size(); i++) {
+            if (countList.get(i) / myIngredientsSumCount >= 0.7) {
+                statusMsg = "한 가지 종류의 비중이 높네요!";
+            }
+        }
+
         IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
-                .starch_num(starch_num)
-                .nut_num(nut_num)
-                .cereal_num(cereal_num)
-                .fruit_num(fruit_num)
-                .etc_num(etc_num)
-                .nan_num(nan_num)
-                .sugar_num(sugar_num)
-                .pulses_num(pulses_num)
-                .mushroom_num(mushroom_num)
-                .fish_num(fish_num)
-                .milkProducts_num(milkProducts_num)
-                .fatAndOils_num(fatAndOils_num)
-                .meat_num(meat_num)
-                .drink_num(drink_num)
-                .processedFood_num(processedFood_num)
-                .seasoning_num(seasoning_num)
-                .alcohol_num(alcohol_num)
-                .tea_num(tea_num)
-                .vegetable_num(vegetable_num)
-                .seaweed_num(seaweed_num)
+                .count(countList)
+                .status_msg(statusMsg)
                 .build();
         return ingredientsByCategoryResponseDto;
     }
