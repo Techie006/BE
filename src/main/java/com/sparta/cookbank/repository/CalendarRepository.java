@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface CalendarRepository extends JpaRepository<Calendar, Long> {
     List<Calendar> findAllByMealDayAndMember_Id(String day,Long id);
+    List<Calendar> findAllByMember_Id(Long id);
 }
