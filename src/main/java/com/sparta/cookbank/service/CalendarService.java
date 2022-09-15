@@ -235,7 +235,7 @@ public class CalendarService {
                 .meals(list)
                 .build();
 
-        return ResponseDto.success(weekList,"준식");
+        return ResponseDto.success(weekList,"성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
     @Transactional(readOnly = true)
@@ -246,35 +246,64 @@ public class CalendarService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        // date 구하기      2022-09
-        int year = Integer.parseInt(day.substring(0, 4));
-        int month = Integer.parseInt(day.substring(5, 7));
-        int dayOfMonth = 1;
-        // 해당월의 일수 구하기
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
+//        // date 구하기      2022-09
+//        int year = Integer.parseInt(day.substring(0, 4));
+//        int month = Integer.parseInt(day.substring(5, 7));
+//        int dayOfMonth = 1;
+//        // 해당월의 일수 구하기
+//        YearMonth yearMonth = YearMonth.of(year, month);
+//        int daysInMonth = yearMonth.lengthOfMonth();
+//
+//
+//        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
+//        List<List> list = new ArrayList<>();
+//
+//        for(int i =1 ; i<daysInMonth+1 ; i++){
+//            String stringDay = String.valueOf(i);
+//            Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day+"-"+stringDay);
+//            String oneDay = df.format(inPutDay);
+//            // 해당월 캘린더 들고오기
+//            List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
+//
+//            if(!dtoList.isEmpty()){
+//                list.add(dtoList);
+//            }
+//
+//        }
 
-
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
+        List<Calendar> calendarList = calendarRepository.findAllByMember_Id(member.getId());
         List<List> list = new ArrayList<>();
+        List<CalendarResponseDto> dtoList = new ArrayList<>();
+        for(int i = 0 ; i < calendarList.size() ; i++){
 
-        for(int i =1 ; i<daysInMonth+1 ; i++){
-            String stringDay = String.valueOf(i);
-            Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day+"-"+stringDay);
-            String oneDay = df.format(inPutDay);
-            // 해당월 캘린더 들고오기
-            List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
-
-            if(!dtoList.isEmpty()){
-                list.add(dtoList);
+            //나의 레시피 찾기
+            Recipe recipe = recipeRepository.findByRCP_NM(calendarList.get(i).getRecipe().getRCP_NM());
+            //북마크 확인하기
+            boolean liked = false;
+            LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
+            if(!(likedRecipe==null)){
+                liked = true;
             }
 
+            dtoList.add(CalendarResponseDto.builder()
+                    .id(calendarList.get(i).getId())
+                    .recipe_id(calendarList.get(i).getRecipe().getId())
+                    .recipe_name(calendarList.get(i).getRecipe().getRCP_NM())
+                    .time(calendarList.get(i).getMealDivision().toString())
+                    .day(calendarList.get(i).getMealDay())
+                    .liked(liked)
+                    .category(calendarList.get(i).getRecipe().getRCP_PAT2())
+                    .calorie(calendarList.get(i).getRecipe().getINFO_ENG())
+                    .method(calendarList.get(i).getRecipe().getRCP_WAY2())
+                    .build());
+            list.add(dtoList);
         }
+
 
         CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
                 .meals(list)
                 .build();
-        return ResponseDto.success(monthList,"준식");
+        return ResponseDto.success(monthList,"성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
     private void inputWeekDiet(Member member, List<List> calendarList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
@@ -326,6 +355,7 @@ public class CalendarService {
 
             dtoList.add(CalendarResponseDto.builder()
                     .id(calendarList.get(i).getId())
+                    .recipe_id(calendarList.get(i).getRecipe().getId())
                     .recipe_name(calendarList.get(i).getRecipe().getRCP_NM())
                     .time(calendarList.get(i).getMealDivision().toString())
                     .day(calendarList.get(i).getMealDay())

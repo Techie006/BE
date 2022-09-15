@@ -74,10 +74,7 @@ public class IngredientService {
         // Token 유효성 검사 없음
 
         // Redis  찾기를 할때 ingredient db를 캐시에 저장한다면??
-        HashOperations<String, Object, Object> hashOperations = redisTemplate.opsForHash();
-        String key = "hashKey";
-        hashOperations.put(key, "ingredient",food_name);
-        List<Ingredient> ingredientList = redisIngredientRepo.findAllByFoodNameIsContaining(food_name);
+
 
         //해당 검색 찾기
         List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContaining(food_name);
@@ -188,7 +185,7 @@ public class IngredientService {
                         .d_date("D"+ d_day)
                         .build());
 
-            }else if(diffDays < 7) {     // 7일 미만 HurryList 추가.
+            }else if(diffDays < 5) {     // 7일 미만 HurryList 추가.
                 d_day ="-"+diffDays.toString();
                 hurryList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())

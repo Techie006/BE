@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CalendarResponseDto {
     private Long id;
+    private Long recipe_id;
     private String recipe_name;
     private String time;
     private String day;
