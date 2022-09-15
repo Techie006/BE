@@ -27,9 +27,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -295,40 +294,40 @@ public class IngredientService {
 
         List<Integer> countList = new ArrayList<>();
 
-        int worningCount = 0;
-        int in_hurryCount = 0;
+        int warningCount = 0;
+        int inHurryCount = 0;
         int fineCount = 0;
 
+        // 5일 미만이면 hurry, < 0 warning
         for (MyIngredients myIngredients : myIngredientsList) {
             String match = "[^0-9]";
             int exp_date = Integer.parseInt(myIngredients.getExpDate().replaceAll(match,""));
             int in_date = Integer.parseInt(myIngredients.getInDate().replaceAll(match,""));
-            if ((exp_date - in_date) <= 3 && (exp_date - in_date) > 0) { // 남은 유통기한이 3일 이내일때
-                worningCount++;
-            } else if ((exp_date - in_date) <= 5 && (exp_date - in_date) > 3) { // 남은 유통기한이 5일 이하 3일 미만일때
-                in_hurryCount++;
-            } else if ((exp_date - in_date) > 5) { // 남은 유통기한이 5일 이상일때
+            if ((exp_date - in_date) < 5 && (exp_date - in_date) > 0) { // 남은 유통기한이 5일 미만일 때 = inHurry
+                inHurryCount++;
+            }  else if ((exp_date - in_date) >= 5) { // 남은 유통기한이 5일 이상일때
                 fineCount++;
             } else if ((exp_date - in_date) < 0) { // 유통기한이 지난 재료
-                throw new IllegalArgumentException("유통기한이 지난 재료 입니다.");
+                warningCount++;
             }
         }
-        int sumCount = worningCount + in_hurryCount + fineCount;
 
-        countList.add(in_hurryCount);
-        countList.add(worningCount);
+        int warningRate = warningCount/(inHurryCount+fineCount);
+
+        countList.add(inHurryCount);
+        countList.add(warningCount);
         countList.add(fineCount);
 
         String statusMsg = "";
 
-        if (fineCount/sumCount >= 0.7) {
-            statusMsg = "아주 바람직한 상테네요!";
-        } else if (fineCount/sumCount >= 0.4 && fineCount/sumCount < 0.7 && worningCount/sumCount < 0.3) {
-            statusMsg = "상태가 양호해요!";
-        } else if (fineCount/sumCount < 0.4 && in_hurryCount/sumCount >=0.7) {
-            statusMsg = "냉장고에 조금 더 신경을 써보는 것이 좋을 것 같아요!";
-        } else if (worningCount/sumCount >= fineCount/sumCount ) {
-            statusMsg = "냉장고 관리가 필요합니다!";
+        //유통기한지난거 1개라도있으면 관리 필요
+        // warning/sumCount = 10: 냉장고가 건강해요! / 30: 냉장고가 슬슬 위험해요! / 50: 냉장고가 아파요!
+        if (warningRate <= 0.1) {
+            statusMsg = "냉장고가 건강해요!";
+        } else if (warningRate > 0.1 && warningRate <= 0.45) {
+            statusMsg = "냉장고가 슬슬 위험해요!";
+        } else if (warningRate > 0.45) {
+            statusMsg = "냉장고가 아파요";
         }
 
         RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
@@ -354,8 +353,6 @@ public class IngredientService {
         int drinkNum = 0;
         // 기타
         int etcNum = 0;
-        // TODO: msg 출력 예시일뿐
-        String statusMsg = "";
 
         // 개수를 담을 list 생성
         List<Integer> countList = new ArrayList<>();
@@ -394,14 +391,64 @@ public class IngredientService {
         countList.add(drinkNum);
         countList.add(etcNum);
 
-        // 합계
-        int myIngredientsSumCount = produceNum + livestockNum + marineNum + drinkNum + etcNum;
+        List<String> statusMsgList = new ArrayList<>();
+        statusMsgList.add("오늘은 농산물 축제 어때요?");
+        statusMsgList.add("오늘은 고기 어때요?");
+        statusMsgList.add("오늘은 해산물 요리 어때요?");
 
-        for (int i = 0; i < countList.size(); i++) {
-            if (countList.get(i) / myIngredientsSumCount >= 0.7) {
-                statusMsg = "한 가지 종류의 비중이 높네요!";
+        List<String> randomMsg = new ArrayList<>();
+        String statusMsg = "";
+
+        int max = countList.get(0);
+        // 개수가 같으면 처음최대값이 출력됨
+        for (int i = 0; i < countList.size()-2; i++) {
+            if (countList.get(i) > max) {
+                max = countList.get(i);
             }
         }
+
+        // 수정 필요함
+        for (int i = 0; i < countList.size() - 2; i++) {
+            // 모든 값이 같을 때 모든 메세지 랜덤으로 출력
+            if (produceNum == livestockNum && produceNum == marineNum) {
+                Double random = Math.random();
+                int num = (int) Math.round(random * (statusMsgList.size() - 1));
+                statusMsg = statusMsgList.get(num);
+                break;
+                // 농산물과 축산물이 같고 최대 값일때 메세지 두가지만 출력
+            } else if (produceNum == livestockNum && produceNum == max) {
+                randomMsg.add(statusMsgList.get(0));
+                randomMsg.add(statusMsgList.get(1));
+                Double random = Math.random();
+                int num = (int) Math.round(random * (randomMsg.size() - 1));
+                statusMsg = randomMsg.get(num);
+                // 축산물과 수산물이 같고 축산물이 최대값일때
+            } else if (livestockNum == marineNum && livestockNum ==max) {
+                randomMsg.add(statusMsgList.get(1));
+                randomMsg.add(statusMsgList.get(2));
+                Double random = Math.random();
+                int num = (int) Math.round(random * (randomMsg.size() - 1));
+                statusMsg = randomMsg.get(num);
+                // 수산물과 농산물이 같고 수산물이 최대값일때
+            } else if (marineNum == produceNum && marineNum ==max) {
+                randomMsg.add(statusMsgList.get(2));
+                randomMsg.add(statusMsgList.get(0));
+                Double random = Math.random();
+                int num = (int) Math.round(random * (randomMsg.size() - 1));
+                statusMsg = randomMsg.get(num);
+            } else if (countList.get(i).equals(countList.get(0)) && countList.get(i) == max) {
+                randomMsg.add(statusMsgList.get(0));
+                randomMsg.add(statusMsgList.get(i));
+                Double random = Math.random();
+                int num = (int) Math.round(random * (randomMsg.size() - 1));
+                statusMsg = randomMsg.get(num);
+            } else if (countList.get(i) > countList.get(0) && countList.get(i) == max) {
+                statusMsg = statusMsgList.get(i);
+                break;
+
+            }
+        }
+
 
         IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
                 .count(countList)
