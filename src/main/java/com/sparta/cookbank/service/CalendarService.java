@@ -13,6 +13,8 @@ import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,7 @@ import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,24 +36,24 @@ public class CalendarService {
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final CalendarRepository calendarRepository;
-
+    private final RedisTemplate redisTemplate;
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
 
-        //토큰 유효성 검사
-        extracted(request);
-
-        // 멤버 유효성 검사
-        Member member = getMember();
-        //해당 날짜 캘린더 다 찾기
-        List<CalendarResponseDto> dtoList = getCalendar(day, member);
-
-        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
-                .meals(dtoList)
-                .build();
-
-        return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
+//        //토큰 유효성 검사
+//        extracted(request);
+//
+//        // 멤버 유효성 검사
+//        Member member = getMember();
+//        //해당 날짜 캘린더 다 찾기
+//        List<CalendarResponseDto> dtoList = getCalendar(day, member);
+//
+//        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+//                .meals(dtoList)
+//                .build();
+//
+        return ResponseDto.success("ListResponseDto","성공적으로 해당 날짜의 식단을 조회하였습니다.");
     }
 
 
@@ -87,6 +86,7 @@ public class CalendarService {
 
         CalendarResponseDto calendarResponseDto = CalendarResponseDto.builder()
                 .id(calendar.getId())
+                .recipe_id(calendar.getRecipe().getId())
                 .recipe_name(calendar.getRecipe().getRCP_NM())
                 .time(calendar.getMealDivision().toString())
                 .day(calendar.getMealDay())
@@ -96,7 +96,12 @@ public class CalendarService {
                 .method(calendar.getRecipe().getRCP_WAY2())
                 .build();
 
-        return ResponseDto.success(calendarResponseDto,"성공적으로 해당 날짜에 식단을 생성하였습니다");
+        CalendarMealsDto calendarMealsDto = CalendarMealsDto.builder()
+                .meals(calendarResponseDto)
+                .day(calendar.getMealDay())
+                .build();
+
+        return ResponseDto.success(calendarMealsDto,"성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
     @Transactional
@@ -134,6 +139,7 @@ public class CalendarService {
 
         CalendarResponseDto calendarResponseDto = CalendarResponseDto.builder()
                 .id(calendar.getId())
+                .recipe_id(calendar.getRecipe().getId())
                 .recipe_name(calendar.getRecipe().getRCP_NM())
                 .time(calendar.getMealDivision().toString())
                 .day(calendar.getMealDay())
@@ -143,8 +149,13 @@ public class CalendarService {
                 .method(calendar.getRecipe().getRCP_WAY2())
                 .build();
 
+        CalendarMealsDto calendarMealsDto = CalendarMealsDto.builder()
+                .meals(calendarResponseDto)
+                .day(calendar.getMealDay())
+                .build();
 
-        return ResponseDto.success(calendarResponseDto,"성공적으로 해당 날짜의 식단을 변경하였습니다.");
+
+        return ResponseDto.success(calendarMealsDto,"성공적으로 해당 날짜의 식단을 변경하였습니다.");
     }
 
 
@@ -164,9 +175,34 @@ public class CalendarService {
             throw new RuntimeException("타인의 캘린더를 삭제할 수 없습니다.");
         }
 
+        Recipe recipe = recipeRepository.findByRCP_NM(calendar.getRecipe().getRCP_NM());
+        //북마크 확인하기
+        boolean liked = false;
+        LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
+        if(!(likedRecipe==null)){
+            liked = true;
+        }
+
+        CalendarResponseDto calendarResponseDto = CalendarResponseDto.builder()
+                .id(calendar.getId())
+                .recipe_id(calendar.getRecipe().getId())
+                .recipe_name(calendar.getRecipe().getRCP_NM())
+                .time(calendar.getMealDivision().toString())
+                .day(calendar.getMealDay())
+                .liked(liked)
+                .category(calendar.getRecipe().getRCP_PAT2())
+                .calorie(calendar.getRecipe().getINFO_ENG())
+                .method(calendar.getRecipe().getRCP_WAY2())
+                .build();
+        CalendarMealsDto calendarMealsDto = CalendarMealsDto.builder()
+                .meals(calendarResponseDto)
+                .day(calendar.getMealDay())
+                .build();
+
         calendarRepository.delete(calendar);
 
-        return ResponseDto.success("","성공적으로 해당 날짜에 식단을 삭제하였습니다.");
+        return ResponseDto.success(calendarMealsDto,"성공적으로 해당 날짜에 식단을 삭제하였습니다.");
+
     }
 
     @Transactional(readOnly = true)
@@ -190,7 +226,7 @@ public class CalendarService {
 
 
         List<String> daysList = new ArrayList<>();
-        List<List> list = new ArrayList<>();
+        List<CalendarResponseDto> dtoList = new ArrayList<>();
 
         // 현재 날짜 Calendar사용
         Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day);
@@ -202,37 +238,37 @@ public class CalendarService {
         switch (dayOfWeekNumber) {
             case 1:  //월요일 , 앞 1
                 cal.add(java.util.Calendar.DATE, -1);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
             case 2:  //화요일, 앞 2
                 cal.add(java.util.Calendar.DATE, -2);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
             case 3:  //수요일 앞 3
                 cal.add(java.util.Calendar.DATE, -3);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
             case 4:  //목요일 앞 4
                 cal.add(java.util.Calendar.DATE, -4);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
             case 5:  //금요일 앞 5
                 cal.add(java.util.Calendar.DATE, -5);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
             case 6:  //토요일 앞 6
                 cal.add(java.util.Calendar.DATE, -6);
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
 
                 break;
             case 7:  //일요일
-                inputWeekDiet(member, list, daysList, cal, df);
+                inputWeekDiet(member, dtoList, daysList, cal, df);
                 break;
         }
 
         CalendarWeekResponseDto weekList =  CalendarWeekResponseDto.builder()
                 .days(daysList)
-                .meals(list)
+                .meals(dtoList)
                 .build();
 
         return ResponseDto.success(weekList,"성공적으로 해당 날짜에 식단을 생성하였습니다");
@@ -272,7 +308,6 @@ public class CalendarService {
 //        }
 
         List<Calendar> calendarList = calendarRepository.findAllByMember_Id(member.getId());
-        List<List> list = new ArrayList<>();
         List<CalendarResponseDto> dtoList = new ArrayList<>();
         for(int i = 0 ; i < calendarList.size() ; i++){
 
@@ -297,22 +332,19 @@ public class CalendarService {
                     .method(calendarList.get(i).getRecipe().getRCP_WAY2())
                     .build());
         }
-        list.add(dtoList);
 
         CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
-                .meals(list)
+                .meals(dtoList)
                 .build();
         return ResponseDto.success(monthList,"성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
-    private void inputWeekDiet(Member member, List<List> calendarList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
+    private void inputWeekDiet(Member member,  List<CalendarResponseDto> dtoList, List<String> daysList, java.util.Calendar cal, DateFormat df) {
         for(int i = 0 ; i < 7  ; i++){
             String oneDay = df.format(cal.getTime());  // oneDay "Mon Sep 05 00:00:00 KST 2022",
             //해당 하루 캘린더 식단 리스트 만들기
-            List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
-
+            getCalendar(oneDay, member, dtoList);
             daysList.add(oneDay);
-            calendarList.add(dtoList);
 
             cal.add(java.util.Calendar.DATE, +1);
         }
@@ -336,9 +368,9 @@ public class CalendarService {
         throw new RuntimeException("not valid token !!");
     }
 
-    private List<CalendarResponseDto> getCalendar(String day, Member member) {
+    private List<CalendarResponseDto> getCalendar(String day, Member member, List<CalendarResponseDto> dtoList) {
         List<Calendar> calendarList = calendarRepository.findAllByMealDayAndMember_Id(day, member.getId());
-        List<CalendarResponseDto> dtoList = new ArrayList<>();
+//        List<CalendarResponseDto> dtoList = new ArrayList<>();
 
 
         for(int i = 0 ; i < calendarList.size() ; i++){
