@@ -5,13 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CalendarWeekResponseDto {
-    private List<String> days;
-    private List meals;
+public class CalendarMealsDto {
+    private CalendarResponseDto meals;
+    private String day;
 }
