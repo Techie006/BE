@@ -296,9 +296,8 @@ public class CalendarService {
                     .calorie(calendarList.get(i).getRecipe().getINFO_ENG())
                     .method(calendarList.get(i).getRecipe().getRCP_WAY2())
                     .build());
-            list.add(dtoList);
         }
-
+        list.add(dtoList);
 
         CalendarMonthResponseDto monthList = CalendarMonthResponseDto.builder()
                 .meals(list)
