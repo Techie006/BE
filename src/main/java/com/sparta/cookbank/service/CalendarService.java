@@ -13,8 +13,6 @@ import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +34,7 @@ public class CalendarService {
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final CalendarRepository calendarRepository;
-    private final RedisTemplate redisTemplate;
+   
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
