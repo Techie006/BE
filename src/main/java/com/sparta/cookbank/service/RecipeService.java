@@ -210,8 +210,8 @@ public class RecipeService {
 
     private List<RecipeAllResponseDto> ConverterAllResponseDto(Page<Recipe> recipes) {
         List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
-        List<String> ingredientsList = new ArrayList<>();
         for (Recipe recipe : recipes){
+            List<String> ingredientsList = new ArrayList<>();
             ingredientsList.add(recipe.getRCP_PARTS_DTLS());
             recipeAllResponseDtoList.add(
                     RecipeAllResponseDto.builder()
