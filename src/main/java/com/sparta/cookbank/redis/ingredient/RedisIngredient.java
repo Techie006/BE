@@ -14,8 +14,8 @@ import javax.persistence.Id;
 public class RedisIngredient {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String foodName;
     private FoodCategory foodCategory;
     public enum FoodCategory {
