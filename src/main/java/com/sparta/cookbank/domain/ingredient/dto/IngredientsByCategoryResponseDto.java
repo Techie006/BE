@@ -13,5 +13,4 @@ import java.util.List;
 @Getter
 public class IngredientsByCategoryResponseDto {
     private List<Integer> count;
-    private String status_msg;
 }
