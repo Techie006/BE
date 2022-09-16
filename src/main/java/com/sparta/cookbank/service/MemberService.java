@@ -2,19 +2,21 @@ package com.sparta.cookbank.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sparta.cookbank.config.RedisConfig;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.member.dto.*;
-import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
 import com.sparta.cookbank.domain.refreshToken.RefreshToken;
+import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RefreshTokenRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.*;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,7 @@ public class MemberService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     private final MailService mailService;
+    private final RedisTemplate<String, String> redisTemplate;
 
 
 
@@ -101,6 +104,10 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
+
+        //레디스 저장 600초 동안 캐시에 저장..
+        redisTemplate.opsForValue().set("RT :"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
+
         return MemberResponseDto.builder()
                 .member_id(member.getId())
                 .username(member.getUsername())

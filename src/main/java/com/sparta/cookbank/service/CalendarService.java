@@ -41,19 +41,21 @@ public class CalendarService {
     @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
 
-//        //토큰 유효성 검사
-//        extracted(request);
-//
-//        // 멤버 유효성 검사
-//        Member member = getMember();
-//        //해당 날짜 캘린더 다 찾기
-//        List<CalendarResponseDto> dtoList = getCalendar(day, member);
-//
-//        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
-//                .meals(dtoList)
-//                .build();
-//
-        return ResponseDto.success("ListResponseDto","성공적으로 해당 날짜의 식단을 조회하였습니다.");
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+        //해당 날짜 캘린더 다 찾기
+        List<CalendarResponseDto> dtoList = new ArrayList<>();
+        List<CalendarResponseDto> mealList = getCalendar(day, member,dtoList);
+
+        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                .day(day)
+                .meals(mealList)
+                .build();
+
+        return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
     }
 
 
