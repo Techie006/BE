@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 
@@ -108,6 +109,16 @@ class RecipeServiceTest {
 //    @DisplayName("레시피 북마크 정상 케이스")
 //    void likeRecipe() {
 //        // given
+//        Member member = Member.builder()
+//                .id(1L)
+//                .email("admin1234@naver.com")
+//                .username("admin1234")
+//                .password("admin1234")
+//                .image("sadkmk111")
+//                .build();
+//
+//        UserDetails userDetails = new User(member);
+//
 //        Long recipeId = 1L;
 //        Authentication a = SecurityContextHolder.getContext().getAuthentication();
 //        UserDetails principal = (UserDetails) a.getPrincipal();
