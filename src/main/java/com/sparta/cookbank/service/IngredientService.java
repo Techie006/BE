@@ -1,25 +1,20 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.ResponseDto;
+import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.ingredient.dto.*;
 import com.sparta.cookbank.domain.member.Member;
-import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.*;
 import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
-import com.sparta.cookbank.security.JwtAccessDeniedHandler;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
-import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,8 +22,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +34,7 @@ public class IngredientService {
     private final MemberRepository memberRepository;
     private final MyIngredientsRepository myIngredientsRepository;
     private final TokenProvider tokenProvider;
-    private final RedisTemplate<String, String> redisTemplate;
+
     private final RedisIngredientRepo redisIngredientRepo;
 
     @Transactional(readOnly = true)
