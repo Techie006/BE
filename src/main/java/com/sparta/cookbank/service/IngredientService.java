@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -288,7 +289,7 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public RefrigeratorStateResponseDto MyRefrigeratorState() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new UsernameNotFoundException("로그인 한 유저를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
 
@@ -312,27 +313,12 @@ public class IngredientService {
             }
         }
 
-        int warningRate = warningCount/(inHurryCount+fineCount);
-
         countList.add(inHurryCount);
         countList.add(warningCount);
         countList.add(fineCount);
 
-        String statusMsg = "";
-
-        //유통기한지난거 1개라도있으면 관리 필요
-        // warning/sumCount = 10: 냉장고가 건강해요! / 30: 냉장고가 슬슬 위험해요! / 50: 냉장고가 아파요!
-        if (warningRate <= 0.1) {
-            statusMsg = "냉장고가 건강해요!";
-        } else if (warningRate > 0.1 && warningRate <= 0.45) {
-            statusMsg = "냉장고가 슬슬 위험해요!";
-        } else if (warningRate > 0.45) {
-            statusMsg = "냉장고가 아파요";
-        }
-
         RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
                 .count(countList)
-                .status_msg(statusMsg)
                 .build();
         return refrigeratorStateResponseDto;
     }
@@ -341,7 +327,7 @@ public class IngredientService {
     @Transactional(readOnly = true)
     public IngredientsByCategoryResponseDto ingredientsByCategory() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new UsernameNotFoundException("로그인 한 유저를 찾을 수 없습니다.");
+            throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
         // 농산물
         int produceNum = 0;
@@ -391,68 +377,9 @@ public class IngredientService {
         countList.add(drinkNum);
         countList.add(etcNum);
 
-        List<String> statusMsgList = new ArrayList<>();
-        statusMsgList.add("오늘은 농산물 축제 어때요?");
-        statusMsgList.add("오늘은 고기 어때요?");
-        statusMsgList.add("오늘은 해산물 요리 어때요?");
-
-        List<String> randomMsg = new ArrayList<>();
-        String statusMsg = "";
-
-        int max = countList.get(0);
-        // 개수가 같으면 처음최대값이 출력됨
-        for (int i = 0; i < countList.size()-2; i++) {
-            if (countList.get(i) > max) {
-                max = countList.get(i);
-            }
-        }
-
-        // 수정 필요함
-        for (int i = 0; i < countList.size() - 2; i++) {
-            // 모든 값이 같을 때 모든 메세지 랜덤으로 출력
-            if (produceNum == livestockNum && produceNum == marineNum) {
-                Double random = Math.random();
-                int num = (int) Math.round(random * (statusMsgList.size() - 1));
-                statusMsg = statusMsgList.get(num);
-                break;
-                // 농산물과 축산물이 같고 최대 값일때 메세지 두가지만 출력
-            } else if (produceNum == livestockNum && produceNum == max) {
-                randomMsg.add(statusMsgList.get(0));
-                randomMsg.add(statusMsgList.get(1));
-                Double random = Math.random();
-                int num = (int) Math.round(random * (randomMsg.size() - 1));
-                statusMsg = randomMsg.get(num);
-                // 축산물과 수산물이 같고 축산물이 최대값일때
-            } else if (livestockNum == marineNum && livestockNum ==max) {
-                randomMsg.add(statusMsgList.get(1));
-                randomMsg.add(statusMsgList.get(2));
-                Double random = Math.random();
-                int num = (int) Math.round(random * (randomMsg.size() - 1));
-                statusMsg = randomMsg.get(num);
-                // 수산물과 농산물이 같고 수산물이 최대값일때
-            } else if (marineNum == produceNum && marineNum ==max) {
-                randomMsg.add(statusMsgList.get(2));
-                randomMsg.add(statusMsgList.get(0));
-                Double random = Math.random();
-                int num = (int) Math.round(random * (randomMsg.size() - 1));
-                statusMsg = randomMsg.get(num);
-            } else if (countList.get(i).equals(countList.get(0)) && countList.get(i) == max) {
-                randomMsg.add(statusMsgList.get(0));
-                randomMsg.add(statusMsgList.get(i));
-                Double random = Math.random();
-                int num = (int) Math.round(random * (randomMsg.size() - 1));
-                statusMsg = randomMsg.get(num);
-            } else if (countList.get(i) > countList.get(0) && countList.get(i) == max) {
-                statusMsg = statusMsgList.get(i);
-                break;
-
-            }
-        }
-
 
         IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
                 .count(countList)
-                .status_msg(statusMsg)
                 .build();
         return ingredientsByCategoryResponseDto;
     }
