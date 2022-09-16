@@ -111,6 +111,36 @@ public class DoneRecipeService {
             fats.add(fsum);
         }
 
+        //출력 7개로 맞추기
+        int size = days.size();
+        if(size > 7){
+            days = days.subList(size-7, size);
+            carbohydrates = carbohydrates.subList(size-7,size);
+            proteins = proteins.subList(size-7,size);
+            fats = fats.subList(size-7,size);
+        }
+        else{
+            while(size<7){
+                switch (requestDto.getFilter()) {
+                    case "month":
+                        str = str.minusMonths(1);
+                        break;
+                    case "week":
+                        str = str.minusWeeks(1);
+                        break;
+                    case "day":
+                        str = str.minusDays(1);
+                        break;
+                }
+                days.add(0,str);
+                carbohydrates.add(0,0L);
+                proteins.add(0,0L);
+                fats.add(0,0L);
+
+                size++;
+            }
+        }
+
         return NutrientsRatioResponseDto.builder()
                 .days(days)
                 .carbohydrates(carbohydrates)
@@ -167,6 +197,33 @@ public class DoneRecipeService {
             }
             calories.add(csum);
         }
+
+        //출력 7개로 맞추기
+        int size = days.size();
+        if(size > 7){
+            days = days.subList(size-7, size);
+            calories = calories.subList(size-7,size);
+        }
+        else{
+            while(size<7){
+                switch (requestDto.getFilter()) {
+                    case "month":
+                        str = str.minusMonths(1);
+                        break;
+                    case "week":
+                        str = str.minusWeeks(1);
+                        break;
+                    case "day":
+                        str = str.minusDays(1);
+                        break;
+                }
+                days.add(0,str);
+                calories.add(0,0L);
+
+                size++;
+            }
+        }
+
         return CaloriesRatioResponseDto.builder()
                 .days(days)
                 .calories(calories)
