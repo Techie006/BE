@@ -13,5 +13,4 @@ import java.util.List;
 @AllArgsConstructor
 public class RefrigeratorStateResponseDto {
     private List<Integer>count;
-    private String status_msg;
 }
