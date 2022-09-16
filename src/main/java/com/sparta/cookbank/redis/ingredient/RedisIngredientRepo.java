@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface RedisIngredientRepo extends CrudRepository<RedisIngredient, String> {
+public interface RedisIngredientRepo extends CrudRepository<RedisIngredient, Long> {
 
-    List<Ingredient> findAllByFoodNameIsContaining(String food_name);
+    List<RedisIngredient> findAllByFoodNameIsContaining(String food_name);
 }
