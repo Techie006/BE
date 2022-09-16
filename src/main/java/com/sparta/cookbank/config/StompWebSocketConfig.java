@@ -30,8 +30,8 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     // 스톰프 인터셉터 추가
-    @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(stompInterceptor);
-    }
+//    @Override
+//    public void configureClientInboundChannel(ChannelRegistration registration) {
+//        registration.interceptors(stompInterceptor);
+//    }
 }
