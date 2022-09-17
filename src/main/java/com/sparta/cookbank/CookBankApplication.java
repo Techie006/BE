@@ -23,7 +23,7 @@ public class CookBankApplication {
                 registry.addMapping("/**")
                         .allowedMethods("*")
                         .allowedHeaders("*")
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins("http://localhost:3000", "http://frigo.kr", "https://frigo.kr")
                         .exposedHeaders("Authorization","Refresh_Token")
                         .allowCredentials(true);
             }
