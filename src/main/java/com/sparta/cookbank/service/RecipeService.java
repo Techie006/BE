@@ -33,6 +33,9 @@ public class RecipeService {
         });
 
         // base 재료가 포함된 모든 레시피를 가져옴
+        String base = requestDto.getBase().split(",")[0];
+        String input = base.split(" ")[0];
+        requestDto.setBase(input);
         List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto);
         List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
         for (Recipe recipe : recipeList) {
