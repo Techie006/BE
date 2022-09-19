@@ -7,12 +7,15 @@ import com.sparta.cookbank.domain.ingredient.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.*;
+import com.sparta.cookbank.redis.ingredient.RedisIngredient;
+import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.IngredientsRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +27,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +37,7 @@ public class IngredientService {
     private final MemberRepository memberRepository;
     private final MyIngredientsRepository myIngredientsRepository;
     private final TokenProvider tokenProvider;
-
-
+    private final RedisIngredientRepo redisIngredientRepo;
 
     @Transactional(readOnly = true)
     public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
@@ -47,7 +49,7 @@ public class IngredientService {
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
         // 5개만 보여주기
-        for(int i=0; i<5; i++){
+        for (int i = 0; i < 5; i++) {
             dtoList.add(IngredientResponseDto.builder()
                     .id(ingredients.get(i).getId())
                     .food_name(ingredients.get(i).getFoodName())
@@ -60,15 +62,13 @@ public class IngredientService {
                 .build();
 
 
-        return ResponseDto.success(responseDto,"자동완성 리스트 제공에 성공하였습니다.");
+        return ResponseDto.success(responseDto, "자동완성 리스트 제공에 성공하였습니다.");
     }
 
     @Transactional(readOnly = true)
     public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
-
-        // Redis  찾기를 할때 ingredient db를 캐시에 저장한다면??
 
 
         //해당 검색 찾기
@@ -112,7 +112,8 @@ public class IngredientService {
                 .expDate(requestDto.getExp_date())
                 .build();
         myIngredientsRepository.save(myIngredients);
-
+        // 레디스 캐시 초기화.
+        redisIngredientRepo.deleteAll();
         return ResponseDto.success("","작성완료");
     }
 
@@ -125,7 +126,6 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-
         // 나의 재료 전체조회
         if(storage.equals("")){
             List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
@@ -135,12 +135,29 @@ public class IngredientService {
             return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
         }else {
             // Storage별 조회
-            Storage storage1 = Storage.valueOf(storage);
-            List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage1);
-            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
-            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
+            Optional<RedisIngredient> ingredientList = redisIngredientRepo.findById(storage);
 
-            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+            // 캐시에서 확인, 만약 없을시 DB에서 검색후 캐시저장.
+            if(ingredientList.isEmpty()){
+                Storage storage1 = Storage.valueOf(storage);
+                List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage1);
+                List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+                StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
+                //레디스 캐시에 저장..
+                RedisIngredient redisIngredient = RedisIngredient.builder()
+                        .id(storage)
+                        .storageList(responseDto)
+                        .build();
+                //레디스 캐시에 저장..
+                redisIngredientRepo.save(redisIngredient);
+
+                return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+            }else {   // 캐시에 있을시 캐시를 출력.
+                RedisIngredient redisIngredient = ingredientList.get();
+                StorageResponseDto responseDto = redisIngredient.getStorageList();
+
+                return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+            }
 
         }
 
@@ -223,7 +240,8 @@ public class IngredientService {
         }
 
         myIngredientsRepository.delete(myIngredients);
-
+        // 레디스 캐시 초기화.
+        redisIngredientRepo.deleteAll();
         return ResponseDto.success("","재료 삭제가 성공하였습니다.");
     }
 
