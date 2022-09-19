@@ -1,5 +1,10 @@
 package com.sparta.cookbank.service;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.sparta.cookbank.FileUtils;
 import com.sparta.cookbank.domain.chat.Chat;
 import com.sparta.cookbank.domain.chat.dto.ChatListResponseDto;
 import com.sparta.cookbank.domain.member.Member;
@@ -14,10 +19,15 @@ import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.repository.RoomRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,13 +35,18 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RoomService {
-    RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
 
-    ChatRepository chatRepository;
+    private final ChatRepository chatRepository;
 
-    MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
-    RecipeRepository recipeRepository;
+    private final RecipeRepository recipeRepository;
+
+    private final AmazonS3Client amazonS3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
 
     public List<RoomResponseDto> ClassLists(){
         List<RoomResponseDto> roomDtoList = new ArrayList<>();
@@ -56,7 +71,7 @@ public class RoomService {
         return chatDtoList;
     }
 
-    public Room CreateRoom(RoomRequestDto requestDto){
+    public Room CreateRoom(RoomRequestDto requestDto, MultipartFile multipartFile)throws IOException {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -64,14 +79,32 @@ public class RoomService {
             throw new IllegalArgumentException("해당 레시피를 찾을 수 없습니다.");
         });
 
+        //파일 비었는지 검증
+        if (multipartFile.isEmpty()) {
+            throw new IOException("파일이 비어있습니다.");
+        }
+
+        String fileName = FileUtils.buildFileName(multipartFile.getOriginalFilename());
+
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentType(multipartFile.getContentType());
+
+        try (InputStream inputStream = multipartFile.getInputStream()) {
+            amazonS3Client.putObject(new PutObjectRequest(bucketName, fileName, inputStream, objectMetadata)
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
+        } catch (IOException e) {
+            throw new IOException("변환에 실패했습니다.");
+        }
+
         return roomRepository.save(Room.builder()
                 .host(member)
                 .name(requestDto.getClass_name())
-                .image(requestDto.getClass_img())
+                .image(amazonS3Client.getUrl(bucketName, fileName).toString())
                 .recipe(recipe)
                 .viewers(0L)
                 .build());
     }
+
 
     public RecipeAllResponseDto ClassRecipeInfo(Long classId){
         Room room = roomRepository.findById(classId).orElseThrow(() -> {
@@ -89,4 +122,6 @@ public class RoomService {
                 .calorie(recipe.getINFO_ENG())
                 .build();
     }
+
+
 }

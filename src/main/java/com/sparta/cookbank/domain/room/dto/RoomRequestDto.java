@@ -8,5 +8,4 @@ import lombok.Setter;
 public class RoomRequestDto {
     private Long recipe_id;
     private String class_name;
-    private String class_img;
 }

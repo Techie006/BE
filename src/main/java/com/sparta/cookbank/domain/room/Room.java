@@ -1,5 +1,6 @@
 package com.sparta.cookbank.domain.room;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import lombok.AllArgsConstructor;
@@ -19,10 +20,12 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
     private Member host;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipe_id", nullable = false)
     private Recipe recipe;
