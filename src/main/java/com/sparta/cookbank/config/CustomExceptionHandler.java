@@ -10,6 +10,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import java.io.IOException;
 
 @RestControllerAdvice     // 글로벌로 적용된다.
 public class CustomExceptionHandler {
@@ -46,5 +49,18 @@ public class CustomExceptionHandler {
     public ResponseDto<?> handleUsernameNotFoundException(UsernameNotFoundException exception) {
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("401",errorMessage);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseDto<?> handleIOException(IOException exception) {
+        String errorMessage = exception.getMessage();
+        return ResponseDto.fail("400",errorMessage);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    protected ResponseDto<?> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException e) {
+        String errorMessage = e.getMessage();
+        return ResponseDto.success("4123", errorMessage);
     }
 }
