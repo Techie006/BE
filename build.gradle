@@ -71,6 +71,9 @@ dependencies {
 
     //WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    //s3의존성
+    implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.3.1'
 }
 
 tasks.named('test') {
