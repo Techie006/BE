@@ -18,6 +18,9 @@ public class Ingredient {
     @Column(nullable = false)
     String foodName;
 
+    @Column
+    String markName;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     FoodCategory foodCategory;
