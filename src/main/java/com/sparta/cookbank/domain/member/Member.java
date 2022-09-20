@@ -47,4 +47,8 @@ public class Member {
     public void changePassword(String chagePassword) {
         this.password = chagePassword;
     }
+
+    public void changeProfileImage(String profileImg) {
+        this.image = profileImg;
+    }
 }
