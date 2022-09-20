@@ -82,9 +82,8 @@ public class ChatService {
                 .build());
     }
 
-    /**
-     * destination정보에서 roomId 추출
-     */
+
+     //destination정보에서 roomId 추출
     public String getRoomId(String destination) {
         int lastIndex = destination.lastIndexOf('/');
         if (lastIndex != -1)
@@ -93,9 +92,7 @@ public class ChatService {
             return "";
     }
 
-    /**
-     * 채팅방에 메시지 발송
-     */
+     //채팅방에 메시지 발송
     public void sendChatMessage(ChatMessage chatMessage) {
         chatMessage.setViewer_num(chatRoomRepository.getUserCount(chatMessage.getRedis_class_id()));
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
