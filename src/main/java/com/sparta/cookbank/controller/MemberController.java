@@ -3,6 +3,7 @@ package com.sparta.cookbank.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.member.Member;
+import com.sparta.cookbank.domain.member.dto.ChangePasswordRequestDto;
 import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
 import com.sparta.cookbank.domain.member.dto.MemberResponseDto;
 import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
@@ -65,6 +66,13 @@ public class MemberController {
     @GetMapping("/api/user/email")
     public void emailConfirm(@RequestParam String memberEmail, @RequestParam String key, HttpServletResponse response)throws Exception{
         response.sendRedirect(memberService.emailCheck(memberEmail,key));
+    }
+
+    // 비밀번호 변경
+    @PutMapping("/api/my/password")
+    public ResponseDto<?> changePassword(@RequestBody ChangePasswordRequestDto requestDto) {
+        memberService.changePassword(requestDto);
+        return ResponseDto.success(null, "비밀번호 변경이 성공적으로 완료되었습니다.");
     }
 
 }

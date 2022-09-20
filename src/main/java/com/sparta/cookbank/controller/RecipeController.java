@@ -1,17 +1,24 @@
 package com.sparta.cookbank.controller;
 
+import antlr.Token;
 import com.sparta.cookbank.ResponseDto;
+import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.dto.*;
+import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequiredArgsConstructor
 public class RecipeController {
     private final RecipeService recipeService;
+    private final TokenProvider tokenProvider;
 
     // 추천 레시피 조회
     @PostMapping("/api/recipes/recommend")
@@ -46,7 +53,7 @@ public class RecipeController {
     @PostMapping("/api/recipe/like")
     public ResponseDto<?> likeRecipe(@RequestParam Long id) {
         recipeService.likeRecipe(id);
-        return ResponseDto.success(null,"레시피 검색에 성공하였습니다.");
+        return ResponseDto.success(null,"레시피를 성공적으로 북마크했습니다.");
     }
 
     // 북마크 Off
@@ -55,5 +62,13 @@ public class RecipeController {
         recipeService.unlikeRecipe(id);
 
         return ResponseDto.success(null,"레시피 북마크 삭제되었습니다.");
+    }
+
+    // 북마크한 레시피 조회
+    @GetMapping("/api/my/bookmark")
+    public ResponseDto<?> getBookmark(@PageableDefault Pageable pageable){
+        RecipeAllBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
+
+        return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
     }
 }
