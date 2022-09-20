@@ -6,6 +6,10 @@ import com.sparta.cookbank.domain.calendar.Calendar;
 import com.sparta.cookbank.domain.calendar.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
+import com.sparta.cookbank.redis.calendar.RedisDayCalendar;
+import com.sparta.cookbank.redis.calendar.RedisDayCalendarRepo;
+import com.sparta.cookbank.redis.recipe.RedisRecipe;
+import com.sparta.cookbank.redis.recipe.RedisRecipeRepo;
 import com.sparta.cookbank.repository.CalendarRepository;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
@@ -22,8 +26,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +40,8 @@ public class CalendarService {
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final CalendarRepository calendarRepository;
-   
+    private final RedisRecipeRepo redisRecipeRepo;
+    private final RedisDayCalendarRepo redisDayCalendarRepo;
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
@@ -44,16 +51,36 @@ public class CalendarService {
 
         // 멤버 유효성 검사
         Member member = getMember();
-        //해당 날짜 캘린더 다 찾기
-        List<CalendarResponseDto> dtoList = new ArrayList<>();
-        List<CalendarResponseDto> mealList = getCalendar(day, member,dtoList);
+        //레디스에서 찾기
+        Optional<RedisDayCalendar> redisDayCalendar = redisDayCalendarRepo.findById(day);
+        if (redisDayCalendar.isEmpty()){
+            //해당 날짜 캘린더 다 찾기
+            List<CalendarResponseDto> dtoList = new ArrayList<>();
+            List<CalendarResponseDto> mealList = getCalendar(day, member,dtoList);
 
-        CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
-                .day(day)
-                .meals(mealList)
-                .build();
+            CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                    .day(day)
+                    .meals(mealList)
+                    .build();
+            // 레디스 저장
+            RedisDayCalendar redisCalendar = RedisDayCalendar.builder()
+                    .id(day)
+                    .meals(ListResponseDto)
+                    .build();
+            redisDayCalendarRepo.save(redisCalendar);
 
-        return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
+            return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
+
+        }else {
+            // 레디스에 있다면 레디스 불러오기
+            RedisDayCalendar calendarList = redisDayCalendar.get();
+            CalendarListResponseDto ListResponseDto = calendarList.getMeals();
+
+            return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
+        }
+
+
+
     }
 
 
@@ -65,7 +92,8 @@ public class CalendarService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        //레시피 찾기
+
+        //레시피
         Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
 
         Calendar calendar = Calendar.builder()
@@ -78,9 +106,9 @@ public class CalendarService {
 
         //북마크 확인하기
         boolean liked = false;
-        LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
-        if(!(likedRecipe==null)){
-           liked = true;
+        LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), recipe.getId());
+        if (!(likedRecipe == null)) {
+            liked = true;
         }
 
 
@@ -101,7 +129,9 @@ public class CalendarService {
                 .day(calendar.getMealDay())
                 .build();
 
-        return ResponseDto.success(calendarMealsDto,"성공적으로 해당 날짜에 식단을 생성하였습니다");
+        //레디스 캐싱 초기화
+        redisDayCalendarRepo.deleteAll();
+        return ResponseDto.success(calendarMealsDto, "성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
     @Transactional
@@ -128,6 +158,8 @@ public class CalendarService {
 
         calendar.update(requestDto, recipe);
 
+        //캘린더 업데이트후 레디스 캐싱 초기화
+        redisDayCalendarRepo.deleteAll();
 
         //북마크 확인하기
         boolean liked = false;
@@ -397,5 +429,40 @@ public class CalendarService {
                     .build());
         }
         return dtoList;
+    }
+
+    public void saveRedisRecipe() {
+        //처음 조회시, Redis에 저장, 저장하는데 시간이 오래걸린다... 쓰짐말자
+        List<Recipe> recipeList = recipeRepository.findAll(); //2초정도.. ㅇ
+        for (int i =0; i<recipeList.size();i++){
+            RedisRecipe recipe = RedisRecipe.builder()
+                    .id(recipeList.get(i).getId())
+                    .RCP_NM(recipeList.get(i).getRCP_NM())
+                    .RCP_WAY2(recipeList.get(i).getRCP_WAY2())
+                    .RCP_PAT2(recipeList.get(i).getRCP_PAT2())
+                    .INFO_ENG(recipeList.get(i).getINFO_ENG())
+                    .INFO_CAR(recipeList.get(i).getINFO_CAR())
+                    .INFO_PRO(recipeList.get(i).getINFO_PRO())
+                    .INFO_FAT(recipeList.get(i).getINFO_FAT())
+                    .INFO_NA(recipeList.get(i).getINFO_NA())
+                    .ATT_FILE_NO_MAIN(recipeList.get(i).getATT_FILE_NO_MAIN())
+                    .ATT_FILE_NO_MK(recipeList.get(i).getATT_FILE_NO_MK())
+                    .RCP_PARTS_DTLS(recipeList.get(i).getRCP_PARTS_DTLS())
+                    .MAIN_INGREDIENTS(recipeList.get(i).getMAIN_INGREDIENTS())
+                    .MANUAL01(recipeList.get(i).getMANUAL01())
+                    .MANUAL_IMG01(recipeList.get(i).getMANUAL_IMG01())
+                    .MANUAL02(recipeList.get(i).getMANUAL02())
+                    .MANUAL_IMG02(recipeList.get(i).getMANUAL_IMG02())
+                    .MANUAL03(recipeList.get(i).getMANUAL03())
+                    .MANUAL_IMG03(recipeList.get(i).getMANUAL_IMG03())
+                    .MANUAL04(recipeList.get(i).getMANUAL04())
+                    .MANUAL_IMG04(recipeList.get(i).getMANUAL_IMG04())
+                    .MANUAL05(recipeList.get(i).getMANUAL05())
+                    .MANUAL_IMG05(recipeList.get(i).getMANUAL_IMG05())
+                    .MANUAL06(recipeList.get(i).getMANUAL06())
+                    .MANUAL_IMG06(recipeList.get(i).getMANUAL_IMG06())
+                    .build();
+            redisRecipeRepo.save(recipe);
+        }
     }
 }

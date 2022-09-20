@@ -3,9 +3,7 @@ package com.sparta.cookbank.config;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import io.jsonwebtoken.ExpiredJwtException;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -45,6 +43,7 @@ public class CustomExceptionHandler {
         return ResponseDto.fail("401",errorMessage);
     }
 
+
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseDto<?> handleUsernameNotFoundException(UsernameNotFoundException exception) {
         String errorMessage = exception.getMessage();
@@ -60,7 +59,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     protected ResponseDto<?> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e) {
-        String errorMessage = e.getMessage();
-        return ResponseDto.success("4123", errorMessage);
+        return ResponseDto.fail("400", "사진은 20MB까지 등록이 가능합니다.");
     }
 }
