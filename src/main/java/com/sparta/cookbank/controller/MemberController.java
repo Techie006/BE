@@ -3,16 +3,15 @@ package com.sparta.cookbank.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.member.Member;
-import com.sparta.cookbank.domain.member.dto.ChangePasswordRequestDto;
-import com.sparta.cookbank.domain.member.dto.LoginRequestDto;
-import com.sparta.cookbank.domain.member.dto.MemberResponseDto;
-import com.sparta.cookbank.domain.member.dto.SignupRequestDto;
+import com.sparta.cookbank.domain.member.dto.*;
 import com.sparta.cookbank.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,4 +74,20 @@ public class MemberController {
         return ResponseDto.success(null, "비밀번호 변경이 성공적으로 완료되었습니다.");
     }
 
+
+    // 프로필 사진 업로드
+    @PutMapping("/api/my/profile")
+    public ResponseDto<?> uploadProfile(@RequestPart(value = "image")MultipartFile multipartFile) throws IOException {
+        ProfileResponseDto profileResponseDto = memberService.uploadProfile(multipartFile);
+
+        return ResponseDto.success(profileResponseDto, "성공적으로 프로필 사진이 변경되었습니다.");
+    }
+
+    // 비밀번호 변경
+    @DeleteMapping("/api/my/profile")
+    public ResponseDto<?> deleteProfile() {
+        ProfileResponseDto profileResponseDto = memberService.deleteProfile();
+
+        return ResponseDto.success(profileResponseDto, "성공적으로 기본 프로필 사진으로 변경되었습니다.");
+    }
 }
