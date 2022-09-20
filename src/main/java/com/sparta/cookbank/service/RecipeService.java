@@ -33,8 +33,12 @@ public class RecipeService {
         });
 
         // base 재료가 포함된 모든 레시피를 가져옴
+        String base = requestDto.getBase().split(",")[0];
+        String input = base.split(" ")[0];
+        requestDto.setBase(input);
         List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto);
         List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+
         for (Recipe recipe : recipeList) {
             // 메인 재료들을  리스트에 담음
             List<String> mainIngredientsList = new ArrayList<>();
@@ -43,7 +47,7 @@ public class RecipeService {
             List<String> ingredientsList = new ArrayList<>();
             ingredientsList.add(recipe.getRCP_PARTS_DTLS());
             for (int i = 0; i < requestDto.getFoods().size(); i++) {
-                if (recipe.getRCP_PARTS_DTLS().matches(requestDto.getFoods().get(i))) {
+                if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
                     recipeRecommendResponseDto.add(
                             RecipeRecommendResponseDto.builder()
                                     .id(recipe.getId())
@@ -141,7 +145,7 @@ public class RecipeService {
 
         Page<Recipe> recipePage = recipeRepository.findAll(pageable);
 
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = ConverterAllResponseDto(recipePage);
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
 
         RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
@@ -160,7 +164,7 @@ public class RecipeService {
         Page<Recipe> recipePage = recipeRepository.findBySearchOption(searchRequestDto,pageable);
 
         // List형태로 각각 분리
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = ConverterAllResponseDto(recipePage);
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
 
         // api 설계형식에 맞게 담아줌
         RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
@@ -175,6 +179,7 @@ public class RecipeService {
     // 북마크 On
     @Transactional
     public void likeRecipe(Long id) {
+
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -208,10 +213,53 @@ public class RecipeService {
         likeRecipeRepository.delete(likeRecipe);
     }
 
-    private List<RecipeAllResponseDto> ConverterAllResponseDto(Page<Recipe> recipes) {
+    // 북마크 조회
+    @Transactional(readOnly = true)
+    public RecipeAllBookmarkResponseDto getBookmark(Pageable pageable) {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
+        });
+
+        // pageable과 memberId 를 이용해서 조회
+        Page<LikeRecipe> likeRecipeList = likeRecipeRepository.findByMember_Id(member.getId(), pageable);
+
+        // member가 북마크한 레시피가 없으면
+        if (likeRecipeList.getContent().isEmpty()) {
+            throw new IllegalArgumentException("사용자가 북마크한 레시피가 없습니다.");
+        }
+
+        List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
+
+        for (LikeRecipe likeRecipe : likeRecipeList) {
+            List<String> ingredientsList = new ArrayList<>();
+            ingredientsList.add(likeRecipe.getRecipe().getRCP_PARTS_DTLS());
+            recipeBookmarkResponseDtoList.add(
+                    RecipeBookmarkResponseDto.builder()
+                            .id(likeRecipe.getRecipe().getId())
+                            .recipe_name(likeRecipe.getRecipe().getRCP_NM())
+                            .ingredients(ingredientsList)
+                            .final_img(likeRecipe.getRecipe().getATT_FILE_NO_MK())
+                            .method(likeRecipe.getRecipe().getRCP_WAY2())
+                            .category(likeRecipe.getRecipe().getRCP_PAT2())
+                            .calorie(likeRecipe.getRecipe().getINFO_ENG())
+                            .liked(true)
+                            .build()
+            );
+        }
+
+        RecipeAllBookmarkResponseDto recipeResponseDto = RecipeAllBookmarkResponseDto.builder()
+                .current_page_num(likeRecipeList.getPageable().getPageNumber())
+                .total_page_num(likeRecipeList.getTotalPages())
+                .recipes(recipeBookmarkResponseDtoList)
+                .build();
+
+        return recipeResponseDto;
+    }
+
+    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
         List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
-        List<String> ingredientsList = new ArrayList<>();
         for (Recipe recipe : recipes){
+            List<String> ingredientsList = new ArrayList<>();
             ingredientsList.add(recipe.getRCP_PARTS_DTLS());
             recipeAllResponseDtoList.add(
                     RecipeAllResponseDto.builder()
@@ -227,4 +275,6 @@ public class RecipeService {
         }
         return recipeAllResponseDtoList;
     }
+
+
 }

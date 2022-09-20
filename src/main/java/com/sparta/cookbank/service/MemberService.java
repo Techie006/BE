@@ -1,30 +1,41 @@
 package com.sparta.cookbank.service;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sparta.cookbank.config.RedisConfig;
+import com.sparta.cookbank.FileUtils;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.member.dto.*;
 import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
+import com.sparta.cookbank.redis.calendar.RedisDayCalendarRepo;
+import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RefreshTokenRepository;
+import com.sparta.cookbank.security.JwtAccessDeniedHandler;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -43,6 +54,15 @@ public class MemberService {
 
     private final MailService mailService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final RedisIngredientRepo redisIngredientRepo;
+    private final RedisDayCalendarRepo redisDayCalendarRepo;
+
+    private final AmazonS3Client amazonS3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
+
+
 
 
 
@@ -106,7 +126,7 @@ public class MemberService {
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
 
         //레디스 저장 600초 동안 캐시에 저장..
-        redisTemplate.opsForValue().set("RT :"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("RT:"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
 
         return MemberResponseDto.builder()
                 .member_id(member.getId())
@@ -143,6 +163,9 @@ public class MemberService {
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
         refreshTokenRepository.deleteByMember(member);
+        // 로그아웃시 레디스 캐시 초기화.
+        redisIngredientRepo.deleteAll();
+        redisDayCalendarRepo.deleteAll();
     }
 
 
@@ -310,5 +333,81 @@ public class MemberService {
             if (!member.isMail_auth()) member.EmailCheck();
         }
         return "http://localhost:3000/auth";
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void changePassword(ChangePasswordRequestDto requestDto) {
+
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+
+        // password 검증
+        if (!passwordEncoder.matches(requestDto.getPresent_password(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        } else if (requestDto.getPresent_password().equals(requestDto.getChange_password())) {
+            throw new IllegalArgumentException("변경할 비밀번호가 현재 비밀번호와 일치합니다.");
+        }
+
+        // 변경할 비밀번호 암호화
+        String encodedChangePassword = passwordEncoder.encode(requestDto.getChange_password());
+
+        // 비밀번호 변경
+        member.changePassword(encodedChangePassword);
+    }
+
+    @Transactional
+    public ProfileResponseDto uploadProfile(MultipartFile multipartFile) throws IOException {
+
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+
+        if (multipartFile.isEmpty()) {
+            throw new IOException();
+        }
+
+        String fileName = FileUtils.buildFileName(multipartFile.getOriginalFilename());
+
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setContentType(multipartFile.getContentType());
+        objectMetadata.setContentLength(multipartFile.getInputStream().available());
+
+
+
+        try (InputStream inputStream = multipartFile.getInputStream()) {
+            amazonS3Client.putObject(new PutObjectRequest(bucketName, fileName, inputStream, objectMetadata)
+                    .withCannedAcl(CannedAccessControlList.PublicRead));
+        } catch (IOException e) {
+            throw new IOException("변환에 실패했습니다.");
+        }
+
+        member.changeProfileImage(amazonS3Client.getUrl(bucketName,fileName).toString());
+
+        ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
+                .profile_img(member.getImage())
+                .build();
+
+        return profileResponseDto;
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public ProfileResponseDto deleteProfile() {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+
+        DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(bucketName , member.getImage());
+        amazonS3Client.deleteObject(deleteObjectRequest);
+
+        member.changeProfileImage(DEFAULT_PROFILE_IMG);
+
+        ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
+                .profile_img(member.getImage())
+                .build();
+
+        return profileResponseDto;
     }
 }

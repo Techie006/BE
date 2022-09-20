@@ -1,5 +1,6 @@
 package com.sparta.cookbank.redis.recipe;
 
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.redis.core.RedisHash;
 
@@ -9,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Getter
+@Builder
 @RedisHash(value = "recipe", timeToLive = 3600) // 3600s
 public class RedisRecipe {
 

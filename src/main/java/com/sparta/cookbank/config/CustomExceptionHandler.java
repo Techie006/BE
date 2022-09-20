@@ -3,13 +3,14 @@ package com.sparta.cookbank.config;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sparta.cookbank.ResponseDto;
 import io.jsonwebtoken.ExpiredJwtException;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import java.io.IOException;
 
 @RestControllerAdvice     // 글로벌로 적용된다.
 public class CustomExceptionHandler {
@@ -42,9 +43,22 @@ public class CustomExceptionHandler {
         return ResponseDto.fail("401",errorMessage);
     }
 
+
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseDto<?> handleUsernameNotFoundException(UsernameNotFoundException exception) {
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("401",errorMessage);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseDto<?> handleIOException(IOException exception) {
+        String errorMessage = exception.getMessage();
+        return ResponseDto.fail("400",errorMessage);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    protected ResponseDto<?> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException e) {
+        return ResponseDto.fail("400", "사진은 20MB까지 등록이 가능합니다.");
     }
 }

@@ -8,6 +8,7 @@ import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixResponseDto;
+import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.DoneRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
@@ -31,24 +32,30 @@ public class DoneRecipeService {
     private final RecipeRepository recipeRepository;
     private final MyIngredientsRepository myIngredientsRepository;
     private final DoneRecipeRepository doneRecipeRepository;
+    private final RedisIngredientRepo redisIngredientRepo;
 
 
     public void UsedIngredient(Long recipeId, DoneRecipeRequestDto requestDto) {
-        for (Long id : requestDto.getIngredients_id()) {
-            MyIngredients ingredients = myIngredientsRepository.findById(id).orElseThrow(
-                    () -> new IllegalArgumentException("해당 재료가 없습니다.")
-            );
-            myIngredientsRepository.delete(ingredients);
+        if(!requestDto.getIngredients_id().isEmpty()){
+            for (Long id : requestDto.getIngredients_id()) {
+                MyIngredients ingredients = myIngredientsRepository.findById(id).orElseThrow(
+                        () -> new IllegalArgumentException("해당 재료가 없습니다.")
+                );
+                myIngredientsRepository.delete(ingredients);
+                // 레디스 캐시 초기화.
+                redisIngredientRepo.deleteAll();
+        }}
 
-            Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                    () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
-            );
-            Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(
-                    () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
-            );
-            DoneRecipe doneRecipe = new DoneRecipe(member, recipe);
-            doneRecipeRepository.save(doneRecipe);
-        }
+
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(
+                () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
+        );
+        DoneRecipe doneRecipe = new DoneRecipe(member, recipe);
+        doneRecipeRepository.save(doneRecipe);
+
     }
 
 
@@ -111,6 +118,36 @@ public class DoneRecipeService {
             fats.add(fsum);
         }
 
+        //출력 7개로 맞추기
+        int size = days.size();
+        if(size > 7){
+            days = days.subList(size-7, size);
+            carbohydrates = carbohydrates.subList(size-7,size);
+            proteins = proteins.subList(size-7,size);
+            fats = fats.subList(size-7,size);
+        }
+        else{
+            while(size<7){
+                switch (requestDto.getFilter()) {
+                    case "month":
+                        str = str.minusMonths(1);
+                        break;
+                    case "week":
+                        str = str.minusWeeks(1);
+                        break;
+                    case "day":
+                        str = str.minusDays(1);
+                        break;
+                }
+                days.add(0,str);
+                carbohydrates.add(0,0L);
+                proteins.add(0,0L);
+                fats.add(0,0L);
+
+                size++;
+            }
+        }
+
         return NutrientsRatioResponseDto.builder()
                 .days(days)
                 .carbohydrates(carbohydrates)
@@ -167,6 +204,33 @@ public class DoneRecipeService {
             }
             calories.add(csum);
         }
+
+        //출력 7개로 맞추기
+        int size = days.size();
+        if(size > 7){
+            days = days.subList(size-7, size);
+            calories = calories.subList(size-7,size);
+        }
+        else{
+            while(size<7){
+                switch (requestDto.getFilter()) {
+                    case "month":
+                        str = str.minusMonths(1);
+                        break;
+                    case "week":
+                        str = str.minusWeeks(1);
+                        break;
+                    case "day":
+                        str = str.minusDays(1);
+                        break;
+                }
+                days.add(0,str);
+                calories.add(0,0L);
+
+                size++;
+            }
+        }
+
         return CaloriesRatioResponseDto.builder()
                 .days(days)
                 .calories(calories)
@@ -196,6 +260,9 @@ public class DoneRecipeService {
         LocalDate today = LocalDate.now();
         List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
         List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
+        if (todayList.isEmpty() || yesterdayList.isEmpty()) {
+            throw new IllegalArgumentException("데이터를 추가해주세요!");
+        }
 
 
         return DailyRatioResponseDto.builder()

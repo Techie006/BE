@@ -1,6 +1,8 @@
 package com.sparta.cookbank.domain.member;
 
+import com.sparta.cookbank.domain.member.dto.ChangePasswordRequestDto;
 import lombok.*;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 
@@ -42,4 +44,11 @@ public class Member {
         this.mail_auth = true;
     }
 
+    public void changePassword(String chagePassword) {
+        this.password = chagePassword;
+    }
+
+    public void changeProfileImage(String profileImg) {
+        this.image = profileImg;
+    }
 }
