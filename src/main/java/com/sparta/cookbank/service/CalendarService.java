@@ -22,8 +22,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,6 @@ public class CalendarService {
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final CalendarRepository calendarRepository;
-   
 
     @Transactional(readOnly = true)
     public ResponseDto<?> getSpecificDayDiet(String day, HttpServletRequest request) {
