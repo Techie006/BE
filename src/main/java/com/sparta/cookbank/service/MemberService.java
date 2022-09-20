@@ -8,6 +8,7 @@ import com.sparta.cookbank.domain.refreshToken.RefreshToken;
 import com.sparta.cookbank.domain.refreshToken.dto.TokenDto;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RefreshTokenRepository;
+import com.sparta.cookbank.security.JwtAccessDeniedHandler;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -306,5 +307,27 @@ public class MemberService {
             if (!member.isMail_auth()) member.EmailCheck();
         }
         return "http://localhost:3000/auth";
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void changePassword(ChangePasswordRequestDto requestDto) {
+
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+
+        // password 검증
+        if (!passwordEncoder.matches(requestDto.getPresent_password(), member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        } else if (requestDto.getPresent_password().equals(requestDto.getChange_password())) {
+            throw new IllegalArgumentException("변경할 비밀번호가 현재 비밀번호와 일치합니다.");
+        }
+
+        // 변경할 비밀번호 암호화
+        String encodedChangePassword = passwordEncoder.encode(requestDto.getChange_password());
+
+        // 비밀번호 변경
+        member.changePassword(encodedChangePassword);
     }
 }

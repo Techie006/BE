@@ -253,6 +253,9 @@ public class DoneRecipeService {
         LocalDate today = LocalDate.now();
         List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
         List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
+        if (todayList.isEmpty() || yesterdayList.isEmpty()) {
+            throw new IllegalArgumentException("데이터를 추가해주세요!");
+        }
 
 
         return DailyRatioResponseDto.builder()
