@@ -59,7 +59,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     protected ResponseDto<?> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e) {
-        String errorMessage = e.getMessage();
-        return ResponseDto.success("4123", errorMessage);
+        return ResponseDto.fail("400", "사진은 20MB까지 등록이 가능합니다.");
     }
 }

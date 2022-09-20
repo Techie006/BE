@@ -18,7 +18,7 @@ import javax.persistence.*;
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long class_id;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,12 +31,12 @@ public class Room {
     private Recipe recipe;
 
     @Column(nullable = false)
-    private Long viewers;
-
-    @Column(nullable = false)
     private String name;
 
     @Column
     private String image;
+
+    @Column(nullable = false)
+    private String redis_class_id;
 
 }
