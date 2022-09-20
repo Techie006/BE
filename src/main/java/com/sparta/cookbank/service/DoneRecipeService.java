@@ -8,6 +8,7 @@ import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixResponseDto;
+import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
 import com.sparta.cookbank.repository.DoneRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.MyIngredientsRepository;
@@ -31,24 +32,30 @@ public class DoneRecipeService {
     private final RecipeRepository recipeRepository;
     private final MyIngredientsRepository myIngredientsRepository;
     private final DoneRecipeRepository doneRecipeRepository;
+    private final RedisIngredientRepo redisIngredientRepo;
 
 
     public void UsedIngredient(Long recipeId, DoneRecipeRequestDto requestDto) {
-        for (Long id : requestDto.getIngredients_id()) {
-            MyIngredients ingredients = myIngredientsRepository.findById(id).orElseThrow(
-                    () -> new IllegalArgumentException("해당 재료가 없습니다.")
-            );
-            myIngredientsRepository.delete(ingredients);
+        if(!requestDto.getIngredients_id().isEmpty()){
+            for (Long id : requestDto.getIngredients_id()) {
+                MyIngredients ingredients = myIngredientsRepository.findById(id).orElseThrow(
+                        () -> new IllegalArgumentException("해당 재료가 없습니다.")
+                );
+                myIngredientsRepository.delete(ingredients);
+                // 레디스 캐시 초기화.
+                redisIngredientRepo.deleteAll();
+        }}
 
-            Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
-                    () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
-            );
-            Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(
-                    () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
-            );
-            DoneRecipe doneRecipe = new DoneRecipe(member, recipe);
-            doneRecipeRepository.save(doneRecipe);
-        }
+
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+                () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
+        );
+        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(
+                () -> new IllegalArgumentException("해당 레시피가 존재하지 않습니다.")
+        );
+        DoneRecipe doneRecipe = new DoneRecipe(member, recipe);
+        doneRecipeRepository.save(doneRecipe);
+
     }
 
 
