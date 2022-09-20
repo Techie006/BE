@@ -23,7 +23,7 @@ public class StompChatController {
 
     //"/pub/chat/enter"
     //메세지 받았을 때
-    @MessageMapping(value = "/chat/room/{roomId}")
+    @MessageMapping(value = "/chat/room/{class_id}")
     public void message(@DestinationVariable String class_id, ChatTest message) {
         //채팅 저장
         //ChatResponseDto responseDto = chatService.saveChat(Long.parseLong(class_id), message);
