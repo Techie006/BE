@@ -1,13 +1,10 @@
 package com.sparta.cookbank.service;
 
-import com.sparta.cookbank.domain.LikeRecipe;
-import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeDetailResultResponseDto;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RecipeRepository;
-import com.sparta.cookbank.security.WithMockCustomUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,18 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssumptions.given;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +32,6 @@ class RecipeServiceTest {
 
     @Mock
     MemberRepository memberRepository;
-
-    @Mock
-    MemberService memberService;
 
     @InjectMocks
     RecipeService recipeService;
@@ -108,30 +96,43 @@ class RecipeServiceTest {
 //    @WithMockCustomUser
 //    @DisplayName("레시피 북마크 정상 케이스")
 //    void likeRecipe() {
+//
 //        // given
-//        Member member = Member.builder()
+//
+//        Recipe testRecipe = Recipe.builder()
 //                .id(1L)
-//                .email("admin1234@naver.com")
-//                .username("admin1234")
-//                .password("admin1234")
-//                .image("sadkmk111")
+//                .ATT_FILE_NO_MAIN("test")
+//                .ATT_FILE_NO_MK("test")
+//                .INFO_CAR(25L)
+//                .INFO_ENG(220L)
+//                .INFO_FAT(17L)
+//                .INFO_NA(99L)
+//                .INFO_PRO(14L)
+//                .MANUAL01("test1")
+//                .MANUAL02("test1")
+//                .MANUAL03("test1")
+//                .MANUAL04("test1")
+//                .MANUAL05("test1")
+//                .MANUAL06("test1")
+//                .MANUAL_IMG01("test1")
+//                .MANUAL_IMG02("test1")
+//                .MANUAL_IMG03("test1")
+//                .MANUAL_IMG04("test1")
+//                .MANUAL_IMG05("test1")
+//                .MANUAL_IMG06("test1")
+//                .RCP_NM("test1메뉴")
+//                .RCP_PARTS_DTLS("test1재료1, test1재료2, test1재료3")
+//                .RCP_PAT2("반찬")
+//                .RCP_WAY2("찌기")
+//                .MAIN_INGREDIENTS("test1재료1, test1재료2, test1재료3")
 //                .build();
-//
-//        UserDetails userDetails = new User(member);
-//
-//        Long recipeId = 1L;
-//        Authentication a = SecurityContextHolder.getContext().getAuthentication();
-//        UserDetails principal = (UserDetails) a.getPrincipal();
-//        Member member = memberRepository.findByEmail(principal.getUsername()).orElseThrow(() -> {
-//            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
-//        });
-//
-//        when(likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),anyLong())).thenReturn(new LikeRecipe());
+//        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(new Member()));
+//        when(recipeRepository.findById(anyLong())).thenReturn(Optional.of(new Recipe()));
 //        // when
-//        recipeService.likeRecipe(recipeId);
-//        LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipeId);
+//        recipeService.likeRecipe(testRecipe.getId());
+//        LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(1L,testRecipe.getId());
 //
 //        //then
-//        assertThat(likeRecipe.getRecipe().getId()).isEqualTo(recipeId);
+//        assertThat(likeRecipe.getRecipe().getId()).isEqualTo(testRecipe.getId());
 //    }
 }
