@@ -4,6 +4,7 @@ import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.chat.dto.ChatListResponseDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
 import com.sparta.cookbank.domain.room.Room;
+import com.sparta.cookbank.domain.room.dto.ClassDto;
 import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
 import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
 import com.sparta.cookbank.service.RoomService;
@@ -21,8 +22,7 @@ public class RoomController {
 
     @GetMapping("/api/class")
     public ResponseDto<?> ClassList(){
-        List<RoomResponseDto> Classes = roomService.ClassLists();
-        return ResponseDto.success(Classes, "성공적으로 클래스을 가져왔습니다.");
+        return ResponseDto.success(new ClassDto(roomService.ClassLists()), "성공적으로 클래스을 가져왔습니다.");
     }
 
     @GetMapping("/api/chat/{class_id}")
