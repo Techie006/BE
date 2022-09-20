@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class MyIngredientResponseDto {
     private Long id;
+    private String mark_name;
     private String food_name;
     private FoodCategory group_name;
     private String in_date;

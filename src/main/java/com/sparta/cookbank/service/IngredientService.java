@@ -191,6 +191,7 @@ public class IngredientService {
                 d_day ="+"+diffDays.toString();
                 outList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
@@ -201,6 +202,7 @@ public class IngredientService {
                 d_day ="-"+diffDays.toString();
                 hurryList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
@@ -276,20 +278,40 @@ public class IngredientService {
             Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
             Long diffDays = diffSec / (24*60*60); // 일자수 차이
             String d_day;
-            if(diffDays < 0){
+            if(diffDays < 0){  //"유통기간만료"를 출력.
                 diffDays = -diffDays;
-                d_day ="+"+diffDays.toString();
-            }else {
+                dtoList.add(MyIngredientResponseDto.builder()
+                        .id(myIngredient.getId())
+                        .mark_name(myIngredient.getIngredient().getMarkName())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date("유통기간만료")
+                        .build());
+
+            }else if(diffDays == 0){ // 당일 재료는 "D-DAY"로출력
+                dtoList.add(MyIngredientResponseDto.builder()
+                        .id(myIngredient.getId())
+                        .mark_name(myIngredient.getIngredient().getMarkName())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date("D-Day")
+                        .build());
+            }else {  //유통기간낸는 "D-남은날짜"
                 d_day ="-"+diffDays.toString();
+
+                dtoList.add(MyIngredientResponseDto.builder()
+                        .id(myIngredient.getId())
+                        .mark_name(myIngredient.getIngredient().getMarkName())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date("D"+ d_day)
+                        .build());
+
             }
 
-            dtoList.add(MyIngredientResponseDto.builder()
-                    .id(myIngredient.getId())
-                    .food_name(myIngredient.getIngredient().getFoodName())
-                    .group_name(myIngredient.getIngredient().getFoodCategory())
-                    .in_date(myIngredient.getInDate())
-                    .d_date("D"+ d_day)
-                    .build());
         }
 
         StorageResponseDto responseDto = StorageResponseDto.builder()
