@@ -44,6 +44,8 @@ public class ChatService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
+    @Value("${default.profile.img}")
+    private String DEFAULT_PROFILE_IMG;
 
 
     private final ChannelTopic channelTopic;
@@ -97,6 +99,18 @@ public class ChatService {
      //채팅방에 메시지 발송
     public void sendChatMessage(ChatMessage chatMessage) {
         chatMessage.setViewer_num(chatRoomRepository.getUserCount(chatMessage.getRedis_class_id()));
+
+        //로그인 비로그인 구분
+        chatMessage.setNickname("UnknownUser");
+        chatMessage.setProfile_img(DEFAULT_PROFILE_IMG);
+        if(chatMessage.getMember_id() != -1){
+            Member member = memberRepository.findById(chatMessage.getMember_id()).orElse(null);
+            if(member != null) {
+                chatMessage.setNickname(member.getUsername());
+                chatMessage.setProfile_img(member.getImage());
+            }
+        }
+
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getNickname() + "님이 방에 입장했습니다.");
             chatMessage.setNickname("[알림]");
