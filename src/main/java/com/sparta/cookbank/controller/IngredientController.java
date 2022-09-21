@@ -51,7 +51,7 @@ public class IngredientController {
     }
     // 카테고리별 식재료 조회
     @GetMapping("/api/ingredients/detail")
-    public ResponseDto<?> getMyCategoryIngredient(@RequestParam("category") String category,HttpServletRequest request){
+    public ResponseDto<?> getMyCategoryIngredient(@RequestParam("category") String category,HttpServletRequest request) throws ParseException {
         return ingredientService.getMyCategoryIngredient(category,request);
     }
 

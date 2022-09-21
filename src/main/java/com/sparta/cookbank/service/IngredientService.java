@@ -440,28 +440,7 @@ public class IngredientService {
         String nowString = now.toString();
 
 
-        for (MyIngredients myIngredient : myIngredients) {
-            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
-            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
-            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
-            Long diffDays = diffSec / (24*60*60); // 일자수 차이
-            String d_day;
-            if(diffDays < 0){
-                diffDays = -diffDays;
-                d_day ="+"+diffDays.toString();
-            }else {
-                d_day ="-"+diffDays.toString();
-            }
-
-            dtoList.add(TotalMyIngredientDto.builder()
-                    .id(myIngredient.getId())
-                    .food_name(myIngredient.getIngredient().getFoodName())
-                    .group_name(myIngredient.getIngredient().getFoodCategory())
-                    .in_date(myIngredient.getInDate())
-                    .d_date("D"+ d_day)
-                    .category(myIngredient.getStorage())
-                    .build());
-        }
+        getMyIngredientWithDday(myIngredients, dtoList, nowString);
 
         ListTotalMyIngredientsDto responseDto = ListTotalMyIngredientsDto.builder()
                 .ingredients_num(dtoList.size())
@@ -471,7 +450,124 @@ public class IngredientService {
         return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
     }
 
-    public ResponseDto<?> getMyCategoryIngredient(String category, HttpServletRequest request) {
-        return ResponseDto.success("엄","준식");
+    public ResponseDto<?> getMyCategoryIngredient(String category, HttpServletRequest request) throws ParseException {
+        //토큰 유효성 검사
+        extracted(request);
+
+        // 멤버 유효성 검사
+        Member member = getMember();
+
+        List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<TotalMyIngredientDto> dtoList = new ArrayList<>();
+
+        //현재시각으로 d_day 구하기
+        LocalDate now = LocalDate.now();
+        String nowString = now.toString();
+
+        //분류별 리스트
+        List<MyIngredients> produceList = new ArrayList<>();
+        List<MyIngredients> livestockList = new ArrayList<>();
+        List<MyIngredients> marineList = new ArrayList<>();
+        List<MyIngredients> drinkList = new ArrayList<>();
+        List<MyIngredients> etcList = new ArrayList<>();
+
+        if (myIngredientsList.isEmpty()) {
+            throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
+        }
+
+        // 카테고리별 재료 분류
+        for (MyIngredients myIngredients : myIngredientsList) {
+            switch (myIngredients.getIngredient().getFoodCategory()){
+                // 농산물
+                case 전분류: case 견과류: case 곡류: case 과실류: case 두류: case 버섯류: case 채소류:
+                    produceList.add(myIngredients);
+                    break;
+                // 축산물
+                case 난류: case 육류:
+                    livestockList.add(myIngredients);
+                    break;
+                // 수산물
+                case 어패류: case 해조류:
+                    marineList.add(myIngredients);
+                    break;
+                // 음료류
+                case 음료류: case 주류: case 차류:
+                    drinkList.add(myIngredients);
+                    break;
+                // 기타
+                case 기타: case 당류: case 유제품류: case 조리가공품류: case 유지류: case 조미료류:
+                    etcList.add(myIngredients);
+                    break;
+            }
+        }
+
+
+        switch (category){
+            case "produce":
+                getMyIngredientWithDday(produceList, dtoList, nowString);
+                break;
+            case "livestock":
+                getMyIngredientWithDday(livestockList, dtoList, nowString);
+                break;
+            case "marine":
+                getMyIngredientWithDday(marineList, dtoList, nowString);
+                break;
+            case "drink":
+                getMyIngredientWithDday(drinkList, dtoList, nowString);
+                break;
+            case "etc":
+                getMyIngredientWithDday(etcList, dtoList, nowString);
+                break;
+        }
+
+        CategoryIngredientDto categoryIngredientDto = CategoryIngredientDto.builder()
+                .category(dtoList)
+                .build();
+
+
+        return ResponseDto.success(categoryIngredientDto,"준식");
+
+    }
+
+    private void getMyIngredientWithDday(List<MyIngredients> myIngredients, List<TotalMyIngredientDto> dtoList, String nowString) throws ParseException {
+        for (MyIngredients myIngredient : myIngredients) {
+            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
+            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
+            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffDays = diffSec / (24*60*60); // 일자수 차이
+            String d_day;
+            if(diffDays < 0){
+                d_day ="유통기간만료";
+                dtoList.add(TotalMyIngredientDto.builder()
+                        .id(myIngredient.getId())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date(d_day)
+                        .category(myIngredient.getStorage())
+                        .build());
+            }else if(diffDays == 0){
+                d_day ="D-Day";
+                dtoList.add(TotalMyIngredientDto.builder()
+                        .id(myIngredient.getId())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date(d_day)
+                        .category(myIngredient.getStorage())
+                        .build());
+            }else{
+                d_day ="-"+diffDays.toString();
+                dtoList.add(TotalMyIngredientDto.builder()
+                        .id(myIngredient.getId())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date("D"+ d_day)
+                        .category(myIngredient.getStorage())
+                        .build());
+            }
+
+        }
     }
 }
