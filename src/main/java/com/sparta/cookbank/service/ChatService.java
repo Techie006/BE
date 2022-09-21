@@ -13,6 +13,7 @@ import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
 import com.sparta.cookbank.domain.room.ChatRoom;
 import com.sparta.cookbank.domain.room.Room;
 import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
+import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
 import com.sparta.cookbank.repository.*;
 import com.sparta.cookbank.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,6 +44,8 @@ public class ChatService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
+    @Value("${default.profile.img}")
+    private String DEFAULT_PROFILE_IMG;
 
 
     private final ChannelTopic channelTopic;
@@ -82,9 +86,8 @@ public class ChatService {
                 .build());
     }
 
-    /**
-     * destination정보에서 roomId 추출
-     */
+
+     //destination정보에서 roomId 추출
     public String getRoomId(String destination) {
         int lastIndex = destination.lastIndexOf('/');
         if (lastIndex != -1)
@@ -93,11 +96,21 @@ public class ChatService {
             return "";
     }
 
-    /**
-     * 채팅방에 메시지 발송
-     */
+     //채팅방에 메시지 발송
     public void sendChatMessage(ChatMessage chatMessage) {
         chatMessage.setViewer_num(chatRoomRepository.getUserCount(chatMessage.getRedis_class_id()));
+
+        //로그인 비로그인 구분
+        chatMessage.setNickname("UnknownUser");
+        chatMessage.setProfile_img(DEFAULT_PROFILE_IMG);
+        if(chatMessage.getMember_id() != -1){
+            Member member = memberRepository.findById(chatMessage.getMember_id()).orElse(null);
+            if(member != null) {
+                chatMessage.setNickname(member.getUsername());
+                chatMessage.setProfile_img(member.getImage());
+            }
+        }
+
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getNickname() + "님이 방에 입장했습니다.");
             chatMessage.setNickname("[알림]");
@@ -109,10 +122,24 @@ public class ChatService {
         redisTemplate.convertAndSend(channelTopic.getTopic(), chatMessage);
     }
 
-    public List<ChatRoom> findAllRoom() {
-        List<ChatRoom> chatRooms = chatRoomRepository.findAllRoom();
-        chatRooms.stream().forEach(room -> room.setUserCount(chatRoomRepository.getUserCount(room.getRedis_class_id())));
-        return chatRooms;
+    public List<RoomResponseDto> findAllRoom() {
+        List<RoomResponseDto> responseDtos = new ArrayList<>();
+        List<Room> Rooms = roomRepository.findAll();
+        for(Room room : Rooms){
+            ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedis_class_id());
+            if(chatRoom != null) {
+                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedis_class_id()));
+
+                responseDtos.add(RoomResponseDto.builder()
+                        .class_id(room.getClass_id())
+                        .redis_class_id(room.getRedis_class_id())
+                        .class_name(room.getName())
+                        .viewer_nums(chatRoom.getUserCount())
+                        .class_img(room.getImage())
+                        .build());
+            }
+        }
+        return responseDtos;
     }
 
     public List<ChatMessage> findAllChatByRoom(Long class_id ){

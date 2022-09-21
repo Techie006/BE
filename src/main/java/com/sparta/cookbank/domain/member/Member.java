@@ -51,4 +51,8 @@ public class Member {
     public void changeProfileImage(String profileImg) {
         this.image = profileImg;
     }
+
+    public void setPassword(String password){
+        this.password = password;
+    }
 }
