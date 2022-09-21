@@ -1,0 +1,16 @@
+package com.sparta.cookbank.domain.room.dto;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RoomResponseDto {
+    private Long class_id;
+    private String redis_class_id;
+    private String class_name;
+    private Long viewer_nums;
+    private String class_img;
+}

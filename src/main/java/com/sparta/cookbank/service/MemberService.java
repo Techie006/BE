@@ -121,6 +121,7 @@ public class MemberService {
         if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호를 잘못 입력하셨습니다.");
         }
+        if (!member.isMail_auth()) throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
@@ -385,11 +386,9 @@ public class MemberService {
 
         member.changeProfileImage(amazonS3Client.getUrl(bucketName,fileName).toString());
 
-        ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
+        return ProfileResponseDto.builder()
                 .profile_img(member.getImage())
                 .build();
-
-        return profileResponseDto;
     }
 
     // 비밀번호 변경
@@ -404,10 +403,22 @@ public class MemberService {
 
         member.changeProfileImage(DEFAULT_PROFILE_IMG);
 
-        ProfileResponseDto profileResponseDto = ProfileResponseDto.builder()
+        return ProfileResponseDto.builder()
                 .profile_img(member.getImage())
                 .build();
+    }
 
-        return profileResponseDto;
+    @Transactional
+    public void sendPassword(EmailRequestDto requestDto) {
+        String emailPattern = "^\\w+@\\w+\\.\\w+(\\.\\w)?$";
+        if(!Pattern.matches(emailPattern,requestDto.getEmail())){
+            throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
+        }
+        Member member = memberRepository.findByEmail(requestDto.getEmail()).orElseThrow(
+                () -> new IllegalArgumentException("가입된 이메일인지 확인해주세요.")
+        );
+        String password = UUID.randomUUID().toString();
+        member.setPassword(passwordEncoder.encode(password));
+        mailService.sendPassowrdMessage(member,password);
     }
 }

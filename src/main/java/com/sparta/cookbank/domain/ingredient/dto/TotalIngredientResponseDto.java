@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class TotalIngredientResponseDto {
-    private int total_count;
+    private int current_page_num;
+    private int total_page_num;
     private List<IngredientResponseDto> search_list;
 }
