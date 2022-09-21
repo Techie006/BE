@@ -90,4 +90,10 @@ public class MemberController {
 
         return ResponseDto.success(profileResponseDto, "성공적으로 기본 프로필 사진으로 변경되었습니다.");
     }
+
+    @PatchMapping("api/password")
+    public ResponseDto<?> reissuePassword(@RequestBody EmailRequestDto requestDto){
+        memberService.sendPassword(requestDto);
+        return ResponseDto.success(null,"임시 비밀번호가 이메일로 전송되었습니다.");
+    }
 }
