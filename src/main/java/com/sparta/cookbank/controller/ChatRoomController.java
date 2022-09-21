@@ -8,6 +8,7 @@ import com.sparta.cookbank.domain.room.ChatRoom;
 import com.sparta.cookbank.domain.room.Room;
 import com.sparta.cookbank.domain.room.dto.ClassDto;
 import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
+import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
 import com.sparta.cookbank.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -27,7 +28,7 @@ public class ChatRoomController {
     @GetMapping("api/class")
     @ResponseBody
     public ResponseDto<?> room() {
-        List<ChatRoom> Rooms = chatService.findAllRoom();
+        List<RoomResponseDto> Rooms = chatService.findAllRoom();
         return ResponseDto.success(new ClassDto(Rooms),"성공적으로 클래스를 가져왔습니다.");
     }
 
