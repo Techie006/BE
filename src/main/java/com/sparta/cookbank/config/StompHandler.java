@@ -15,9 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-
-// import ... 생략
-
 @Slf4j
 @RequiredArgsConstructor
 @Component

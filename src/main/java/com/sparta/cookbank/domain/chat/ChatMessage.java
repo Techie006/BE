@@ -1,28 +1,16 @@
 package com.sparta.cookbank.domain.chat;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ChatMessage implements Serializable {
-
-    public ChatMessage() {
-    }
-
-    @Builder
-    public ChatMessage(MessageType type, String redis_class_id, String nickname, String message, long viewer_num) {
-        this.type = type;
-        this.redis_class_id = redis_class_id;
-        this.nickname = nickname;
-        this.message = message;
-        this.viewer_num = viewer_num;
-    }
-
     // 메시지 타입 : 입장, 퇴장, 채팅
     public enum MessageType {
         MESSAGE, ENTER, LEAVE
