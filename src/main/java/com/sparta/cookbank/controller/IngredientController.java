@@ -7,6 +7,8 @@ import com.sparta.cookbank.domain.ingredient.dto.RefrigeratorStateResponseDto;
 import com.sparta.cookbank.domain.myingredients.dto.IngredientRequestDto;
 import com.sparta.cookbank.service.IngredientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,13 +22,15 @@ public class IngredientController {
 
 
     @GetMapping("/api/ingredients/autocomplete")  // 식재료 자동완성(5개만 보여줌)
-    public ResponseDto<?> findAutoIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
-        return ingredientService.findAutoIngredient(requestDto.getFood_name(),request);
+    public ResponseDto<?> findAutoIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request
+                                             ,@PageableDefault(size = 5) Pageable pageable       ){
+        return ingredientService.findAutoIngredient(requestDto.getFood_name(),request,pageable);
     }
 
     @GetMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
-    public ResponseDto<?> findIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
-        return ingredientService.findIngredient(requestDto.getFood_name(),request);
+    public ResponseDto<?> findIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request,
+                                         @PageableDefault(size = 5) Pageable pageable){
+        return ingredientService.findIngredient(requestDto.getFood_name(),request,pageable);
     }
 
     @PostMapping("/api/ingredient")  // 식재료 작성
@@ -45,6 +49,12 @@ public class IngredientController {
     public ResponseDto<?> getMyIngredient(@RequestParam("storage") String storage, HttpServletRequest request) throws ParseException {
         return ingredientService.getMyIngredient(storage,request);
     }
+    // 카테고리별 식재료 조회
+    @GetMapping("/api/ingredients/detail")
+    public ResponseDto<?> getMyCategoryIngredient(@RequestParam("category") String category,HttpServletRequest request) throws ParseException {
+        return ingredientService.getMyCategoryIngredient(category,request);
+    }
+
 
     // 임박 식재료 조회(시간데이터..)
     @GetMapping("/api/ingredients/warning")
