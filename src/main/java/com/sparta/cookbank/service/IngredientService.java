@@ -525,7 +525,7 @@ public class IngredientService {
                 .build();
 
 
-        return ResponseDto.success(categoryIngredientDto,"준식");
+        return ResponseDto.success(categoryIngredientDto,"리스트 제공에 성공하였습니다.");
 
     }
 
