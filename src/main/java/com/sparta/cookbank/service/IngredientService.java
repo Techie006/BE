@@ -48,6 +48,11 @@ public class IngredientService {
         List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContaining(food_name);
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
+
+        // 검색내용이 없다면 예외처리리
+       if (ingredients.isEmpty()){
+            return ResponseDto.success("", "검색 내용이 없습니다.");
+        }
         // 5개만 보여주기
         for (int i = 0; i < 5; i++) {
             dtoList.add(IngredientResponseDto.builder()
@@ -60,6 +65,7 @@ public class IngredientService {
         AutoIngredientResponseDto responseDto = AutoIngredientResponseDto.builder()
                 .auto_complete(dtoList)
                 .build();
+
 
 
         return ResponseDto.success(responseDto, "자동완성 리스트 제공에 성공하였습니다.");
