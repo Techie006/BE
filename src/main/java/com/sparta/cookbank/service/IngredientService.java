@@ -15,6 +15,8 @@ import com.sparta.cookbank.repository.MyIngredientsRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -40,12 +42,12 @@ public class IngredientService {
     private final RedisIngredientRepo redisIngredientRepo;
 
     @Transactional(readOnly = true)
-    public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
+    public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request,Pageable pageable) {
 
         // Token 유효성 검사 없음
 
         //해당 검색어 찾기
-        List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContaining(food_name);
+        List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContainingOrderByFoodName(food_name);
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
 
@@ -72,18 +74,14 @@ public class IngredientService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request) {
+    public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request, Pageable pageable) {
 
         // Token 유효성 검사 없음
 
-
         //해당 검색 찾기
-        List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContaining(food_name);
-
-        // DTO사용
+        Page<Ingredient> ingredientPage = ingredientsRepository.findAllByFoodNameIsContaining(food_name, pageable);
         List<IngredientResponseDto> dtoList = new ArrayList<>();
-
-        for (Ingredient ingredient : ingredients) {
+        for(Ingredient ingredient : ingredientPage){
             dtoList.add(IngredientResponseDto.builder()
                     .id(ingredient.getId())
                     .food_name(ingredient.getFoodName())
@@ -92,7 +90,8 @@ public class IngredientService {
         }
 
         TotalIngredientResponseDto responseDto = TotalIngredientResponseDto.builder()
-                .total_count(dtoList.size())
+                .current_page_num(ingredientPage.getPageable().getPageNumber()+1)
+                .total_page_num(ingredientPage.getTotalPages())
                 .search_list(dtoList)
                 .build();
         return ResponseDto.success(responseDto,"식재료 검색에 성공하였습니다.");
@@ -470,5 +469,9 @@ public class IngredientService {
                 .build();
 
         return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+    }
+
+    public ResponseDto<?> getMyCategoryIngredient(String category, HttpServletRequest request) {
+        return ResponseDto.success("엄","준식");
     }
 }
