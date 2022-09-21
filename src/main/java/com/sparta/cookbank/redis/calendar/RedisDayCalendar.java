@@ -10,7 +10,7 @@ import javax.persistence.Id;
 
 @Getter
 @Builder
-@RedisHash(value = "dailyCalendar", timeToLive = 600) // 3600s
+@RedisHash(value = "dailyCalendar", timeToLive = 600) // 600s
 public class RedisDayCalendar {
     @Id
     private String id;
