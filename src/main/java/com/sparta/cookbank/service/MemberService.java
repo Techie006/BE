@@ -121,6 +121,7 @@ public class MemberService {
         if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호를 잘못 입력하셨습니다.");
         }
+        if (!member.isMail_auth()) throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
