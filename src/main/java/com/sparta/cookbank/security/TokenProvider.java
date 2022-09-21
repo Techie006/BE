@@ -131,7 +131,13 @@ public class TokenProvider {//토큰 만듬
     }
 
 
-
+    public Long getMemberId(String accessToken){
+        if(validateTokenWithoutTime(accessToken)) {
+            Claims claims = parseClaims(accessToken);
+            return Long.parseLong(claims.getId());
+        }
+        return -1L;
+    }
 
     private Claims parseClaims(String accessToken) {//만료된 토큰이어도 정보를 뽑아내기 위함
         try {
