@@ -52,13 +52,15 @@ public class ChatService {
     private final RedisTemplate redisTemplate;
     private final ChatRoomRepository chatRoomRepository;
 
-    public Room CreateRoom(RoomRequestDto requestDto, MultipartFile multipartFile) throws IOException{
+    public Room CreateRoom(RoomRequestDto requestDto) throws IOException{
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
         Recipe recipe = recipeRepository.findById(requestDto.getRecipe_id()).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 레시피를 찾을 수 없습니다.");
         });
+
+        MultipartFile multipartFile = requestDto.getFile();
 
         //파일 비었는지 검증
         if (multipartFile.isEmpty()) {
