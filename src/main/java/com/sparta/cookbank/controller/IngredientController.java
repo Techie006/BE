@@ -22,12 +22,12 @@ public class IngredientController {
 
 
     @GetMapping("/api/ingredients/autocomplete")  // 식재료 자동완성(5개만 보여줌)
-    public ResponseDto<?> findAutoIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request
-                                             ,@PageableDefault(size = 5) Pageable pageable       ){
-        return ingredientService.findAutoIngredient(requestDto.getFood_name(),request,pageable);
+    public ResponseDto<?> findAutoIngredient(@RequestParam("foodname") String requestDto, HttpServletRequest request
+                                             ,@PageableDefault(size = 5) Pageable pageable    ){
+        return ingredientService.findAutoIngredient(requestDto,request,pageable);
     }
 
-    @GetMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
+    @PostMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
     public ResponseDto<?> findIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request,
                                          @PageableDefault(size = 5) Pageable pageable){
         return ingredientService.findIngredient(requestDto.getFood_name(),request,pageable);
