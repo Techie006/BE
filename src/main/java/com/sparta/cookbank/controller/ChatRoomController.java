@@ -34,9 +34,8 @@ public class ChatRoomController {
 
     @PostMapping("/api/class")
     @ResponseBody
-    public ResponseDto<?> CreateClass(@RequestPart(value = "RoomRequestDto") RoomRequestDto requestDto,
-                                      @RequestPart(value = "Multipart") MultipartFile multipartFile) throws IOException {
-        Room room = chatService.CreateRoom(requestDto,multipartFile);
+    public ResponseDto<?> CreateClass(@ModelAttribute RoomRequestDto requestDto) throws IOException {
+        Room room = chatService.CreateRoom(requestDto);
         return ResponseDto.success(room,"성공적으로 방을 만들었습니다");
     }
 
