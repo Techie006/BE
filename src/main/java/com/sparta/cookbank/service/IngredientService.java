@@ -47,7 +47,7 @@ public class IngredientService {
         // Token 유효성 검사 없음
 
         //해당 검색어 찾기
-        List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContainingOrderByFoodName(food_name);
+        List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContainingOrderByMarkName(food_name);
         // DTO사용
         List<IngredientResponseDto> dtoList = new ArrayList<>();
 
@@ -140,17 +140,18 @@ public class IngredientService {
             return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
         }else {
             // Storage별 조회
-            Optional<RedisIngredient> ingredientList = redisIngredientRepo.findById(storage);
+            String redisStorage = member.getEmail()+storage;
+            Optional<RedisIngredient> ingredientList = redisIngredientRepo.findById(redisStorage);
 
             // 캐시에서 확인, 만약 없을시 DB에서 검색후 캐시저장.
             if(ingredientList.isEmpty()){
                 Storage storage1 = Storage.valueOf(storage);
-                List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorage(member.getId(), storage1);
+                List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage1);
                 List<MyIngredientResponseDto> dtoList = new ArrayList<>();
                 StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
                 //레디스 캐시에 저장..
                 RedisIngredient redisIngredient = RedisIngredient.builder()
-                        .id(storage)
+                        .id(redisStorage)
                         .storageList(responseDto)
                         .build();
                 //레디스 캐시에 저장..

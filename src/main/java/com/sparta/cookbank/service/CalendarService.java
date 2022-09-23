@@ -52,7 +52,8 @@ public class CalendarService {
         // 멤버 유효성 검사
         Member member = getMember();
         //레디스에서 찾기
-        Optional<RedisDayCalendar> redisDayCalendar = redisDayCalendarRepo.findById(day);
+        String redisDay = member.getEmail() + day;
+        Optional<RedisDayCalendar> redisDayCalendar = redisDayCalendarRepo.findById(redisDay);
         if (redisDayCalendar.isEmpty()){
             //해당 날짜 캘린더 다 찾기
             List<CalendarResponseDto> dtoList = new ArrayList<>();
@@ -64,7 +65,7 @@ public class CalendarService {
                     .build();
             // 레디스 저장
             RedisDayCalendar redisCalendar = RedisDayCalendar.builder()
-                    .id(day)
+                    .id(redisDay)
                     .meals(ListResponseDto)
                     .build();
             redisDayCalendarRepo.save(redisCalendar);

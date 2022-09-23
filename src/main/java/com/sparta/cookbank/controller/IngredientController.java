@@ -27,7 +27,7 @@ public class IngredientController {
         return ingredientService.findAutoIngredient(requestDto,request,pageable);
     }
 
-    @GetMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
+    @PostMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
     public ResponseDto<?> findIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request,
                                          @PageableDefault(size = 5) Pageable pageable){
         return ingredientService.findIngredient(requestDto.getFood_name(),request,pageable);
