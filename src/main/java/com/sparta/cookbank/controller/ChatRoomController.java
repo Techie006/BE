@@ -52,4 +52,11 @@ public class ChatRoomController {
         RecipeAllResponseDto recipe = chatService.ClassRecipeInfo(class_id);
         return ResponseDto.success(recipe,"성공적으로 레시피를 가져왔습니다.");
     }
+
+    @DeleteMapping("api/class/{class_id}")
+    @ResponseBody
+    public ResponseDto<?> RemoveClass(@PathVariable Long class_id){
+        chatService.CloseClass(class_id);
+        return ResponseDto.success(null,"클래스가 종료되었습니다.");
+    }
 }
