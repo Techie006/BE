@@ -37,6 +37,16 @@ public class Room {
     private String image;
 
     @Column(nullable = false)
-    private String redis_class_id;
+    private String redisClassId;
+
+    @Column
+    private String sessionId;
+
+    @Column
+    private Long viewrs;
+
+    public void FixViewrs(Long num){
+        this.viewrs = viewrs + num;
+    }
 
 }
