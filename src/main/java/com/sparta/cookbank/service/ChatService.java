@@ -297,5 +297,18 @@ public class ChatService {
         //DB 방 삭제
         roomRepository.delete(ClassRoom);
     }
+
+    public void DailyRemoveClass(){
+        List<Room> rooms = roomRepository.findAll();
+
+        //오픈비두에 활성화된 세션을 모두 가져와 리스트에 담음
+        List<Session> activeSessionList = openVidu.getActiveSessions();
+        List<String> sessions = new ArrayList<>();
+        for(Session session : activeSessionList) sessions.add(session.getSessionId());
+
+        for(Room room : rooms) {
+            if(!sessions.contains(room.getSessionId())) CloseClass(room.getClass_id());
+        }
+    }
 }
 
