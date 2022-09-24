@@ -14,6 +14,7 @@ import javax.persistence.Id;
 public class RedisIngredient {
     // @Id   // My ingredient 보여주기
     private String id;
+    private long total_nums;
     private StorageResponseDto storageList;
 
 }

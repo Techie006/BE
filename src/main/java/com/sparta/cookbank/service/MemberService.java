@@ -165,9 +165,7 @@ public class MemberService {
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
         refreshTokenRepository.deleteByMember(member);
-        // 로그아웃시 레디스 캐시 초기화.
-        redisIngredientRepo.deleteAll();
-        redisDayCalendarRepo.deleteAll();
+
     }
 
 
