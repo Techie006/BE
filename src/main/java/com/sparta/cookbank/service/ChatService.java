@@ -77,8 +77,7 @@ public class ChatService {
     }
 
 
-    public ViduRoomResponseDto CreateRoom(RoomRequestDto requestDto, MultipartFile multipartFile) throws IOException, OpenViduJavaClientException, OpenViduHttpException {
-    public Room CreateRoom(RoomRequestDto requestDto) throws IOException{
+    public ViduRoomResponseDto CreateRoom(RoomRequestDto requestDto) throws IOException, OpenViduJavaClientException, OpenViduHttpException {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -115,14 +114,14 @@ public class ChatService {
                 .name(requestDto.getClass_name())
                 .image(amazonS3Client.getUrl(bucketName, fileName).toString())
                 .recipe(recipe)
-                .redis_class_id(chatRoom.getRedis_class_id())
-                .session_id(viduToken.getSessionId())
+                .redisClassId(chatRoom.getRedis_class_id())
+                .sessionId(viduToken.getSessionId())
                 .viewrs(1L)
                 .build());
         return ViduRoomResponseDto.builder()
                 .class_id(room.getClass_id())
-                .redis_class_id(room.getRedis_class_id())
-                .session_id(room.getSession_id())
+                .redis_class_id(room.getRedisClassId())
+                .session_id(room.getSessionId())
                 .token(viduToken.getToken())
                 .build();
     }
@@ -167,14 +166,14 @@ public class ChatService {
         List<RoomResponseDto> responseDtos = new ArrayList<>();
         List<Room> Rooms = roomRepository.findAll();
         for(Room room : Rooms){
-            ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedis_class_id());
+            ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedisClassId());
             if(chatRoom != null) {
-                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedis_class_id()));
+                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedisClassId()));
 
                 responseDtos.add(RoomResponseDto.builder()
                         .class_id(room.getClass_id())
-                        .redis_class_id(room.getRedis_class_id())
-                        .session_id(room.getSession_id())
+                        .redis_class_id(room.getRedisClassId())
+                        .session_id(room.getSessionId())
                         .class_name(room.getName())
                         .viewer_nums(room.getViewrs())
                         .class_img(room.getImage())
@@ -192,11 +191,11 @@ public class ChatService {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.");
         });
-        String enterToken = enterNewToken(member,ClassRoom.getSession_id());
-        List<ChatMessage> chats = chatRoomRepository.findAllMessageByRoom(ClassRoom.getRedis_class_id());
+        String enterToken = enterNewToken(member,ClassRoom.getSessionId());
+        List<ChatMessage> chats = chatRoomRepository.findAllMessageByRoom(ClassRoom.getRedisClassId());
         chats.sort(new MiniComparator());
         return MessageResponseDto.builder()
-                .session_id(ClassRoom.getSession_id())
+                .session_id(ClassRoom.getSessionId())
                 .token(enterToken)
                 .chats(chats)
                 .build();
@@ -204,7 +203,7 @@ public class ChatService {
 
     @Transactional
     public void PlusMinusViewrs(String roomId, Long num){
-        Room room = roomRepository.findByRedis_class_id(roomId).orElseThrow(() -> {
+        Room room = roomRepository.findByRedisClassId(roomId).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
         });
         room.FixViewrs(num);
