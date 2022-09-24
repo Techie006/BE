@@ -7,23 +7,29 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sparta.cookbank.FileUtils;
 import com.sparta.cookbank.MiniComparator;
 import com.sparta.cookbank.domain.chat.ChatMessage;
+import com.sparta.cookbank.domain.chat.dto.MessageResponseDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
 import com.sparta.cookbank.domain.room.ChatRoom;
 import com.sparta.cookbank.domain.room.Room;
+import com.sparta.cookbank.domain.room.dto.OpenviduResponseDto;
 import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
 import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
+import com.sparta.cookbank.domain.room.dto.ViduRoomResponseDto;
 import com.sparta.cookbank.repository.*;
 import com.sparta.cookbank.security.SecurityUtil;
+import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -34,6 +40,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class ChatService {
+
     private final RoomRepository roomRepository;
 
     private final MemberRepository memberRepository;
@@ -41,6 +48,7 @@ public class ChatService {
     private final RecipeRepository recipeRepository;
 
     private final AmazonS3Client amazonS3Client;
+
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
@@ -52,13 +60,35 @@ public class ChatService {
     private final RedisTemplate redisTemplate;
     private final ChatRoomRepository chatRoomRepository;
 
-    public Room CreateRoom(RoomRequestDto requestDto) throws IOException{
+    // SDK의 진입점인 OpenVidu 개체
+    private OpenVidu openVidu;
+
+    // OpenVidu 서버가 수신하는 URL
+    @Value("${openvidu.url}")
+    private String OPENVIDU_URL;
+
+    // OpenVidu 서버와 공유되는 비밀
+    @Value("${openvidu.secret}")
+    private String OPENVIDU_SECRET;
+
+    @PostConstruct
+    public OpenVidu openVidu() {
+        return openVidu = new OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET);
+    }
+
+
+    public ViduRoomResponseDto CreateRoom(RoomRequestDto requestDto) throws IOException, OpenViduJavaClientException, OpenViduHttpException {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
         Recipe recipe = recipeRepository.findById(requestDto.getRecipe_id()).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 레시피를 찾을 수 없습니다.");
         });
+        //새로운 비디오방 생성
+        OpenviduResponseDto viduToken = createNewToken(member);
+
+        System.out.println("ViduToken : " + viduToken);
+
 
         MultipartFile multipartFile = requestDto.getFile();
 
@@ -79,13 +109,21 @@ public class ChatService {
             throw new IOException("변환에 실패했습니다.");
         }
         ChatRoom chatRoom = chatRoomRepository.createChatRoom(requestDto.getClass_name());
-        return roomRepository.save(Room.builder()
+        Room room = roomRepository.save(Room.builder()
                 .host(member)
                 .name(requestDto.getClass_name())
                 .image(amazonS3Client.getUrl(bucketName, fileName).toString())
                 .recipe(recipe)
-                .redis_class_id(chatRoom.getRedis_class_id())
+                .redisClassId(chatRoom.getRedis_class_id())
+                .sessionId(viduToken.getSessionId())
+                .viewrs(1L)
                 .build());
+        return ViduRoomResponseDto.builder()
+                .class_id(room.getClass_id())
+                .redis_class_id(room.getRedisClassId())
+                .session_id(room.getSessionId())
+                .token(viduToken.getToken())
+                .build();
     }
 
 
@@ -128,15 +166,16 @@ public class ChatService {
         List<RoomResponseDto> responseDtos = new ArrayList<>();
         List<Room> Rooms = roomRepository.findAll();
         for(Room room : Rooms){
-            ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedis_class_id());
+            ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedisClassId());
             if(chatRoom != null) {
-                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedis_class_id()));
+                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedisClassId()));
 
                 responseDtos.add(RoomResponseDto.builder()
                         .class_id(room.getClass_id())
-                        .redis_class_id(room.getRedis_class_id())
+                        .redis_class_id(room.getRedisClassId())
+                        .session_id(room.getSessionId())
                         .class_name(room.getName())
-                        .viewer_nums(chatRoom.getUserCount())
+                        .viewer_nums(room.getViewrs())
                         .class_img(room.getImage())
                         .build());
             }
@@ -144,13 +183,30 @@ public class ChatService {
         return responseDtos;
     }
 
-    public List<ChatMessage> findAllChatByRoom(Long class_id ){
+    public MessageResponseDto EnterRoom(Long class_id ) throws OpenViduJavaClientException, OpenViduHttpException {
         Room ClassRoom = roomRepository.findById(class_id).orElseThrow(() -> {
-            throw new IllegalArgumentException("해당 클래스를");
+            throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
         });
-        List<ChatMessage> chats = chatRoomRepository.findAllMessageByRoom(ClassRoom.getRedis_class_id());
+        if(ClassRoom.getViewrs() >= 50) throw new RuntimeException("방 인원수가 초과되었습니다.");
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("해당 사용자를 찾을 수 없습니다.");
+        });
+        String enterToken = enterNewToken(member,ClassRoom.getSessionId());
+        List<ChatMessage> chats = chatRoomRepository.findAllMessageByRoom(ClassRoom.getRedisClassId());
         chats.sort(new MiniComparator());
-        return chats;
+        return MessageResponseDto.builder()
+                .session_id(ClassRoom.getSessionId())
+                .token(enterToken)
+                .chats(chats)
+                .build();
+    }
+
+    @Transactional
+    public void PlusMinusViewrs(String roomId, Long num){
+        Room room = roomRepository.findByRedisClassId(roomId).orElseThrow(() -> {
+            throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
+        });
+        room.FixViewrs(num);
     }
 
     public RecipeAllResponseDto ClassRecipeInfo(Long classId){
@@ -168,6 +224,58 @@ public class ChatService {
                 .category(recipe.getRCP_PAT2())
                 .calorie(recipe.getINFO_ENG())
                 .build();
+    }
+
+    // 채팅방 생성 시 토큰 발급
+    private OpenviduResponseDto createNewToken(Member member) throws OpenViduJavaClientException, OpenViduHttpException {
+
+        // 사용자 연결 시 닉네임 전달
+        String serverData = member.getUsername();
+
+        // serverData을 사용하여 connectionProperties 객체를 빌드
+        ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC).data(serverData).build();
+
+        // 새로운 OpenVidu 세션(채팅방) 생성
+        Session session = openVidu.createSession();
+
+        String token = session.createConnection(connectionProperties).getToken();
+
+        return OpenviduResponseDto.builder()
+                .sessionId(session.getSessionId()) //리턴해주는 해당 세션아이디로 다른 유저 채팅방 입장시 요청해주시면 됩니다.
+                .token(token) //이 토큰으로 오픈비두에 해당 유저의 화상 미디어 정보를 받아주세요
+                .build();
+    }
+
+    //채팅방 입장 시 토큰 발급
+    private String enterNewToken(Member member, String sessionId) throws OpenViduJavaClientException, OpenViduHttpException {
+        String serverData = member.getUsername();
+
+        //serverData을 사용하여 connectionProperties 객체를 빌드
+        ConnectionProperties connectionProperties = new ConnectionProperties.Builder().type(ConnectionType.WEBRTC).data(serverData).build();
+
+        openVidu.fetch();
+
+        //오픈비두에 활성화된 세션을 모두 가져와 리스트에 담음
+        List<Session> activeSessionList = openVidu.getActiveSessions();
+
+        // 1. Request : 다른 유저가 타겟 채팅방에 입장하기 위한 타겟 채팅방의 세션 정보 , 입장 요청하는 유저 정보
+        Session session = null;
+
+        //활성화된 session의 sessionId들을 registerReqChatRoom에서 리턴한 sessionId(입장할 채팅방의 sessionId)와 비교
+        //같을 경우 해당 session으로 새로운 토큰을 생성
+        for (Session getSession : activeSessionList) {
+            if (getSession.getSessionId().equals(sessionId)) {
+                session = getSession;
+                break;
+            }
+        }
+        if (session == null){
+            throw new NullPointerException("방이 존재하지 않습니다.");
+        }
+
+        // 2. Openvidu에 유저 토큰 발급 요청 : 오픈비두 서버에 요청 유저가 타겟 채팅방에 입장할 수 있는 토큰을 발급 요청
+        //토큰을 가져옴
+        return session.createConnection(connectionProperties).getToken();
     }
 }
 

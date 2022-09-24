@@ -49,6 +49,7 @@ public class StompHandler implements ChannelInterceptor {
             chatRoomRepository.setUserEnterInfo(sessionId, roomId);
             // 채팅방의 인원수를 +1한다.
             chatRoomRepository.plusUserCount(roomId);
+            chatService.PlusMinusViewrs(roomId,1L);
             // 클라이언트 입장 메시지를 채팅방에 발송한다.(redis publish)
             chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.ENTER).redis_class_id(roomId).member_id(memberId).build());
             log.info("SUBSCRIBED {}, {}, {}", sessionId, memberId, roomId);
@@ -66,6 +67,7 @@ public class StompHandler implements ChannelInterceptor {
             String roomId = chatRoomRepository.getUserEnterRoomId(sessionId);
             // 채팅방의 인원수를 -1한다.
             chatRoomRepository.minusUserCount(roomId);
+            chatService.PlusMinusViewrs(roomId,-1L);
             // 클라이언트 퇴장 메시지를 채팅방에 발송한다.(redis publish)
             chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.LEAVE).redis_class_id(roomId).member_id(memberId).build());
             // 퇴장한 클라이언트의 roomId 맵핑 정보를 삭제한다.
