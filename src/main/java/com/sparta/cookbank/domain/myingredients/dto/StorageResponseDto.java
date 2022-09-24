@@ -12,5 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StorageResponseDto {
+    private long total_nums;
     private List<MyIngredientResponseDto> storage;
 }
