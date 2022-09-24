@@ -39,4 +39,14 @@ public class Room {
     @Column(nullable = false)
     private String redis_class_id;
 
+    @Column
+    private String session_id;
+
+    @Column
+    private Long viewrs;
+
+    public void FixViewrs(Long num){
+        this.viewrs = viewrs + num;
+    }
+
 }
