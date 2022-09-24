@@ -131,7 +131,8 @@ public class CalendarService {
                 .build();
 
         //레디스 캐싱 초기화
-        redisDayCalendarRepo.deleteAll();
+        String redisDay = member.getEmail() + requestDto.getDay();
+        redisDayCalendarRepo.deleteById(redisDay);
         return ResponseDto.success(calendarMealsDto, "성공적으로 해당 날짜에 식단을 생성하였습니다");
     }
 
@@ -156,11 +157,18 @@ public class CalendarService {
 
         // Request 에서 레시피에서 찾아야됨
         Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
+        String beforeDay = calendar.getMealDay();
 
+        //레디스 캐싱 초기화redisAfterDay
+        String redisAfterDay = member.getEmail() + requestDto.getDay();
+        String redisBeforeDay = member.getEmail() + beforeDay;
+        redisDayCalendarRepo.deleteById(redisAfterDay);
+        redisDayCalendarRepo.deleteById(redisBeforeDay);
+
+        // db 업데이트
         calendar.update(requestDto, recipe);
 
-        //캘린더 업데이트후 레디스 캐싱 초기화
-        redisDayCalendarRepo.deleteAll();
+
 
         //북마크 확인하기
         boolean liked = false;
@@ -233,6 +241,10 @@ public class CalendarService {
                 .build();
 
         calendarRepository.delete(calendar);
+        //캘린더 업데이트후 레디스 캐싱 초기화
+        String redisDay = member.getEmail() + calendar.getMealDay();
+        redisDayCalendarRepo.deleteById(redisDay);
+
 
         return ResponseDto.success(calendarMealsDto,"성공적으로 해당 날짜에 식단을 삭제하였습니다.");
 
@@ -432,38 +444,4 @@ public class CalendarService {
         return dtoList;
     }
 
-    public void saveRedisRecipe() {
-        //처음 조회시, Redis에 저장, 저장하는데 시간이 오래걸린다... 쓰짐말자
-        List<Recipe> recipeList = recipeRepository.findAll(); //2초정도.. ㅇ
-        for (int i =0; i<recipeList.size();i++){
-            RedisRecipe recipe = RedisRecipe.builder()
-                    .id(recipeList.get(i).getId())
-                    .RCP_NM(recipeList.get(i).getRCP_NM())
-                    .RCP_WAY2(recipeList.get(i).getRCP_WAY2())
-                    .RCP_PAT2(recipeList.get(i).getRCP_PAT2())
-                    .INFO_ENG(recipeList.get(i).getINFO_ENG())
-                    .INFO_CAR(recipeList.get(i).getINFO_CAR())
-                    .INFO_PRO(recipeList.get(i).getINFO_PRO())
-                    .INFO_FAT(recipeList.get(i).getINFO_FAT())
-                    .INFO_NA(recipeList.get(i).getINFO_NA())
-                    .ATT_FILE_NO_MAIN(recipeList.get(i).getATT_FILE_NO_MAIN())
-                    .ATT_FILE_NO_MK(recipeList.get(i).getATT_FILE_NO_MK())
-                    .RCP_PARTS_DTLS(recipeList.get(i).getRCP_PARTS_DTLS())
-                    .MAIN_INGREDIENTS(recipeList.get(i).getMAIN_INGREDIENTS())
-                    .MANUAL01(recipeList.get(i).getMANUAL01())
-                    .MANUAL_IMG01(recipeList.get(i).getMANUAL_IMG01())
-                    .MANUAL02(recipeList.get(i).getMANUAL02())
-                    .MANUAL_IMG02(recipeList.get(i).getMANUAL_IMG02())
-                    .MANUAL03(recipeList.get(i).getMANUAL03())
-                    .MANUAL_IMG03(recipeList.get(i).getMANUAL_IMG03())
-                    .MANUAL04(recipeList.get(i).getMANUAL04())
-                    .MANUAL_IMG04(recipeList.get(i).getMANUAL_IMG04())
-                    .MANUAL05(recipeList.get(i).getMANUAL05())
-                    .MANUAL_IMG05(recipeList.get(i).getMANUAL_IMG05())
-                    .MANUAL06(recipeList.get(i).getMANUAL06())
-                    .MANUAL_IMG06(recipeList.get(i).getMANUAL_IMG06())
-                    .build();
-            redisRecipeRepo.save(recipe);
-        }
-    }
 }

@@ -79,6 +79,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //embedded-redis
     compileOnly group: 'it.ozimov', name: 'embedded-redis', version: '0.7.2'
+
+    //    openvidu
+    implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.22.0'
+    implementation group: 'junit', name: 'junit', version: '4.13.1'
+    implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 }
 
 tasks.named('test') {
