@@ -336,11 +336,18 @@ public class IngredientService {
 
     // 나만의 냉장고 상태 표시
     @Transactional(readOnly = true)
-    public RefrigeratorStateResponseDto MyRefrigeratorState() {
+    public IngredientsRatioResponseDto MyRefrigeratorState() {
+
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
+
+        boolean empty = false;
+
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+        if (myIngredientsList.isEmpty()) {
+            empty = true;
+        }
 
         List<Integer> countList = new ArrayList<>();
 
@@ -366,7 +373,8 @@ public class IngredientService {
         countList.add(warningCount);
         countList.add(fineCount);
 
-        RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
+        IngredientsRatioResponseDto refrigeratorStateResponseDto = IngredientsRatioResponseDto.builder()
+                .empty(empty)
                 .count(countList)
                 .build();
         return refrigeratorStateResponseDto;
@@ -374,10 +382,13 @@ public class IngredientService {
 
     // 제품류 나눠서 보여주기
     @Transactional(readOnly = true)
-    public IngredientsByCategoryResponseDto ingredientsByCategory() {
+    public IngredientsRatioResponseDto ingredientsByCategory() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
+
+        boolean empty = false;
+
         // 농산물
         int produceNum = 0;
         // 축산물
@@ -393,7 +404,7 @@ public class IngredientService {
         List<Integer> countList = new ArrayList<>();
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
         if (myIngredientsList.isEmpty()) {
-            throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
+            empty = true;
         }
         // 카테고리별 재료 분류
         for (MyIngredients myIngredients : myIngredientsList) {
@@ -427,7 +438,8 @@ public class IngredientService {
         countList.add(etcNum);
 
 
-        IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
+        IngredientsRatioResponseDto ingredientsByCategoryResponseDto = IngredientsRatioResponseDto.builder()
+                .empty(empty)
                 .count(countList)
                 .build();
         return ingredientsByCategoryResponseDto;
