@@ -307,7 +307,16 @@ public class ChatService {
         for(Session session : activeSessionList) sessions.add(session.getSessionId());
 
         for(Room room : rooms) {
-            if(!sessions.contains(room.getSessionId())) CloseClass(room.getClass_id());
+            if(!sessions.contains(room.getSessionId())) {
+                chatRoomRepository.removeChat(room.getRedisClassId());
+                //시청자수 기록 삭제
+                chatRoomRepository.removeCount(room.getRedisClassId());
+                //방 삭제
+                chatRoomRepository.removeChatRoom(room.getRedisClassId());
+
+                //DB 방 삭제
+                roomRepository.delete(room);
+            }
         }
     }
 }
