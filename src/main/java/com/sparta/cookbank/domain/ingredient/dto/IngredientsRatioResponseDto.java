@@ -7,10 +7,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@Getter
-public class IngredientsByCategoryResponseDto {
-    private List<Integer> count;
+public class IngredientsRatioResponseDto {
+    private boolean empty;
+    private List<Integer>count;
 }
