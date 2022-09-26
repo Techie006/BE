@@ -53,23 +53,31 @@ public class DoneRecipeService {
 
 
     // 탄단지나 통계
-    public NutrientsRatioResponseDto getNutrientsRatio(NutrientsRatioRequestDto requestDto) {
+    public RatioResponseDto getNutrientsRatio(NutrientsRatioRequestDto requestDto) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
 
-        //내림차순으로 받아와 스택에 저장
-        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_IdOrderByCreatedAtDesc(member.getId());
-        if (doneRecipeList.isEmpty()) throw new NullPointerException("완료한 레시피가 없습니다");
-        Stack<DoneRecipe> stack = new Stack<>();
-        stack.addAll(doneRecipeList);
+        boolean empty = false;
 
+        List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_IdOrderByCreatedAtDesc(member.getId());
+        if (doneRecipeList.isEmpty()) {
+            empty = true;
+
+            return RatioResponseDto.builder()
+                    .empty(empty)
+                    .build();
+        }
         //시작날짜와 끝날짜 설정
         LocalDate str = doneRecipeList.get(doneRecipeList.size() - 1).getCreatedAt();
-        if (requestDto.getFilter().equals("month")) str = str.minusDays(str.getDayOfMonth() - 1);
-        else if (requestDto.getFilter().equals("week")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
+        if (requestDto.getFilter().equals("월별")) str = str.minusDays(str.getDayOfMonth() - 1);
+        else if (requestDto.getFilter().equals("주별")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
         LocalDate end = doneRecipeList.get(0).getCreatedAt();
         LocalDate cur = str;
+
+        //내림차순으로 받아와 스택에 저장
+        Stack<DoneRecipe> stack = new Stack<>();
+        stack.addAll(doneRecipeList);
 
         //총합을 담을 리스트
         List<LocalDate> days = new ArrayList<>();
@@ -81,13 +89,13 @@ public class DoneRecipeService {
         while (!cur.isAfter(end)) {
             days.add(cur);
             switch (requestDto.getFilter()) {
-                case "month":
+                case "월별":
                         cur = cur.plusMonths(1);
                     break;
-                case "week":
+                case "주별":
                     cur = cur.plusWeeks(1);
                     break;
-                case "day":
+                case "일별":
                     cur = cur.plusDays(1);
                     break;
             }
@@ -122,13 +130,13 @@ public class DoneRecipeService {
         else{
             while(size<7){
                 switch (requestDto.getFilter()) {
-                    case "month":
+                    case "월별":
                         str = str.minusMonths(1);
                         break;
-                    case "week":
+                    case "주별":
                         str = str.minusWeeks(1);
                         break;
-                    case "day":
+                    case "일별":
                         str = str.minusDays(1);
                         break;
                 }
@@ -140,30 +148,42 @@ public class DoneRecipeService {
                 size++;
             }
         }
-
-        return NutrientsRatioResponseDto.builder()
+        NutrientsRatioResponseDto nutrientsRatioResponseDto = NutrientsRatioResponseDto.builder()
                 .days(days)
                 .carbohydrates(carbohydrates)
                 .proteins(proteins)
                 .fats(fats)
                 .build();
+
+        return RatioResponseDto.builder()
+                .empty(empty)
+                .statistics(nutrientsRatioResponseDto)
+                .build();
     }
 
-    public CaloriesRatioResponseDto getCaloriesRatio(CaloriesRatioRequestDto requestDto) {
+    public RatioResponseDto getCaloriesRatio(CaloriesRatioRequestDto requestDto) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
 
+        boolean empty = false;
+
         //내림차순으로 받아와 스택에 저장
         List<DoneRecipe> doneRecipeList = doneRecipeRepository.findAllByMember_IdOrderByCreatedAtDesc(member.getId());
-        if (doneRecipeList.isEmpty()) throw new NullPointerException("완료한 레시피가 없습니다");
+        if (doneRecipeList.isEmpty()) {
+            empty = true;
+
+            return RatioResponseDto.builder()
+                    .empty(empty)
+                    .build();
+        }
         Stack<DoneRecipe> stack = new Stack<>();
         stack.addAll(doneRecipeList);
 
         //시작날짜와 끝날짜 설정
         LocalDate str = doneRecipeList.get(doneRecipeList.size() - 1).getCreatedAt();
-        if (requestDto.getFilter().equals("month")) str = str.minusDays(str.getDayOfMonth() - 1);
-        else if (requestDto.getFilter().equals("week")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
+        if (requestDto.getFilter().equals("월별")) str = str.minusDays(str.getDayOfMonth() - 1);
+        else if (requestDto.getFilter().equals("주별")) str = str.minusDays(str.getDayOfWeek().getValue() - 1);
         LocalDate end = doneRecipeList.get(0).getCreatedAt();
         LocalDate cur = str;
 
@@ -174,13 +194,13 @@ public class DoneRecipeService {
         while (!cur.isAfter(end)) {
             days.add(cur);
             switch (requestDto.getFilter()) {
-                case "month":
+                case "월별":
                     cur = cur.plusMonths(1);
                     break;
-                case "week":
+                case "주별":
                     cur = cur.plusWeeks(1);
                     break;
-                case "day":
+                case "일별":
                     cur = cur.plusDays(1);
                     break;
             }
@@ -207,13 +227,13 @@ public class DoneRecipeService {
         else{
             while(size<7){
                 switch (requestDto.getFilter()) {
-                    case "month":
+                    case "월별":
                         str = str.minusMonths(1);
                         break;
-                    case "week":
+                    case "주별":
                         str = str.minusWeeks(1);
                         break;
-                    case "day":
+                    case "일별":
                         str = str.minusDays(1);
                         break;
                 }
@@ -224,9 +244,14 @@ public class DoneRecipeService {
             }
         }
 
-        return CaloriesRatioResponseDto.builder()
+        CaloriesRatioResponseDto caloriesRatioResponseDto = CaloriesRatioResponseDto.builder()
                 .days(days)
                 .calories(calories)
+                .build();
+
+        return RatioResponseDto.builder()
+                .empty(empty)
+                .statistics(caloriesRatioResponseDto)
                 .build();
     }
 
@@ -244,23 +269,30 @@ public class DoneRecipeService {
 
 
     //어제 대비 오늘 데이터 조회 통계
-    public DailyRatioResponseDto getDailyRatio() {
+    public RatioResponseDto getDailyRatio() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("유저정보가 올바르지 않습니다.")
         );
+
+        boolean empty = false;
 
         // 현재 날짜 구하기
         LocalDate today = LocalDate.now();
         List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
         List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
         if (todayList.isEmpty() || yesterdayList.isEmpty()) {
-            throw new IllegalArgumentException("데이터를 추가해주세요!");
+            empty =true;
         }
 
 
-        return DailyRatioResponseDto.builder()
+        DailyRatioResponseDto dailyRatioResponseDto = DailyRatioResponseDto.builder()
                 .today(getDayNutrientData(todayList))
                 .yesterday(getDayNutrientData(yesterdayList))
+                .build();
+
+        return RatioResponseDto.builder()
+                .empty(empty)
+                .statistics(dailyRatioResponseDto)
                 .build();
     }
 

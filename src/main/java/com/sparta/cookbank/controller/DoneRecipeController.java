@@ -28,23 +28,23 @@ public class DoneRecipeController {
     }
 
     // 탄단지나 통계
-    @PostMapping("/api/statistics/ratio/nutrients")
+    @GetMapping("/api/statistics/ratio/nutrients")
     public ResponseDto<?> getNutrientsRatio(@RequestBody NutrientsRatioRequestDto requestDto ) {
-        NutrientsRatioResponseDto nutrientsRatio = doneRecipeService.getNutrientsRatio(requestDto);
+        RatioResponseDto nutrientsRatio = doneRecipeService.getNutrientsRatio(requestDto);
         return ResponseDto.success(nutrientsRatio, "통계자료 제공에 성공하였습니다.");
     }
 
     // 열량 통계
-    @PostMapping("/api/statistics/ratio/calories")
+    @GetMapping("/api/statistics/ratio/calories")
     public ResponseDto<?> getCaloriesRatio(@RequestBody CaloriesRatioRequestDto requestDto) {
-        CaloriesRatioResponseDto caloriesRatio = doneRecipeService.getCaloriesRatio(requestDto);
+        RatioResponseDto caloriesRatio = doneRecipeService.getCaloriesRatio(requestDto);
         return ResponseDto.success(caloriesRatio, "통계자료 제공에 성공하였습니다.");
     }
 
     //어제 대비 오늘 데이터 조회 통계
     @GetMapping("/api/statistics/daily")
     public ResponseDto<?> getDailyRatio() {
-        DailyRatioResponseDto dailyRatio = doneRecipeService.getDailyRatio();
+        RatioResponseDto dailyRatio = doneRecipeService.getDailyRatio();
         return ResponseDto.success(dailyRatio, "통계자료 제공에 성공하였습니다.");
     }
 }
