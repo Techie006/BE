@@ -118,7 +118,8 @@ public class IngredientService {
                 .build();
         myIngredientsRepository.save(myIngredients);
         // 레디스 캐시 초기화.
-        redisIngredientRepo.deleteAll();
+        String redisStorage = member.getEmail()+requestDto.getStorage();
+        redisIngredientRepo.deleteById(redisStorage);
         return ResponseDto.success("","작성완료");
     }
 
@@ -131,11 +132,15 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
+        //전체 갯수 조회
+        List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+        long total_nums = totalMyIngredients.size();
+
         // 나의 재료 전체조회
         if(storage.equals("")){
-            List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
-            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
-            StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
+
+            StorageResponseDto responseDto = getStorageResponseDto(totalMyIngredients, dtoList,total_nums);
 
             return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
         }else {
@@ -147,11 +152,11 @@ public class IngredientService {
             if(ingredientList.isEmpty()){
                 Storage storage1 = Storage.valueOf(storage);
                 List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage1);
-                List<MyIngredientResponseDto> dtoList = new ArrayList<>();
-                StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList);
+                StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList,total_nums);
                 //레디스 캐시에 저장..
                 RedisIngredient redisIngredient = RedisIngredient.builder()
                         .id(redisStorage)
+                        .total_nums(total_nums)/// 여기에 저장
                         .storageList(responseDto)
                         .build();
                 //레디스 캐시에 저장..
@@ -233,7 +238,7 @@ public class IngredientService {
         extracted(request);
 
         // 멤버 유효성 검사
-        getMember();
+        Member member = getMember();
 
 
 
@@ -249,7 +254,8 @@ public class IngredientService {
 
         myIngredientsRepository.delete(myIngredients);
         // 레디스 캐시 초기화.
-        redisIngredientRepo.deleteAll();
+        String redisStorage = member.getEmail()+myIngredients.getStorage();
+        redisIngredientRepo.deleteById(redisStorage);
         return ResponseDto.success("","재료 삭제가 성공하였습니다.");
     }
 
@@ -273,7 +279,8 @@ public class IngredientService {
         throw new RuntimeException("not valid token !!");
     }
 
-    private StorageResponseDto getStorageResponseDto(List<MyIngredients> myIngredients, List<MyIngredientResponseDto> dtoList) throws ParseException {
+    private StorageResponseDto getStorageResponseDto(List<MyIngredients> myIngredients, List<MyIngredientResponseDto> dtoList,
+                                                     long total_nums  ) throws ParseException {
         //현재시각으로 d_day 구하기
         LocalDate now = LocalDate.now();
         String nowString = now.toString();
@@ -292,7 +299,7 @@ public class IngredientService {
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
-                        .d_date("유통기간만료")
+                        .d_date("만료")
                         .build());
 
             }else if(diffDays == 0){ // 당일 재료는 "D-DAY"로출력
@@ -321,6 +328,7 @@ public class IngredientService {
         }
 
         StorageResponseDto responseDto = StorageResponseDto.builder()
+                .total_nums(total_nums)// 넣기
                 .storage(dtoList)
                 .build();
         return responseDto;
@@ -328,11 +336,18 @@ public class IngredientService {
 
     // 나만의 냉장고 상태 표시
     @Transactional(readOnly = true)
-    public RefrigeratorStateResponseDto MyRefrigeratorState() {
+    public IngredientsRatioResponseDto MyRefrigeratorState() {
+
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
+
+        boolean empty = false;
+
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+        if (myIngredientsList.isEmpty()) {
+            empty = true;
+        }
 
         List<Integer> countList = new ArrayList<>();
 
@@ -358,7 +373,8 @@ public class IngredientService {
         countList.add(warningCount);
         countList.add(fineCount);
 
-        RefrigeratorStateResponseDto refrigeratorStateResponseDto = RefrigeratorStateResponseDto.builder()
+        IngredientsRatioResponseDto refrigeratorStateResponseDto = IngredientsRatioResponseDto.builder()
+                .empty(empty)
                 .count(countList)
                 .build();
         return refrigeratorStateResponseDto;
@@ -366,10 +382,13 @@ public class IngredientService {
 
     // 제품류 나눠서 보여주기
     @Transactional(readOnly = true)
-    public IngredientsByCategoryResponseDto ingredientsByCategory() {
+    public IngredientsRatioResponseDto ingredientsByCategory() {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인 한 유저를 찾을 수 없습니다.");
         });
+
+        boolean empty = false;
+
         // 농산물
         int produceNum = 0;
         // 축산물
@@ -385,7 +404,7 @@ public class IngredientService {
         List<Integer> countList = new ArrayList<>();
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
         if (myIngredientsList.isEmpty()) {
-            throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
+            empty = true;
         }
         // 카테고리별 재료 분류
         for (MyIngredients myIngredients : myIngredientsList) {
@@ -419,7 +438,8 @@ public class IngredientService {
         countList.add(etcNum);
 
 
-        IngredientsByCategoryResponseDto ingredientsByCategoryResponseDto = IngredientsByCategoryResponseDto.builder()
+        IngredientsRatioResponseDto ingredientsByCategoryResponseDto = IngredientsRatioResponseDto.builder()
+                .empty(empty)
                 .count(countList)
                 .build();
         return ingredientsByCategoryResponseDto;

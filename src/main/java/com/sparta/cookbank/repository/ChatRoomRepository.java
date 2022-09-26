@@ -51,6 +51,10 @@ public class ChatRoomRepository {
         return chatRoom;
     }
 
+    public void removeChatRoom(String roomId){
+        hashOpsChatRoom.delete(CHAT_ROOMS, roomId);
+    }
+
     // 유저가 입장한 채팅방ID와 유저 세션ID 맵핑 정보 저장
     public void setUserEnterInfo(String sessionId, String roomId) {
         hashOpsEnterInfo.put(ENTER_INFO, sessionId, roomId);
@@ -81,6 +85,10 @@ public class ChatRoomRepository {
         return Optional.ofNullable(valueOps.decrement(USER_COUNT + "_" + roomId)).filter(count -> count > 0).orElse(0L);
     }
 
+    public void removeCount(String roomId){
+        valueOps.getAndDelete(USER_COUNT + "_" + roomId);
+    }
+
     public ChatMessage saveMessage(ChatMessage message){
         message.setRedis_chat_id(UUID.randomUUID().toString());
         message.setCreateAt(LocalTime.now().toString());
@@ -91,4 +99,9 @@ public class ChatRoomRepository {
     public List<ChatMessage> findAllMessageByRoom(String roomId){
         return hashOpsChatMessage.values(USER_CHAT+"_"+roomId);
     }
+
+    public void removeChat (String roomId){
+        hashOpsChatMessage.delete(USER_CHAT+"_"+roomId);
+    }
+
 }
