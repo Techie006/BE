@@ -277,5 +277,47 @@ public class ChatService {
         //토큰을 가져옴
         return session.createConnection(connectionProperties).getToken();
     }
+
+    public void CloseClass(Long classId){
+        Room ClassRoom = roomRepository.findById(classId).orElseThrow(() -> {
+            throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
+        });
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("해당 멤버를 찾을 수 없습니다");
+        });
+        if(ClassRoom.getHost() != member) throw new RuntimeException("호스트가 아닙니다.");
+
+        //채팅기록 삭제
+        chatRoomRepository.removeChat(ClassRoom.getRedisClassId());
+        //시청자수 기록 삭제
+        chatRoomRepository.removeCount(ClassRoom.getRedisClassId());
+        //방 삭제
+        chatRoomRepository.removeChatRoom(ClassRoom.getRedisClassId());
+
+        //DB 방 삭제
+        roomRepository.delete(ClassRoom);
+    }
+
+    public void DailyRemoveClass(){
+        List<Room> rooms = roomRepository.findAll();
+
+        //오픈비두에 활성화된 세션을 모두 가져와 리스트에 담음
+        List<Session> activeSessionList = openVidu.getActiveSessions();
+        List<String> sessions = new ArrayList<>();
+        for(Session session : activeSessionList) sessions.add(session.getSessionId());
+
+        for(Room room : rooms) {
+            if(!sessions.contains(room.getSessionId())) {
+                chatRoomRepository.removeChat(room.getRedisClassId());
+                //시청자수 기록 삭제
+                chatRoomRepository.removeCount(room.getRedisClassId());
+                //방 삭제
+                chatRoomRepository.removeChatRoom(room.getRedisClassId());
+
+                //DB 방 삭제
+                roomRepository.delete(room);
+            }
+        }
+    }
 }
 
