@@ -313,6 +313,7 @@ public class RecipeService {
                             .build()
             );
         }
+        
         return AutoCompleteResultResponseDto.builder()
                 .empty(empty)
                 .recipes(autoCompleteResponseList)
