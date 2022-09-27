@@ -14,9 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,64 +35,62 @@ public class RecipeService {
         String base = requestDto.getBase().split(",")[0];
         String input = base.split(" ")[0];
         requestDto.setBase(input);
-        List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto);
+
+        List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
         List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
 
+        HashMap<Recipe, Integer> recipeMap = new HashMap<>();
+
         for (Recipe recipe : recipeList) {
-            // 메인 재료들을  리스트에 담음
-            List<String> mainIngredientsList = new ArrayList<>();
-            String[] splitMainList = recipe.getMAIN_INGREDIENTS().split(",");
-            for( String s : splitMainList){
-                mainIngredientsList.add(s);
-            }
+            int count = 0;
 
-
-            // 모든 재료들을 리스트에 담음
-            List<String> ingredientsList = new ArrayList<>();
-            String[] splitList = recipe.getRCP_PARTS_DTLS().split(",");
-            for (String s : splitList) {
-                ingredientsList.add(s);
-            }
-
-
-            //북마크된 레시피
-            Optional<LikeRecipe> likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_IdOrderByRecipe(member.getId(), recipe.getId());
-            boolean likes= likeRecipe.isPresent();
-
+            // 서브 재료의 개수만큼 반복문을 돌리는데
             for (int i = 0; i < requestDto.getFoods().size(); i++) {
+                // 만약 가져온 recipe 에 검색어 i 번째가 포함되면 count를  1 증가시키고 HashMap에 저장한다. 포함되는게 없으면 Recipe와 함께 0을 저장한다.
                 if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
-                    recipeRecommendResponseDto.add(
-                            RecipeRecommendResponseDto.builder()
-                                    .id(recipe.getId())
-                                    .recipe_name(recipe.getRCP_NM())
-                                    .common_ingredients(mainIngredientsList)
-                                    .recipe_image(recipe.getATT_FILE_NO_MK())
-                                    .ingredients(ingredientsList)
-                                    .method(recipe.getRCP_WAY2())
-                                    .category(recipe.getRCP_PAT2())
-                                    .calorie(recipe.getINFO_ENG())
-                                    .liked(likes)
-                                    .build()
-                    );
+                    count++;
+                    recipeMap.put(recipe, count);
+                } else {
+                    recipeMap.put(recipe,0);
                 }
             }
+        }
+
+        // 저장한 map에서 count를 내림차순으로 정렬하기 위해 list 형태로 map을 가져온다.
+        List<Map.Entry<Recipe, Integer>> list = new LinkedList<>(recipeMap.entrySet());
+        // 람다식을 통해 내림차순으로 정렬한다.
+        list.sort(((o1, o2) -> recipeMap.get(o2.getKey()) - recipeMap.get(o1.getKey())));
+
+        for (Map.Entry<Recipe, Integer> entry : list) {
+            boolean liked = false;
+            LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), entry.getKey().getId());
+            if (!(likeRecipe == null)) {
+                liked = true;
+            }
+            // 메인 재료들을  리스트에 담음
+            List<String> mainIngredientsList = new ArrayList<>();
+            mainIngredientsList.add(entry.getKey().getMAIN_INGREDIENTS());
+            // 모든 재료들을 리스트에 담음
+            List<String> ingredientsList = new ArrayList<>();
+            ingredientsList.add(entry.getKey().getRCP_PARTS_DTLS());
             recipeRecommendResponseDto.add(
                     RecipeRecommendResponseDto.builder()
-                            .id(recipe.getId())
-                            .recipe_name(recipe.getRCP_NM())
+                            .id(entry.getKey().getId())
+                            .recipe_name(entry.getKey().getRCP_NM())
+                            .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
+                            .liked(liked)
                             .common_ingredients(mainIngredientsList)
                             .ingredients(ingredientsList)
-                            .method(recipe.getRCP_WAY2())
-                            .category(recipe.getRCP_PAT2())
-                            .calorie(recipe.getINFO_ENG())
+                            .method(entry.getKey().getRCP_WAY2())
+                            .category(entry.getKey().getRCP_PAT2())
+                            .calorie(entry.getKey().getINFO_ENG())
                             .build()
             );
         }
-        RecipeRecommendResultResponseDto responseDto = RecipeRecommendResultResponseDto.builder()
+
+        return RecipeRecommendResultResponseDto.builder()
                 .recipes(recipeRecommendResponseDto)
                 .build();
-
-        return responseDto;
     }
 
     // 레시피 상세 조회
@@ -293,5 +289,20 @@ public class RecipeService {
         return recipeAllResponseDtoList;
     }
 
+    // 검색어 자동완성
+    @Transactional(readOnly = true)
+    public AutoCompleteResultResponseDto getAutoComplete(AutoCompleteRequestDto requestDto) {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
+        });
+
+        List<Recipe> recipeList = recipeRepository.findAllByRCP_NM(requestDto.getKeyword());
+        List<AutoCompleteResponseDto> autoCompleteResponseList = new ArrayList<>();
+
+        boolean empty = false;
+
+        if (recipeList.isEmpty()) {
+            empty = true;
+        }
 
 }
