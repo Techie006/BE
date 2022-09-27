@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,10 +43,24 @@ public class RecipeService {
         for (Recipe recipe : recipeList) {
             // 메인 재료들을  리스트에 담음
             List<String> mainIngredientsList = new ArrayList<>();
-            mainIngredientsList.add(recipe.getMAIN_INGREDIENTS());
+            String[] splitMainList = recipe.getMAIN_INGREDIENTS().split(",");
+            for( String s : splitMainList){
+                mainIngredientsList.add(s);
+            }
+
+
             // 모든 재료들을 리스트에 담음
             List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+            String[] splitList = recipe.getRCP_PARTS_DTLS().split(",");
+            for (String s : splitList) {
+                ingredientsList.add(s);
+            }
+
+
+            //북마크된 레시피
+            Optional<LikeRecipe> likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_IdOrderByRecipe(member.getId(), recipe.getId());
+            boolean likes= likeRecipe.isPresent();
+
             for (int i = 0; i < requestDto.getFoods().size(); i++) {
                 if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
                     recipeRecommendResponseDto.add(
@@ -53,10 +68,12 @@ public class RecipeService {
                                     .id(recipe.getId())
                                     .recipe_name(recipe.getRCP_NM())
                                     .common_ingredients(mainIngredientsList)
+                                    .recipe_image(recipe.getATT_FILE_NO_MK())
                                     .ingredients(ingredientsList)
                                     .method(recipe.getRCP_WAY2())
                                     .category(recipe.getRCP_PAT2())
                                     .calorie(recipe.getINFO_ENG())
+                                    .liked(likes)
                                     .build()
                     );
                 }
