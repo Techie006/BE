@@ -26,10 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -202,7 +199,7 @@ public class IngredientService {
                 d_day ="+"+diffDays.toString();
                 outList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
-                        .image_icon(myIngredient.getIngredient().getIconImage())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -214,7 +211,7 @@ public class IngredientService {
                 d_day ="-"+diffDays.toString();
                 hurryList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
-                        .image_icon(myIngredient.getIngredient().getIconImage())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -297,7 +294,7 @@ public class IngredientService {
                 diffDays = -diffDays;
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
-                        .image_icon(myIngredient.getIngredient().getIconImage())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -308,7 +305,7 @@ public class IngredientService {
             }else if(diffDays == 0){ // 당일 재료는 "D-DAY"로출력
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
-                        .image_icon(myIngredient.getIngredient().getIconImage())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -320,7 +317,7 @@ public class IngredientService {
 
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
-                        .image_icon(myIngredient.getIngredient().getIconImage())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -483,8 +480,6 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
-        List<TotalMyIngredientDto> dtoList = new ArrayList<>();
 
         //현재시각으로 d_day 구하기
         LocalDate now = LocalDate.now();
@@ -497,11 +492,45 @@ public class IngredientService {
         List<MyIngredients> drinkList = new ArrayList<>();
         List<MyIngredients> etcList = new ArrayList<>();
 
-        if (myIngredientsList.isEmpty()) {
-            throw new IllegalArgumentException("해당 사용자가 입력한 식재료가 없습니다.");
+
+
+        //Storage별 분류
+        if( category.equals("freeze") ||category.equals("refrigerated")||category.equals("room_temp")) {
+
+            String redisStorage = member.getEmail()+category;
+            Optional<RedisIngredient> ingredientList = redisIngredientRepo.findById(redisStorage);
+
+            // 캐시에서 확인, 만약 없을시 DB에서 검색후 캐시저장.
+            if(ingredientList.isEmpty()){
+                Storage storage1 = Storage.valueOf(category);
+                List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage1);
+                long total_nums = 0;
+                List<MyIngredientResponseDto> dtoList1 = new ArrayList<>();
+                StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList1,total_nums);
+                //레디스 캐시에 저장..
+                RedisIngredient redisIngredient = RedisIngredient.builder()
+                        .id(redisStorage)
+                        .total_nums(total_nums)/// 여기에 저장
+                        .storageList(responseDto)
+                        .build();
+                //레디스 캐시에 저장..
+                redisIngredientRepo.save(redisIngredient);
+
+                return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+            }else {   // 캐시에 있을시 캐시를 출력.
+                RedisIngredient redisIngredient = ingredientList.get();
+                StorageResponseDto responseDto = redisIngredient.getStorageList();
+
+                return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+            }
+
         }
 
-        // 카테고리별 재료 분류
+        List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<TotalMyIngredientDto> dtoList = new ArrayList<>();
+
+
+    // 카테고리별 재료 분류
         for (MyIngredients myIngredients : myIngredientsList) {
             switch (myIngredients.getIngredient().getFoodCategory()){
                 // 농산물
