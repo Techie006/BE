@@ -12,5 +12,5 @@ import java.util.List;
 public interface RecipeRepositoryCustom {
     Page<Recipe> findBySearchOption(RecipeSearchRequestDto searchRequestDto, Pageable pageable);
 
-    List<Recipe> findByRecommendRecipeOption(RecipeRecommendRequestDto requestDto);
+    List<Recipe> findByRecommendRecipeOption(String baseName);
 }
