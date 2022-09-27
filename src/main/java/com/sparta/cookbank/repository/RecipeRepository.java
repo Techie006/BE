@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RecipeRepository extends JpaRepository<Recipe, Long>, RecipeRepositoryCustom {
 
-    @Query("select r from Recipe r where r.RCP_NM = ?1")  // WHERE조건에서 ? 1번째 것이 같다면 들고ㅓ오기.
-    Recipe findByRCP_NM(String RCP_NM);
+//    @Query("select r from Recipe r where r.RCP_NM = ?1")  // WHERE조건에서 ? 1번째 것이 같다면 들고ㅓ오기.
+//    Recipe findByRCP_NM(String RCP_NM);
 
 }
