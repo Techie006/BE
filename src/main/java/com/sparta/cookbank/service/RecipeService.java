@@ -305,4 +305,19 @@ public class RecipeService {
             empty = true;
         }
 
+        for (Recipe recipe : recipeList) {
+            autoCompleteResponseList.add(
+                    AutoCompleteResponseDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .build()
+            );
+        }
+        
+        return AutoCompleteResultResponseDto.builder()
+                .empty(empty)
+                .recipes(autoCompleteResponseList)
+                .build();
+    }
+
 }
