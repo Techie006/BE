@@ -14,6 +14,8 @@ import java.util.List;
 public class RecipeRecommendResponseDto {
     private Long id;
     private String recipe_name;
+    private String recipe_image;
+    private boolean liked;
     private List<String> common_ingredients;
     private List<String> ingredients;
     private String method;

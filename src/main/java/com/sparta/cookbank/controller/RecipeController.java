@@ -1,18 +1,15 @@
 package com.sparta.cookbank.controller;
 
-import antlr.Token;
 import com.sparta.cookbank.ResponseDto;
-import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.dto.*;
 import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -70,5 +67,13 @@ public class RecipeController {
         RecipeAllBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
 
         return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
+    }
+
+    // 레시피 자동완성
+    @PostMapping("/api/recipes/autocomplete")
+    public ResponseDto<?> getAutoComplete(@RequestBody AutoCompleteRequestDto requestDto) {
+        AutoCompleteResultResponseDto autoCompleteResponseDto = recipeService.getAutoComplete(requestDto);
+
+        return ResponseDto.success(autoCompleteResponseDto,"레시피 자동완성에 성공하였습니다.");
     }
 }
