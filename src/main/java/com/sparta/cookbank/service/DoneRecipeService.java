@@ -43,7 +43,10 @@ public class DoneRecipeService {
                 );
                 myIngredientsRepository.delete(ingredients);
                 // 레디스 캐시 초기화.
-                redisIngredientRepo.deleteAll();
+                String redisStorage = ingredients.getMember().getEmail()+ingredients.getStorage();
+                redisIngredientRepo.deleteById(redisStorage);
+
+
         }}
 
 

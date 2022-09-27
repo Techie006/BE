@@ -14,9 +14,11 @@ import java.util.List;
 public class RecipeRecommendResponseDto {
     private Long id;
     private String recipe_name;
+    private String recipe_image;
     private List<String> common_ingredients;
     private List<String> ingredients;
     private String method;
     private String category;
     private Long calorie;
+    private boolean liked;
 }

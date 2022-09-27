@@ -95,7 +95,11 @@ public class CalendarService {
 
 
         //레시피
-        Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
+        Optional<Recipe> recipeOptional = recipeRepository.findById(requestDto.getRecipe_id());
+        if (recipeOptional.isEmpty()){
+            throw new NullPointerException("해당 레시피를 잘못 입력 하셨습니다.");
+        }
+        Recipe recipe = recipeOptional.get();
 
         Calendar calendar = Calendar.builder()
                 .member(member)
@@ -156,8 +160,14 @@ public class CalendarService {
 
 
         // Request 에서 레시피에서 찾아야됨
-        Recipe recipe = recipeRepository.findByRCP_NM(requestDto.getRecipe_name());
+        Optional<Recipe> recipeOptional = recipeRepository.findById(requestDto.getRecipe_id());
+        if (recipeOptional.isEmpty()){
+            throw new NullPointerException("해당 레시피를 잘못 입력 하셨습니다.");
+        }
+        Recipe recipe = recipeOptional.get();
+
         String beforeDay = calendar.getMealDay();
+
 
         //레디스 캐싱 초기화redisAfterDay
         String redisAfterDay = member.getEmail() + requestDto.getDay();
@@ -216,7 +226,13 @@ public class CalendarService {
             throw new RuntimeException("타인의 캘린더를 삭제할 수 없습니다.");
         }
 
-        Recipe recipe = recipeRepository.findByRCP_NM(calendar.getRecipe().getRCP_NM());
+        Optional<Recipe> recipeOptional = recipeRepository.findById(calendar.getRecipe().getId());
+        if (recipeOptional.isEmpty()){
+            throw new NullPointerException("해당 레시피를 잘못 입력 하셨습니다.");
+        }
+        Recipe recipe = recipeOptional.get();
+
+
         //북마크 확인하기
         boolean liked = false;
         LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
@@ -320,7 +336,7 @@ public class CalendarService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseDto<?> getSpecificMonthDiet(String day, HttpServletRequest request) throws ParseException {
+    public ResponseDto<?> getSpecificMonthDiet(HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         extracted(request);
 
@@ -357,7 +373,12 @@ public class CalendarService {
         for(int i = 0 ; i < calendarList.size() ; i++){
 
             //나의 레시피 찾기
-            Recipe recipe = recipeRepository.findByRCP_NM(calendarList.get(i).getRecipe().getRCP_NM());
+            Optional<Recipe> recipeOptional = recipeRepository.findById(calendarList.get(i).getRecipe().getId());
+            if (recipeOptional.isEmpty()){
+                throw new NullPointerException("해당 레시피를 잘못 입력 하셨습니다.");
+            }
+            Recipe recipe = recipeOptional.get();
+
             //북마크 확인하기
             boolean liked = false;
             LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
@@ -421,7 +442,14 @@ public class CalendarService {
         for(int i = 0 ; i < calendarList.size() ; i++){
 
             //나의 레시피 찾기
-            Recipe recipe = recipeRepository.findByRCP_NM(calendarList.get(i).getRecipe().getRCP_NM());
+            //나의 레시피 찾기
+            Optional<Recipe> recipeOptional = recipeRepository.findById(calendarList.get(i).getRecipe().getId());
+            if (recipeOptional.isEmpty()){
+                throw new NullPointerException("해당 레시피를 잘못 입력 하셨습니다.");
+            }
+            Recipe recipe = recipeOptional.get();
+
+
             //북마크 확인하기
             boolean liked = false;
             LikeRecipe likedRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());

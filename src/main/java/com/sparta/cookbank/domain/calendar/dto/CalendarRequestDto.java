@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CalendarRequestDto {
-    private String recipe_name;
+    private Long recipe_id;
     private MealCategory category;
     private String day;
 }
