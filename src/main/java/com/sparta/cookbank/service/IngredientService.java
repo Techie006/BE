@@ -202,6 +202,7 @@ public class IngredientService {
                 d_day ="+"+diffDays.toString();
                 outList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .image_icon(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -213,6 +214,7 @@ public class IngredientService {
                 d_day ="-"+diffDays.toString();
                 hurryList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .image_icon(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -295,6 +297,7 @@ public class IngredientService {
                 diffDays = -diffDays;
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .image_icon(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -305,6 +308,7 @@ public class IngredientService {
             }else if(diffDays == 0){ // 당일 재료는 "D-DAY"로출력
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .image_icon(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -316,6 +320,7 @@ public class IngredientService {
 
                 dtoList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
+                        .image_icon(myIngredient.getIngredient().getIconImage())
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
@@ -561,6 +566,7 @@ public class IngredientService {
                 d_day ="유통기간만료";
                 dtoList.add(TotalMyIngredientDto.builder()
                         .id(myIngredient.getId())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
@@ -571,6 +577,7 @@ public class IngredientService {
                 d_day ="D-Day";
                 dtoList.add(TotalMyIngredientDto.builder()
                         .id(myIngredient.getId())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
@@ -581,6 +588,7 @@ public class IngredientService {
                 d_day ="-"+diffDays.toString();
                 dtoList.add(TotalMyIngredientDto.builder()
                         .id(myIngredient.getId())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())

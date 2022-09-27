@@ -290,7 +290,7 @@ public class DoneRecipeService {
         LocalDate today = LocalDate.now();
         List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
         List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
-        if (todayList.isEmpty() || yesterdayList.isEmpty()) {
+        if (todayList.isEmpty() && yesterdayList.isEmpty()) {
             empty =true;
         }
 
