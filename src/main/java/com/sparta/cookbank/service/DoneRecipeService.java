@@ -43,7 +43,10 @@ public class DoneRecipeService {
                 );
                 myIngredientsRepository.delete(ingredients);
                 // 레디스 캐시 초기화.
-                redisIngredientRepo.deleteAll();
+                String redisStorage = ingredients.getMember().getEmail()+ingredients.getStorage();
+                redisIngredientRepo.deleteById(redisStorage);
+
+
         }}
 
 
@@ -287,7 +290,7 @@ public class DoneRecipeService {
         LocalDate today = LocalDate.now();
         List<DoneRecipe> todayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today);
         List<DoneRecipe> yesterdayList = doneRecipeRepository.findAllByMember_IdAndCreatedAt(member.getId(), today.minusDays(1));
-        if (todayList.isEmpty() || yesterdayList.isEmpty()) {
+        if (todayList.isEmpty() && yesterdayList.isEmpty()) {
             empty =true;
         }
 

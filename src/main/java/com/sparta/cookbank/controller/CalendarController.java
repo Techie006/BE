@@ -42,8 +42,8 @@ public class CalendarController {
         return calendarService.getSpecificWeekDiet(day, request);
     }
 
-    @GetMapping("/api/calendar/month")
-    public ResponseDto<?> getSpecificMonthDiet(@RequestParam("day") String day,HttpServletRequest request) throws ParseException {
-        return calendarService.getSpecificMonthDiet(day,request);
+    @GetMapping("/api/calendar/all")
+    public ResponseDto<?> getSpecificMonthDiet(HttpServletRequest request) throws ParseException {
+        return calendarService.getSpecificMonthDiet(request);
     }
 }
