@@ -24,4 +24,7 @@ public class Ingredient {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     FoodCategory foodCategory;
+
+    @Column
+    String iconImage;
 }
