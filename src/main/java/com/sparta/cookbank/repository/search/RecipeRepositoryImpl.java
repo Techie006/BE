@@ -36,10 +36,10 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
     }
 
     @Override
-    public List<Recipe> findByRecommendRecipeOption(RecipeRecommendRequestDto requestDto) {
+    public List<Recipe> findByRecommendRecipeOption(String baseName) {
         JPQLQuery<Recipe> query = queryFactory
                 .selectFrom(recipe)
-                .where(eqBaseName(requestDto));
+                .where(eqBaseName(baseName));
 
         List<Recipe> recipeList = query.fetch();
         return recipeList;
@@ -54,10 +54,10 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
     }
 
     // 추천 레시피 Baes 조건
-    private BooleanExpression eqBaseName(RecipeRecommendRequestDto requestDto) {
-        if (requestDto.getBase() == null || requestDto.getBase().isEmpty()) {
+    private BooleanExpression eqBaseName(String baseName) {
+        if (baseName == null || baseName.isEmpty()) {
             return null;
         }
-        return recipe.RCP_PARTS_DTLS.containsIgnoreCase(requestDto.getBase());
+        return recipe.RCP_PARTS_DTLS.containsIgnoreCase(baseName);
     }
 }
