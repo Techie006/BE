@@ -1,6 +1,7 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.LikeRecipe;
+import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
