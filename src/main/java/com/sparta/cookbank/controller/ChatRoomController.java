@@ -28,7 +28,9 @@ public class ChatRoomController {
     @ResponseBody
     public ResponseDto<?> room() {
         List<RoomResponseDto> Rooms = chatService.findAllRoom();
-        return ResponseDto.success(new ClassDto(Rooms),"성공적으로 클래스를 가져왔습니다.");
+        boolean empty = false;
+        if(Rooms.isEmpty())  empty = true;
+        return ResponseDto.success(new ClassDto(empty, Rooms),"성공적으로 클래스를 가져왔습니다.");
     }
 
     @PostMapping("/api/class")
