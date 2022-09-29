@@ -62,3 +62,4 @@ public class CustomExceptionHandler {
         return ResponseDto.fail("400", "사진은 20MB까지 등록이 가능합니다.");
     }
 }
+
