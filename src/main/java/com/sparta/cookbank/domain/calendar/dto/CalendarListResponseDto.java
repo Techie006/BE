@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CalendarListResponseDto {
+    private boolean empty;
     private List<CalendarResponseDto> meals;
     private String day;
 }
