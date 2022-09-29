@@ -2,20 +2,16 @@ package com.sparta.cookbank.controller;
 
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.recipe.dto.*;
-import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 public class RecipeController {
     private final RecipeService recipeService;
-    private final TokenProvider tokenProvider;
 
     // 추천 레시피 조회
     @PostMapping("/api/recipes/recommend")
