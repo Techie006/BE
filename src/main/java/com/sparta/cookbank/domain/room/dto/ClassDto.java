@@ -9,8 +9,10 @@ import java.util.List;
 @Getter
 @Setter
 public class ClassDto {
+    private boolean empty;
     private List<RoomResponseDto> Classes;
-    public ClassDto(List<RoomResponseDto> c){
+    public ClassDto(boolean empty, List<RoomResponseDto> c){
+        this.empty = empty;
         this.Classes = c;
     }
 }
