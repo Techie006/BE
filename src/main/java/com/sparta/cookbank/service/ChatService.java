@@ -122,7 +122,8 @@ public class ChatService {
                 .class_id(room.getClass_id())
                 .redis_class_id(room.getRedisClassId())
                 .session_id(room.getSessionId())
-                .token(viduToken.getToken())
+                .token(viduToken.getToken().split("&")[1].substring(6))
+                .fullToken(viduToken.getToken())
                 .build();
     }
 
@@ -196,7 +197,8 @@ public class ChatService {
         chats.sort(new MiniComparator());
         return MessageResponseDto.builder()
                 .session_id(ClassRoom.getSessionId())
-                .token(enterToken)
+                .token(enterToken.split("&")[1].substring(6))
+                .fullToken(enterToken)
                 .chats(chats)
                 .build();
     }
