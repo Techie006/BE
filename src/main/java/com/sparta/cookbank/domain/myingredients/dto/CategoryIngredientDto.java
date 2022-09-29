@@ -13,5 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CategoryIngredientDto {
-    private List<TotalMyIngredientDto> category;
+    private List<TotalMyIngredientDto> storage;
 }
