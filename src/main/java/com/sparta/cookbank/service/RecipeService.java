@@ -1,6 +1,7 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.LikeRecipe;
+import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
@@ -31,15 +32,15 @@ public class RecipeService {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
 
-        // base 재료가 포함된 모든 레시피를 가져옴
-        String base = requestDto.getBase().split(",")[0];
-        String input = base.split(" ")[0];
-        requestDto.setBase(input);
+        // base 재료가 포함된 모든 레시피를 가져옴 (삭제예정)
+//        String base = requestDto.getBase().split(",")[0];
+//        String input = base.split(" ")[0];
+//        requestDto.setBase(input);
 
         List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
         List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
 
-        HashMap<Recipe, Integer> recipeMap = new HashMap<>();
+        HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
 
         for (Recipe recipe : recipeList) {
             int count = 0;
@@ -60,6 +61,7 @@ public class RecipeService {
         List<Map.Entry<Recipe, Integer>> list = new LinkedList<>(recipeMap.entrySet());
         // 람다식을 통해 내림차순으로 정렬한다.
         list.sort(((o1, o2) -> recipeMap.get(o2.getKey()) - recipeMap.get(o1.getKey())));
+
 
         for (Map.Entry<Recipe, Integer> entry : list) {
             boolean liked = false;
