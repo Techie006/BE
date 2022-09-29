@@ -14,6 +14,7 @@ import javax.persistence.Id;
 public class RedisDayCalendar {
     @Id
     private String id;
+    private boolean empty;
     private CalendarListResponseDto meals;
 
 

@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StorageResponseDto {
+    private boolean empty;
     private long total_nums;
     private List<MyIngredientResponseDto> storage;
 }

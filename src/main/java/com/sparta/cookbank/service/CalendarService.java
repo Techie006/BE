@@ -59,13 +59,24 @@ public class CalendarService {
             List<CalendarResponseDto> dtoList = new ArrayList<>();
             List<CalendarResponseDto> mealList = getCalendar(day, member,dtoList);
 
+            if(mealList.isEmpty()){
+                CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                        .empty(true)
+                        .day(day)
+                        .meals(null)
+                        .build();
+                return ResponseDto.success(ListResponseDto,"성공적으로 해당 날짜의 식단을 조회하였습니다.");
+            }
+
             CalendarListResponseDto ListResponseDto = CalendarListResponseDto.builder()
+                    .empty(false)
                     .day(day)
                     .meals(mealList)
                     .build();
             // 레디스 저장
             RedisDayCalendar redisCalendar = RedisDayCalendar.builder()
                     .id(redisDay)
+                    .empty(true)
                     .meals(ListResponseDto)
                     .build();
             redisDayCalendarRepo.save(redisCalendar);

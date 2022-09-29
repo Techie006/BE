@@ -13,5 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CategoryIngredientDto {
+    private boolean empty;
     private List<TotalMyIngredientDto> storage;
 }
