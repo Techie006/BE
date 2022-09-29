@@ -21,8 +21,8 @@ public class IngredientController {
 
     @GetMapping("/api/ingredients/autocomplete")  // 식재료 자동완성(5개만 보여줌)
     public ResponseDto<?> findAutoIngredient(@RequestParam("foodname") String requestDto, HttpServletRequest request
-                                             ,@PageableDefault(size = 5) Pageable pageable    ){
-        return ingredientService.findAutoIngredient(requestDto,request,pageable);
+                                             ){
+        return ingredientService.findAutoIngredient(requestDto,request);
     }
 
     @PostMapping("/api/ingredients/search")  // 식재료 검색 HTTPSERVLET 추가해줘야됨..
@@ -32,7 +32,7 @@ public class IngredientController {
     }
 
     @PostMapping("/api/ingredient")  // 식재료 작성
-    public ResponseDto<?> saveMyIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request){
+    public ResponseDto<?> saveMyIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request) throws ParseException {
         return ingredientService.saveMyIngredient(requestDto,request);
     }
 
