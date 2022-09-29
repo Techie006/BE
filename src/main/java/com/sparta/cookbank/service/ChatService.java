@@ -169,7 +169,6 @@ public class ChatService {
             ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedisClassId());
             if(chatRoom != null) {
                 chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedisClassId()));
-
                 responseDtos.add(RoomResponseDto.builder()
                         .class_id(room.getClass_id())
                         .redis_class_id(room.getRedisClassId())
@@ -177,6 +176,7 @@ public class ChatService {
                         .class_name(room.getName())
                         .viewer_nums(room.getViewrs())
                         .class_img(room.getImage())
+                        .ingredients(Arrays.asList(room.getRecipe().getMAIN_INGREDIENTS().split(", ")))
                         .build());
             }
         }

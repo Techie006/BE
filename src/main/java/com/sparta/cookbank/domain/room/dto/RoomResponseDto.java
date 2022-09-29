@@ -2,6 +2,8 @@ package com.sparta.cookbank.domain.room.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,5 +16,6 @@ public class RoomResponseDto {
     private String class_name;
     private Long viewer_nums;
     private String class_img;
+    private List<String> ingredients;
 
 }
