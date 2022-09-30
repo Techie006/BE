@@ -123,7 +123,7 @@ public class ChatService {
                 .redis_class_id(room.getRedisClassId())
                 .session_id(room.getSessionId())
                 .token(viduToken.getToken().split("&")[1].substring(6))
-                .fullToken(viduToken.getToken())
+                .full_token(viduToken.getToken())
                 .build();
     }
 
@@ -198,7 +198,7 @@ public class ChatService {
         return MessageResponseDto.builder()
                 .session_id(ClassRoom.getSessionId())
                 .token(enterToken.split("&")[1].substring(6))
-                .fullToken(enterToken)
+                .full_token(enterToken)
                 .chats(chats)
                 .build();
     }
