@@ -111,8 +111,7 @@ public class RecipeService {
 
 
         // 재료들을 리스트에 담음
-        List<String> ingredientsList = new ArrayList<>();
-        ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+        List<String> ingredientsList = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
 
         // 방법들을 리스트에 담음
         List<String> manualDescList = Arrays.asList(
