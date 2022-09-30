@@ -49,10 +49,11 @@ public class StompHandler implements ChannelInterceptor {
             chatRoomRepository.setUserEnterInfo(sessionId, roomId);
             // 채팅방의 인원수를 +1한다.
             chatRoomRepository.plusUserCount(roomId);
-            chatService.PlusMinusViewrs(roomId,1L);
+            Long viewers = chatService.PlusMinusViewrs(roomId,1L);
             // 클라이언트 입장 메시지를 채팅방에 발송한다.(redis publish)
-            chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.ENTER).redis_class_id(roomId).member_id(memberId).build());
-            log.info("SUBSCRIBED {}, {}, {}", sessionId, memberId, roomId);
+            chatService.sendChatMessage(ChatMessage.builder()
+                    .type(ChatMessage.MessageType.ENTER).redis_class_id(roomId).member_id(memberId).viewer_num(viewers).build());
+            log.info("SUBSCRIBED {}, {}, {}, {}", sessionId, memberId, roomId, viewers);
         } else if (StompCommand.DISCONNECT == accessor.getCommand()) { // Websocket 연결 종료
             //토큰 까기
             Long memberId = -1L;
@@ -67,9 +68,10 @@ public class StompHandler implements ChannelInterceptor {
             String roomId = chatRoomRepository.getUserEnterRoomId(sessionId);
             // 채팅방의 인원수를 -1한다.
             chatRoomRepository.minusUserCount(roomId);
-            chatService.PlusMinusViewrs(roomId,-1L);
+            Long viewers = chatService.PlusMinusViewrs(roomId,-1L);
             // 클라이언트 퇴장 메시지를 채팅방에 발송한다.(redis publish)
-            chatService.sendChatMessage(ChatMessage.builder().type(ChatMessage.MessageType.LEAVE).redis_class_id(roomId).member_id(memberId).build());
+            chatService.sendChatMessage(ChatMessage.builder()
+                    .type(ChatMessage.MessageType.LEAVE).redis_class_id(roomId).member_id(memberId).viewer_num(viewers).build());
             // 퇴장한 클라이언트의 roomId 맵핑 정보를 삭제한다.
             chatRoomRepository.removeUserEnterInfo(sessionId);
             log.info("SUBSCRIBED {}, {}, {}", sessionId, memberId, roomId);

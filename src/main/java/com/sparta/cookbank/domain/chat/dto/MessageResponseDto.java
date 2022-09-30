@@ -13,5 +13,6 @@ import java.util.List;
 public class MessageResponseDto {
     private String session_id;
     private String token;
+    private String full_token;
     List<ChatMessage> chats;
 }

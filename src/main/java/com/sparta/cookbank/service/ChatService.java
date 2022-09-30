@@ -122,7 +122,8 @@ public class ChatService {
                 .class_id(room.getClass_id())
                 .redis_class_id(room.getRedisClassId())
                 .session_id(room.getSessionId())
-                .token(viduToken.getToken())
+                .token(viduToken.getToken().split("&")[1].substring(6))
+                .full_token(viduToken.getToken())
                 .build();
     }
 
@@ -143,6 +144,8 @@ public class ChatService {
         //로그인 비로그인 구분
         chatMessage.setNickname("UnknownUser");
         chatMessage.setProfile_img(DEFAULT_PROFILE_IMG);
+        chatMessage.setNotice(false);
+        //로그인되었을 경우
         if(chatMessage.getMember_id() != -1){
             Member member = memberRepository.findById(chatMessage.getMember_id()).orElse(null);
             if(member != null) {
@@ -151,12 +154,15 @@ public class ChatService {
             }
         }
 
+        //입장 퇴장일 시
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getNickname() + "님이 방에 입장했습니다.");
             chatMessage.setNickname("[알림]");
+            chatMessage.setNotice(true);
         } else if (ChatMessage.MessageType.LEAVE.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getNickname() + "님이 방에서 나갔습니다.");
             chatMessage.setNickname("[알림]");
+            chatMessage.setNotice(true);
         }
         chatRoomRepository.saveMessage(chatMessage);
         redisTemplate.convertAndSend(channelTopic.getTopic(), chatMessage);
@@ -196,17 +202,19 @@ public class ChatService {
         chats.sort(new MiniComparator());
         return MessageResponseDto.builder()
                 .session_id(ClassRoom.getSessionId())
-                .token(enterToken)
+                .token(enterToken.split("&")[1].substring(6))
+                .full_token(enterToken)
                 .chats(chats)
                 .build();
     }
 
     @Transactional
-    public void PlusMinusViewrs(String roomId, Long num){
+    public Long PlusMinusViewrs(String roomId, Long num){
+        log.info("redis_class_id: "+roomId);
         Room room = roomRepository.findByRedisClassId(roomId).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
         });
-        room.FixViewrs(num);
+        return room.FixViewrs(num);
     }
 
     public RecipeAllResponseDto ClassRecipeInfo(Long classId){
