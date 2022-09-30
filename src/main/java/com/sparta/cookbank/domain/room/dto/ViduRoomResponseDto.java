@@ -12,5 +12,5 @@ public class ViduRoomResponseDto {
     private String redis_class_id;
     private String session_id;
     private String token;
-    private String fullToken;
+    private String full_token;
 }
