@@ -210,6 +210,7 @@ public class ChatService {
 
     @Transactional
     public Long PlusMinusViewrs(String roomId, Long num){
+        log.info("redis_class_id: "+roomId);
         Room room = roomRepository.findByRedisClassId(roomId).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
         });
