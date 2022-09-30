@@ -115,22 +115,23 @@ public class RecipeService {
         ingredientsList.add(recipe.getRCP_PARTS_DTLS());
 
         // 방법들을 리스트에 담음
-        List<String> manualDescList = new ArrayList<>();
-        manualDescList.add(recipe.getMANUAL01());
-        manualDescList.add(recipe.getMANUAL02());
-        manualDescList.add(recipe.getMANUAL03());
-        manualDescList.add(recipe.getMANUAL04());
-        manualDescList.add(recipe.getMANUAL05());
-        manualDescList.add(recipe.getMANUAL06());
+        List<String> manualDescList = Arrays.asList(
+                recipe.getMANUAL01(),
+                recipe.getMANUAL02(),
+                recipe.getMANUAL03(),
+                recipe.getMANUAL04(),
+                recipe.getMANUAL05(),
+                recipe.getMANUAL06());
 
         // 방법의 이미지들을 리스트에 담음
-        List<String> manualImgList = new ArrayList<>();
-        manualImgList.add(recipe.getMANUAL_IMG01());
-        manualImgList.add(recipe.getMANUAL_IMG02());
-        manualImgList.add(recipe.getMANUAL_IMG03());
-        manualImgList.add(recipe.getMANUAL_IMG04());
-        manualImgList.add(recipe.getMANUAL_IMG05());
-        manualImgList.add(recipe.getMANUAL_IMG06());
+        List<String> manualImgList = Arrays.asList(
+                recipe.getMANUAL_IMG01(),
+                recipe.getMANUAL_IMG02(),
+                recipe.getMANUAL_IMG03(),
+                recipe.getMANUAL_IMG04(),
+                recipe.getMANUAL_IMG05(),
+                recipe.getMANUAL_IMG06()
+        );
 
         RecipeDetailResponseDto detailResponseDto = RecipeDetailResponseDto.builder()
                 .id(id)
@@ -247,8 +248,7 @@ public class RecipeService {
         List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
 
         for (LikeRecipe likeRecipe : likeRecipeList) {
-            List<String> mainIngredientsList = new ArrayList<>();
-            mainIngredientsList.add(likeRecipe.getRecipe().getMAIN_INGREDIENTS());
+            List<String> mainIngredientsList = Arrays.asList(likeRecipe.getRecipe().getMAIN_INGREDIENTS().split(","));
             recipeBookmarkResponseDtoList.add(
                     RecipeBookmarkResponseDto.builder()
                             .id(likeRecipe.getRecipe().getId())
