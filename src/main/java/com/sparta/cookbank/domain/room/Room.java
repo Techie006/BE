@@ -45,8 +45,9 @@ public class Room {
     @Column
     private Long viewrs;
 
-    public void FixViewrs(Long num){
+    public Long FixViewrs(Long num){
         this.viewrs = viewrs + num;
+        return viewrs;
     }
 
 }
