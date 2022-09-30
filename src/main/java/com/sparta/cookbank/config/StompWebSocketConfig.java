@@ -25,8 +25,8 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
     //어플리케이션 내부에서 사용할 path를 지정할 수 있음
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/pub");
-        registry.enableSimpleBroker("/sub");
+        registry.setApplicationDestinationPrefixes("/api/pub");
+        registry.enableSimpleBroker("/api/sub");
     }
 
     // 스톰프 인터셉터 추가

@@ -15,6 +15,7 @@ public class ChatMessage implements Serializable {
     public enum MessageType {
         MESSAGE, ENTER, LEAVE
     }
+    private Boolean notice;
 
     private String redis_chat_id;//채팅 아이디(redis 저장용)
     private MessageType type; // 메시지 타입
