@@ -1,10 +1,7 @@
 package com.sparta.cookbank.domain.recipe.dto;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Getter
+@EqualsAndHashCode
 public class RecipeRecommendRequestDto {
 
     // 추천 레시피의 메인 재료
