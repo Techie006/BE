@@ -20,14 +20,20 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -120,36 +126,31 @@ class RecipeControllerTest {
         List<String> foods = List.of(new String[]{"양파", "마늘", "간장", "고추", "파"});
         RecipeRecommendRequestDto requestDto = new RecipeRecommendRequestDto(base, foods);
 
-        given(recipeService.getRecommendRecipe(requestDto)).willReturn(
-                RecipeRecommendResultResponseDto.builder()
-                        .recipes(recipeRecommendResponseDto)
-                        .build()
-        );
-        JSONObject json = new JSONObject();
-        json.put("base", requestDto.getBase());
-        json.put("foods", requestDto.getFoods());
+        RecipeRecommendResultResponseDto resultResponseDto = RecipeRecommendResultResponseDto.builder()
+                .recipes(recipeRecommendResponseDto)
+                .build();
 
+        given(recipeService.getRecommendRecipe(requestDto)).willReturn(resultResponseDto);
 
-        String body = objectMapper.writeValueAsString(
-                RecipeRecommendResultResponseDto.builder().recipes(recipeRecommendResponseDto).build()
-        );
+        String content = objectMapper.writeValueAsString(requestDto);
 
 
         // when
-        final ResultActions actions = mockMvc.perform(post("/api/recipes/recommend")
-                .content(body)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .characterEncoding("UTF-8")
-                .content(json.toString()))
+        final ResultActions actions = mockMvc.perform(post("/api/recipes/recommend") // perform 요청을 전송하는 역할
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8"))
                 .andDo(print());
+
 
         // then
         actions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.content.ingredients").value(contains("고등어")))
                 .andDo(print());
+
+        verify(recipeService, times(1)).getRecommendRecipe(requestDto);
 
 
     }
