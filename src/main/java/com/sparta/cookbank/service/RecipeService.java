@@ -246,13 +246,13 @@ public class RecipeService {
         List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
 
         for (LikeRecipe likeRecipe : likeRecipeList) {
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(likeRecipe.getRecipe().getRCP_PARTS_DTLS());
+            List<String> mainIngredientsList = new ArrayList<>();
+            mainIngredientsList.add(likeRecipe.getRecipe().getMAIN_INGREDIENTS());
             recipeBookmarkResponseDtoList.add(
                     RecipeBookmarkResponseDto.builder()
                             .id(likeRecipe.getRecipe().getId())
                             .recipe_name(likeRecipe.getRecipe().getRCP_NM())
-                            .ingredients(ingredientsList)
+                            .ingredients(mainIngredientsList)
                             .final_img(likeRecipe.getRecipe().getATT_FILE_NO_MK())
                             .method(likeRecipe.getRecipe().getRCP_WAY2())
                             .category(likeRecipe.getRecipe().getRCP_PAT2())
