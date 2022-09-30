@@ -100,8 +100,8 @@ public class ChatRoomRepository {
         return hashOpsChatMessage.values(USER_CHAT+"_"+roomId);
     }
 
-    public void removeChat (String roomId){
-        hashOpsChatMessage.delete(USER_CHAT+"_"+roomId);
+    public void removeChat (String roomId,String chatId){
+        hashOpsChatMessage.delete(USER_CHAT+"_"+roomId,chatId);
     }
 
 }
