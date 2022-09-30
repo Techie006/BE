@@ -45,7 +45,7 @@ public class IngredientService {
 
         // Token 유효성 검사 없음
 
-        // 분기 처리
+        // 분기 처리.
         // 빈배열이면 fail
         if(food_name.isEmpty()){
             return ResponseDto.fail(null,"내용을 입력하세요.");
