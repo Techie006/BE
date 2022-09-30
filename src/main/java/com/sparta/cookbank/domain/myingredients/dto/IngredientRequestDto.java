@@ -14,7 +14,7 @@ public class IngredientRequestDto {
     private Long id;
     private String food_name;
     private String group_name;
-    private Storage storage;
+    private String storage;
     private String in_date;
     private String exp_date;
 

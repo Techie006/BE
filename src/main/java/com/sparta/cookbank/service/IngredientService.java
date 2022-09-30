@@ -27,6 +27,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -39,9 +41,22 @@ public class IngredientService {
     private final RedisIngredientRepo redisIngredientRepo;
 
     @Transactional(readOnly = true)
-    public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request,Pageable pageable) {
+    public ResponseDto<?> findAutoIngredient(String food_name, HttpServletRequest request) {
 
         // Token 유효성 검사 없음
+
+        // 분기 처리
+        // 빈배열이면 fail
+        if(food_name.isEmpty()){
+            return ResponseDto.fail(null,"내용을 입력하세요.");
+        }
+
+        //한글이 아닐시 fail
+        String pattern = "^[가-힣]*$";
+        boolean result = Pattern.matches(pattern,food_name);
+        if(!result){
+            return ResponseDto.fail(null, "한글만 입력가능합니다.");
+        }
 
         //해당 검색어 찾기
         List<Ingredient> ingredients = ingredientsRepository.findAllByFoodNameIsContainingOrderByMarkName(food_name);
@@ -50,14 +65,14 @@ public class IngredientService {
 
         // 검색내용이 없다면 예외처리리
        if (ingredients.isEmpty()){
-            return ResponseDto.success("", "검색 내용이 없습니다.");
+            return ResponseDto.success(null, "검색 내용이 없습니다.");
         }
         // 5개만 보여주기
-        for (int i = 0; i < 5; i++) {
+        for (Ingredient ingredient : ingredients) {
             dtoList.add(IngredientResponseDto.builder()
-                    .id(ingredients.get(i).getId())
-                    .food_name(ingredients.get(i).getFoodName())
-                    .group_name(ingredients.get(i).getFoodCategory())
+                    .id(ingredient.getId())
+                    .food_name(ingredient.getFoodName())
+                    .group_name(ingredient.getFoodCategory())
                     .build());
         }
 
@@ -74,6 +89,21 @@ public class IngredientService {
     public ResponseDto<?> findIngredient(String food_name, HttpServletRequest request, Pageable pageable) {
 
         // Token 유효성 검사 없음
+
+        // 분기 처리
+        // 빈배열이면 fail
+        if(food_name.isEmpty()){
+            return ResponseDto.fail(null,"내용을 입력하세요.");
+        }
+
+        //한글이 아닐시 fail
+        String pattern = "^[가-힣]*$";
+        boolean result = Pattern.matches(pattern,food_name);
+        if(!result){
+            return ResponseDto.fail(null, "한글만 입력가능합니다.");
+        }
+
+
 
         //해당 검색 찾기
         Page<Ingredient> ingredientPage = ingredientsRepository.findAllByFoodNameIsContaining(food_name, pageable);
@@ -94,13 +124,53 @@ public class IngredientService {
         return ResponseDto.success(responseDto,"식재료 검색에 성공하였습니다.");
     }
     @Transactional
-    public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) {
+    public ResponseDto<?> saveMyIngredient(IngredientRequestDto requestDto, HttpServletRequest request) throws ParseException {
 
         //토큰 유효성 검사
         extracted(request);
 
         // 멤버 유효성 검사
         Member member = getMember();
+
+        //  request 유효성감사
+        // 1. 재료이름
+//        String pattern = "^[가-힣]*$";
+//        boolean result = Pattern.matches(pattern,food_name);
+//        if(!result){
+//            return ResponseDto.fail(null, "한글만 입력가능합니다.");
+//        }
+
+        // 2. Storage 검사
+        switch (requestDto.getStorage()) {
+            case "freeze":
+                break;
+            case "room_temp":
+                break;
+            case "refrigerated":
+                break;
+            default:
+                throw new IllegalArgumentException("보관방법을 선택해주세요!");
+        }
+
+
+
+        //3. 입주날짜 검사
+        if(requestDto.getIn_date().isEmpty()||requestDto.getExp_date().isEmpty()){
+            throw new IllegalArgumentException("입주날짜 혹은 유통기한을 추가해주세요!");
+        }
+
+        //4. 입주 유통기한 비교
+        Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(requestDto.getIn_date());
+        Date expDay = new SimpleDateFormat("yyyy-MM-dd").parse( requestDto.getExp_date());
+        int result = expDay.compareTo(inPutDay);
+        // result가 0보다 작다면 유통기한이 입주날짜보다 앞선 날짜라는것이됨..
+        if(result<0){
+            throw new IllegalArgumentException("입주날짜가 유통기한보다 이전날짜입니다.");
+        }
+
+
+
+
         //재료찾기
         Ingredient ingredient = ingredientsRepository.findById(requestDto.getId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 음식 재료가 존재 하지 않습니다.")
@@ -109,7 +179,7 @@ public class IngredientService {
         MyIngredients myIngredients = MyIngredients.builder()
                 .member(member)
                 .ingredient(ingredient)
-                .storage(requestDto.getStorage())
+                .storage(Storage.valueOf(requestDto.getStorage()))
                 .inDate(requestDto.getIn_date())
                 .expDate(requestDto.getExp_date())
                 .build();
@@ -128,11 +198,21 @@ public class IngredientService {
 
         // 멤버 유효성 검사
         Member member = getMember();
-
         //전체 갯수 조회
         List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
         List<MyIngredientResponseDto> dtoList = new ArrayList<>();
         long total_nums = totalMyIngredients.size();
+
+
+        // 없을시 empty false 로 응답.
+        if(totalMyIngredients.isEmpty()){
+            StorageResponseDto responseDto = StorageResponseDto.builder()
+                    .empty(true)
+                    .total_nums(0)
+                    .storage(null)
+                    .build();
+            return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
+        }
 
         // 나의 재료 전체조회
         if(storage.equals("")){
@@ -153,6 +233,7 @@ public class IngredientService {
                 //레디스 캐시에 저장..
                 RedisIngredient redisIngredient = RedisIngredient.builder()
                         .id(redisStorage)
+                        .empty(false)
                         .total_nums(total_nums)/// 여기에 저장
                         .storageList(responseDto)
                         .build();
@@ -221,7 +302,22 @@ public class IngredientService {
             }
         }
 
+        if (hurryList.isEmpty()){
+            WarningResponseDto responseDto = WarningResponseDto.builder()
+                    .empty(true)
+                    .out_dated_num(outList.size())
+                    .in_hurry_num(0)
+                    .out_dated(outList)
+                    .in_hurry(null)
+                    .build();
+
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다");
+        }
+
+
+
         WarningResponseDto responseDto = WarningResponseDto.builder()
+                .empty(false)
                 .out_dated_num(outList.size())
                 .in_hurry_num(hurryList.size())
                 .out_dated(outList)
@@ -299,7 +395,7 @@ public class IngredientService {
                         .food_name(myIngredient.getIngredient().getFoodName())
                         .group_name(myIngredient.getIngredient().getFoodCategory())
                         .in_date(myIngredient.getInDate())
-                        .d_date("만료")
+                        .d_date("기한 만료")
                         .build());
 
             }else if(diffDays == 0){ // 당일 재료는 "D-DAY"로출력
@@ -330,6 +426,7 @@ public class IngredientService {
         }
 
         StorageResponseDto responseDto = StorageResponseDto.builder()
+                .empty(false)
                 .total_nums(total_nums)// 넣기
                 .storage(dtoList)
                 .build();
@@ -480,20 +577,6 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-
-        //현재시각으로 d_day 구하기
-        LocalDate now = LocalDate.now();
-        String nowString = now.toString();
-
-        //분류별 리스트
-        List<MyIngredients> produceList = new ArrayList<>();
-        List<MyIngredients> livestockList = new ArrayList<>();
-        List<MyIngredients> marineList = new ArrayList<>();
-        List<MyIngredients> drinkList = new ArrayList<>();
-        List<MyIngredients> etcList = new ArrayList<>();
-
-
-
         //Storage별 분류
         if( category.equals("freeze") ||category.equals("refrigerated")||category.equals("room_temp")) {
 
@@ -506,10 +589,13 @@ public class IngredientService {
                 List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage1);
                 long total_nums = 0;
                 List<MyIngredientResponseDto> dtoList1 = new ArrayList<>();
+
+
                 StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList1,total_nums);
                 //레디스 캐시에 저장..
                 RedisIngredient redisIngredient = RedisIngredient.builder()
                         .id(redisStorage)
+                        .empty(false)
                         .total_nums(total_nums)/// 여기에 저장
                         .storageList(responseDto)
                         .build();
@@ -525,6 +611,47 @@ public class IngredientService {
             }
 
         }
+
+
+
+
+        if(category.isEmpty()){
+
+            //전체 갯수 조회
+            List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+            List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+            long total_nums = totalMyIngredients.size();
+
+            if(totalMyIngredients.isEmpty()){
+                StorageResponseDto responseDto = StorageResponseDto.builder()
+                        .empty(true)
+                        .total_nums(0)
+                        .storage(null)
+                        .build();
+                return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
+            }
+
+            StorageResponseDto responseDto = getStorageResponseDto(totalMyIngredients, dtoList,total_nums);
+
+            return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다.");
+
+        }
+
+
+
+        //현재시각으로 d_day 구하기
+        LocalDate now = LocalDate.now();
+        String nowString = now.toString();
+
+        //분류별 리스트
+        List<MyIngredients> produceList = new ArrayList<>();
+        List<MyIngredients> livestockList = new ArrayList<>();
+        List<MyIngredients> marineList = new ArrayList<>();
+        List<MyIngredients> drinkList = new ArrayList<>();
+        List<MyIngredients> etcList = new ArrayList<>();
+
+
+
 
         List<MyIngredients> myIngredientsList = myIngredientsRepository.findAllByMemberId(member.getId());
         List<TotalMyIngredientDto> dtoList = new ArrayList<>();
@@ -576,7 +703,8 @@ public class IngredientService {
         }
 
         CategoryIngredientDto categoryIngredientDto = CategoryIngredientDto.builder()
-                .category(dtoList)
+                .empty(false)
+                .storage(dtoList)
                 .build();
 
 
