@@ -1,7 +1,6 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.LikeRecipe;
-import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
@@ -28,6 +27,7 @@ public class RecipeService {
     // 추천 레시피 조회
     @Transactional(readOnly = true)
     public RecipeRecommendResultResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
+
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -39,6 +39,7 @@ public class RecipeService {
 
         List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
         List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+
 
         HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
 
@@ -246,13 +247,13 @@ public class RecipeService {
         List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
 
         for (LikeRecipe likeRecipe : likeRecipeList) {
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(likeRecipe.getRecipe().getRCP_PARTS_DTLS());
+            List<String> mainIngredientsList = new ArrayList<>();
+            mainIngredientsList.add(likeRecipe.getRecipe().getMAIN_INGREDIENTS());
             recipeBookmarkResponseDtoList.add(
                     RecipeBookmarkResponseDto.builder()
                             .id(likeRecipe.getRecipe().getId())
                             .recipe_name(likeRecipe.getRecipe().getRCP_NM())
-                            .ingredients(ingredientsList)
+                            .ingredients(mainIngredientsList)
                             .final_img(likeRecipe.getRecipe().getATT_FILE_NO_MK())
                             .method(likeRecipe.getRecipe().getRCP_WAY2())
                             .category(likeRecipe.getRecipe().getRCP_PAT2())
@@ -271,32 +272,9 @@ public class RecipeService {
         return recipeResponseDto;
     }
 
-    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
-        for (Recipe recipe : recipes){
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
-            recipeAllResponseDtoList.add(
-                    RecipeAllResponseDto.builder()
-                            .id(recipe.getId())
-                            .recipe_name(recipe.getRCP_NM())
-                            .ingredients(ingredientsList)
-                            .final_img(recipe.getATT_FILE_NO_MK())
-                            .method(recipe.getRCP_WAY2())
-                            .category(recipe.getRCP_PAT2())
-                            .calorie(recipe.getINFO_ENG())
-                            .build()
-            );
-        }
-        return recipeAllResponseDtoList;
-    }
-
     // 검색어 자동완성
     @Transactional(readOnly = true)
     public AutoCompleteResultResponseDto getAutoComplete(AutoCompleteRequestDto requestDto) {
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
-        });
 
         List<Recipe> recipeList = recipeRepository.findAllByRCP_NM(requestDto.getKeyword());
         List<AutoCompleteResponseDto> autoCompleteResponseList = new ArrayList<>();
@@ -320,6 +298,26 @@ public class RecipeService {
                 .empty(empty)
                 .recipes(autoCompleteResponseList)
                 .build();
+    }
+
+    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
+        for (Recipe recipe : recipes){
+            List<String> ingredientsList = new ArrayList<>();
+            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+            recipeAllResponseDtoList.add(
+                    RecipeAllResponseDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .ingredients(ingredientsList)
+                            .final_img(recipe.getATT_FILE_NO_MK())
+                            .method(recipe.getRCP_WAY2())
+                            .category(recipe.getRCP_PAT2())
+                            .calorie(recipe.getINFO_ENG())
+                            .build()
+            );
+        }
+        return recipeAllResponseDtoList;
     }
 
 }
