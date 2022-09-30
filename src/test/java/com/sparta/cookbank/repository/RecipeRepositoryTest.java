@@ -3,6 +3,7 @@ package com.sparta.cookbank.repository;
 import com.sparta.cookbank.config.TestQueryDslConfig;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeSearchRequestDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,16 +36,40 @@ class RecipeRepositoryTest {
     @Autowired
     private RecipeRepository recipeRepository;
 
+    private Recipe setRecipe() {
+
+
+        Recipe setRecipe = Recipe.builder()
+                .RCP_NM("고등어")
+                .RCP_PARTS_DTLS("마늘, 고등어, 쌀, 양파, 닭, 고추")
+                .build();
+
+        return recipeRepository.save(setRecipe);
+    }
+
+    @Nested
+    @DisplayName("RecommendRecipe")
+    class RecommendRecipeTest {
+
+        @Test
+        @DisplayName("레시피 추천 테스트")
+        void RecommendRecipe_Normal() {
+            // given
+            setRecipe();
+            entityManager.clear();
+            String base = "고등어";
+
+            // when
+            List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(base);
+
+            // then
+            assertThat(recipeList.get(0).getRCP_PARTS_DTLS()).contains(base);
+        }
+    }
+
     @Nested
     @DisplayName("SearchRecipe")
     class SearchTest{
-        private Recipe setRecipe() {
-            Recipe setRecipe = Recipe.builder()
-                    .RCP_NM("고등어")
-                    .build();
-
-            return recipeRepository.save(setRecipe);
-        }
 
         @Test
         @DisplayName("레시피 검색 테스트")
