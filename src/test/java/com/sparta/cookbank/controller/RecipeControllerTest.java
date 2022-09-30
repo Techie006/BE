@@ -29,6 +29,8 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.bytebuddy.implementation.FixedValue.value;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -45,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @MockBean(JpaMetamodelMappingContext.class)
 class RecipeControllerTest {
 
-    // 웹 api 테스츠할 때 사용, 스프링 MVC 테스트의 시작점
+    // 웹 api 테스트할 때 사용, 스프링 MVC 테스트의 시작점
     @Autowired
     MockMvc mockMvc;
 
@@ -97,7 +99,7 @@ class RecipeControllerTest {
     }
 
     @Test
-    @DisplayName("추천 레시피")
+    @DisplayName("[API][POST] 추천 레시피")
     void RecommendRecipe() throws Exception {
         // given
         List<Recipe> recipeList = recipeSetUp();
@@ -148,6 +150,10 @@ class RecipeControllerTest {
         actions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.['result']").value(true))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.['content']['recipes'][0]['ingredients'][0]").value(containsString("고등어")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.['status']['code']").value("200"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.['status']['message']").value("추천레시피 제공에 성공하였습니다."))
                 .andDo(print());
 
         verify(recipeService, times(1)).getRecommendRecipe(requestDto);
