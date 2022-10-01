@@ -20,4 +20,5 @@ public class RecipeAllResponseDto {
     private String method;
     private String category;
     private Long calorie;
+    private boolean liked;
 }
