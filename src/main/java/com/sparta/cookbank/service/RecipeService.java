@@ -291,6 +291,7 @@ public class RecipeService {
         }
 
         RecipeAllBookmarkResponseDto recipeResponseDto = RecipeAllBookmarkResponseDto.builder()
+                .user_name(member.getUsername())
                 .current_page_num(likeRecipeList.getPageable().getPageNumber())
                 .total_page_num(likeRecipeList.getTotalPages())
                 .recipes(recipeBookmarkResponseDtoList)

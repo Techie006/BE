@@ -15,5 +15,6 @@ import java.util.List;
 public class RecipeAllBookmarkResponseDto {
     private int current_page_num;
     private int total_page_num;
+    private String user_name;
     private List<RecipeBookmarkResponseDto> recipes;
 }
