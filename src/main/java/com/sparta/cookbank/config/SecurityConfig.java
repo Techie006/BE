@@ -5,6 +5,7 @@ import com.sparta.cookbank.security.JwtAuthenticationEntryPoint;
 import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -13,6 +14,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+
+import java.util.List;
 
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     // h2 database 테스트가 원활하도록 관련 API 들은 전부 무시
     @Override

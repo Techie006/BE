@@ -135,7 +135,11 @@ public class RecipeService {
 
 
         // 재료들을 리스트에 담음
-        List<String> ingredientsList = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
+        List<String> ingredientsList = new ArrayList<>();
+        if (!(recipe.getRCP_PARTS_DTLS() == null)) {
+            ingredientsList = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
+        }
+
 
         // 방법들을 리스트에 담음
         List<String> manualDescList = Arrays.asList(
@@ -326,7 +330,10 @@ public class RecipeService {
     private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
         List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
         for (Recipe recipe : recipes){
-            List<String> mainIngredientsList = Arrays.asList(recipe.getMAIN_INGREDIENTS().split(","));
+            List<String> mainIngredientsList = new ArrayList<>();
+            if (!(recipe.getMAIN_INGREDIENTS() == null)) {
+                mainIngredientsList = Arrays.asList(recipe.getMAIN_INGREDIENTS().split(","));
+            }
             recipeAllResponseDtoList.add(
                     RecipeAllResponseDto.builder()
                             .id(recipe.getId())
