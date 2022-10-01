@@ -5,6 +5,8 @@ import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
+import com.sparta.cookbank.redis.recipe.RedisRecipe;
+import com.sparta.cookbank.redis.recipe.RedisRecipeRepo;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RecipeRepository;
@@ -24,6 +26,7 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private final LikeRecipeRepository likeRecipeRepository;
     private final MemberRepository memberRepository;
+    private final RedisRecipeRepo redisRecipeRepo;
 
     // 추천 레시피 조회
     @Transactional(readOnly = true)
@@ -37,62 +40,86 @@ public class RecipeService {
 //        String input = base.split(" ")[0];
 //        requestDto.setBase(input);
 
-        List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
-        List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+        //레디스에서 찾기
+        String redisKey = requestDto.getBase()+requestDto.getFoods(); // 고유키
+        Optional<RedisRecipe> redisRecipe = redisRecipeRepo.findById(redisKey);
 
-        HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
+        if(redisRecipe.isEmpty()){ // 레디스 캐시 없을시
 
-        for (Recipe recipe : recipeList) {
-            int count = 0;
+            List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
+            List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
 
-            // 서브 재료의 개수만큼 반복문을 돌리는데
-            for (int i = 0; i < requestDto.getFoods().size(); i++) {
-                // 만약 가져온 recipe 에 검색어 i 번째가 포함되면 count를  1 증가시키고 HashMap에 저장한다. 포함되는게 없으면 Recipe와 함께 0을 저장한다.
-                if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
-                    count++;
-                    recipeMap.put(recipe, count);
-                } else {
-                    recipeMap.put(recipe,0);
+            HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
+
+            for (Recipe recipe : recipeList) {
+                int count = 0;
+
+                // 서브 재료의 개수만큼 반복문을 돌리는데
+                for (int i = 0; i < requestDto.getFoods().size(); i++) {
+                    // 만약 가져온 recipe 에 검색어 i 번째가 포함되면 count를  1 증가시키고 HashMap에 저장한다. 포함되는게 없으면 Recipe와 함께 0을 저장한다.
+                    if (recipe.getRCP_PARTS_DTLS().contains(requestDto.getFoods().get(i))) {
+                        count++;
+                        recipeMap.put(recipe, count);
+                    } else {
+                        recipeMap.put(recipe,0);
+                    }
                 }
             }
-        }
 
-        // 저장한 map에서 count를 내림차순으로 정렬하기 위해 list 형태로 map을 가져온다.
-        List<Map.Entry<Recipe, Integer>> list = new LinkedList<>(recipeMap.entrySet());
-        // 람다식을 통해 내림차순으로 정렬한다.
-        list.sort(((o1, o2) -> recipeMap.get(o2.getKey()) - recipeMap.get(o1.getKey())));
+            // 저장한 map에서 count를 내림차순으로 정렬하기 위해 list 형태로 map을 가져온다.
+            List<Map.Entry<Recipe, Integer>> list = new LinkedList<>(recipeMap.entrySet());
+            // 람다식을 통해 내림차순으로 정렬한다.
+            list.sort(((o1, o2) -> recipeMap.get(o2.getKey()) - recipeMap.get(o1.getKey())));
 
 
-        for (Map.Entry<Recipe, Integer> entry : list) {
-            boolean liked = false;
-            LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), entry.getKey().getId());
-            if (!(likeRecipe == null)) {
-                liked = true;
+            for (Map.Entry<Recipe, Integer> entry : list) {
+                boolean liked = false;
+                LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), entry.getKey().getId());
+                if (!(likeRecipe == null)) {
+                    liked = true;
+                }
+                // 메인 재료들을  리스트에 담음
+                List<String> mainIngredientsList = new ArrayList<>();
+                mainIngredientsList.add(entry.getKey().getMAIN_INGREDIENTS());
+                // 모든 재료들을 리스트에 담음
+                List<String> ingredientsList = new ArrayList<>();
+                ingredientsList.add(entry.getKey().getRCP_PARTS_DTLS());
+                recipeRecommendResponseDto.add(
+                        RecipeRecommendResponseDto.builder()
+                                .id(entry.getKey().getId())
+                                .recipe_name(entry.getKey().getRCP_NM())
+                                .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
+                                .liked(liked)
+                                .common_ingredients(mainIngredientsList)
+                                .ingredients(ingredientsList)
+                                .method(entry.getKey().getRCP_WAY2())
+                                .category(entry.getKey().getRCP_PAT2())
+                                .calorie(entry.getKey().getINFO_ENG())
+                                .build()
+                );
             }
-            // 메인 재료들을  리스트에 담음
-            List<String> mainIngredientsList = new ArrayList<>();
-            mainIngredientsList.add(entry.getKey().getMAIN_INGREDIENTS());
-            // 모든 재료들을 리스트에 담음
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(entry.getKey().getRCP_PARTS_DTLS());
-            recipeRecommendResponseDto.add(
-                    RecipeRecommendResponseDto.builder()
-                            .id(entry.getKey().getId())
-                            .recipe_name(entry.getKey().getRCP_NM())
-                            .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
-                            .liked(liked)
-                            .common_ingredients(mainIngredientsList)
-                            .ingredients(ingredientsList)
-                            .method(entry.getKey().getRCP_WAY2())
-                            .category(entry.getKey().getRCP_PAT2())
-                            .calorie(entry.getKey().getINFO_ENG())
-                            .build()
-            );
+
+            //레디스 캐시 저장
+            RedisRecipe saveRedisRecipe = RedisRecipe.builder()
+                    .id(redisKey)
+                    .recipes(recipeRecommendResponseDto)
+                    .build();
+            redisRecipeRepo.save(saveRedisRecipe);
+
+            return RecipeRecommendResultResponseDto.builder()
+                    .recipes(recipeRecommendResponseDto)
+                    .build();
+
+        }else{ // 레디스 캐시 있을시 출력
+            RedisRecipe recipes =  redisRecipe.get();
+            List<RecipeRecommendResponseDto> recipeRecommendResponseDto = recipes.getRecipes();
+
+            return RecipeRecommendResultResponseDto.builder()
+                    .recipes(recipeRecommendResponseDto)
+                    .build();
+
         }
 
-        return RecipeRecommendResultResponseDto.builder()
-                .recipes(recipeRecommendResponseDto)
-                .build();
     }
 
     // 레시피 상세 조회
