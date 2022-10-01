@@ -553,15 +553,46 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
         List<TotalMyIngredientDto> dtoList = new ArrayList<>();
 
         //현재시각으로 d_day 구하기
         LocalDate now = LocalDate.now();
         String nowString = now.toString();
 
+        // 유통기한지난거 빼서 보내주기
+        for (MyIngredients myIngredient : myIngredients) {
+            Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
+            Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
+            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffDays = diffSec / (24*60*60); // 일자수 차이
+            String d_day;
+            if(diffDays == 0){
+                d_day ="D-Day";
+                dtoList.add(TotalMyIngredientDto.builder()
+                        .id(myIngredient.getId())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date(d_day)
+                        .category(myIngredient.getStorage())
+                        .build());
+            }else if(diffDays > 0){
+                d_day ="-"+diffDays.toString();
+                dtoList.add(TotalMyIngredientDto.builder()
+                        .id(myIngredient.getId())
+                        .icon_image(myIngredient.getIngredient().getIconImage())
+                        .food_name(myIngredient.getIngredient().getFoodName())
+                        .group_name(myIngredient.getIngredient().getFoodCategory())
+                        .in_date(myIngredient.getInDate())
+                        .d_date("D"+ d_day)
+                        .category(myIngredient.getStorage())
+                        .build());
+            }
 
-        getMyIngredientWithDday(myIngredients, dtoList, nowString);
+        }
+
 
         ListTotalMyIngredientsDto responseDto = ListTotalMyIngredientsDto.builder()
                 .ingredients_num(dtoList.size())
