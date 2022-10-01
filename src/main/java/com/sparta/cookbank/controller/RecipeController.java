@@ -5,7 +5,6 @@ import com.sparta.cookbank.domain.recipe.dto.*;
 import com.sparta.cookbank.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,15 +28,14 @@ public class RecipeController {
 
     // 레시피 전체 조회
     @GetMapping("/api/recipes")
-    public ResponseDto<?> getAllRecipe(@PageableDefault(size = 5)Pageable pageable) {
+    public ResponseDto<?> getAllRecipe(Pageable pageable) {
         RecipeResponseDto recipeResponseDtoPage = recipeService.getAllRecipe(pageable);
         return ResponseDto.success(recipeResponseDtoPage,"전체레시피 제공에 성공하였습니다.");
     }
 
     // 레시피 검색
     @PostMapping("/api/recipes/search")
-    public ResponseDto<?> searchRecipe(@RequestBody RecipeSearchRequestDto searchRequestDto,
-                                       @PageableDefault(size = 5) Pageable pageable) {
+    public ResponseDto<?> searchRecipe(@RequestBody RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
         RecipeResponseDto ResponseDtoPage = recipeService.searchRecipe(searchRequestDto,pageable);
         return ResponseDto.success(ResponseDtoPage,"레시피 검색에 성공하였습니다.");
     }
@@ -59,7 +57,7 @@ public class RecipeController {
 
     // 북마크한 레시피 조회
     @GetMapping("/api/my/bookmark")
-    public ResponseDto<?> getBookmark(@PageableDefault Pageable pageable){
+    public ResponseDto<?> getBookmark(Pageable pageable){
         RecipeAllBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
 
         return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
