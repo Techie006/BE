@@ -29,6 +29,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -263,7 +264,8 @@ public class IngredientService {
 
         List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
         List<MyIngredientResponseDto> outList = new ArrayList<>();
-        List<MyIngredientResponseDto> hurryList = new ArrayList<>();
+        List<InHurryIngredientDto> hurryList = new ArrayList<>();
+        List<String> stringHurryList = new ArrayList<>();
 
         //현재시각으로 d_day 구하기
         LocalDate now = LocalDate.now();
@@ -290,14 +292,8 @@ public class IngredientService {
 
             }else if(diffDays < 5) {     // 7일 미만 HurryList 추가.
                 d_day ="-"+diffDays.toString();
-                hurryList.add(MyIngredientResponseDto.builder()
-                        .id(myIngredient.getId())
-                        .icon_image(myIngredient.getIngredient().getIconImage())
+                hurryList.add(InHurryIngredientDto.builder()
                         .mark_name(myIngredient.getIngredient().getMarkName())
-                        .food_name(myIngredient.getIngredient().getFoodName())
-                        .group_name(myIngredient.getIngredient().getFoodCategory())
-                        .in_date(myIngredient.getInDate())
-                        .d_date("D"+ d_day)
                         .build());
             }
         }
@@ -315,13 +311,17 @@ public class IngredientService {
         }
 
 
+        // 중복된 임박재료 리스트 set으로 제거  @EqualsAndHashCode  사용..
+        LinkedHashSet<InHurryIngredientDto> set = new LinkedHashSet<>(hurryList);
+        List<InHurryIngredientDto> setHurryList = new ArrayList<>(set);
+
 
         WarningResponseDto responseDto = WarningResponseDto.builder()
                 .empty(false)
                 .out_dated_num(outList.size())
                 .in_hurry_num(hurryList.size())
                 .out_dated(outList)
-                .in_hurry(hurryList)
+                .in_hurry(setHurryList)
                 .build();
 
         return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다");

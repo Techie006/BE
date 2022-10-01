@@ -90,7 +90,9 @@ public class MemberService {
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         String key = UUID.randomUUID().toString();
 
-        String emailPattern = "^\\w+@\\w+\\.\\w+(\\.\\w)?$";
+        String emailPattern = "^[a-z\\d(.)(_)]+@\\w+\\.\\w+(\\.\\w)?$";
+
+        // 기존
         if(!Pattern.matches(emailPattern,requestDto.getEmail())){
             throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
         }
