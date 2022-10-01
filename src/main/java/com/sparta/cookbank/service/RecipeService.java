@@ -72,32 +72,30 @@ public class RecipeService {
             list.sort(((o1, o2) -> recipeMap.get(o2.getKey()) - recipeMap.get(o1.getKey())));
 
 
-            for (Map.Entry<Recipe, Integer> entry : list) {
-                boolean liked = false;
-                LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), entry.getKey().getId());
-                if (!(likeRecipe == null)) {
-                    liked = true;
-                }
-                // 메인 재료들을  리스트에 담음
-                List<String> mainIngredientsList = new ArrayList<>();
-                mainIngredientsList.add(entry.getKey().getMAIN_INGREDIENTS());
-                // 모든 재료들을 리스트에 담음
-                List<String> ingredientsList = new ArrayList<>();
-                ingredientsList.add(entry.getKey().getRCP_PARTS_DTLS());
-                recipeRecommendResponseDto.add(
-                        RecipeRecommendResponseDto.builder()
-                                .id(entry.getKey().getId())
-                                .recipe_name(entry.getKey().getRCP_NM())
-                                .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
-                                .liked(liked)
-                                .common_ingredients(mainIngredientsList)
-                                .ingredients(ingredientsList)
-                                .method(entry.getKey().getRCP_WAY2())
-                                .category(entry.getKey().getRCP_PAT2())
-                                .calorie(entry.getKey().getINFO_ENG())
-                                .build()
-                );
+        for (Map.Entry<Recipe, Integer> entry : list) {
+            boolean liked = false;
+            LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(), entry.getKey().getId());
+            if (!(likeRecipe == null)) {
+                liked = true;
             }
+            // 메인 재료들을  리스트에 담음
+            List<String> mainIngredientsList = Arrays.asList(entry.getKey().getMAIN_INGREDIENTS().split(","));
+            // 모든 재료들을 리스트에 담음
+            List<String> ingredientsList = Arrays.asList(entry.getKey().getRCP_PARTS_DTLS().split(","));
+            recipeRecommendResponseDto.add(
+                    RecipeRecommendResponseDto.builder()
+                            .id(entry.getKey().getId())
+                            .recipe_name(entry.getKey().getRCP_NM())
+                            .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
+                            .liked(liked)
+                            .common_ingredients(mainIngredientsList)
+                            .ingredients(ingredientsList)
+                            .method(entry.getKey().getRCP_WAY2())
+                            .category(entry.getKey().getRCP_PAT2())
+                            .calorie(entry.getKey().getINFO_ENG())
+                            .build()
+            );
+        }
 
             //레디스 캐시 저장
             RedisRecipe saveRedisRecipe = RedisRecipe.builder()
@@ -137,26 +135,26 @@ public class RecipeService {
 
 
         // 재료들을 리스트에 담음
-        List<String> ingredientsList = new ArrayList<>();
-        ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+        List<String> ingredientsList = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
 
         // 방법들을 리스트에 담음
-        List<String> manualDescList = new ArrayList<>();
-        manualDescList.add(recipe.getMANUAL01());
-        manualDescList.add(recipe.getMANUAL02());
-        manualDescList.add(recipe.getMANUAL03());
-        manualDescList.add(recipe.getMANUAL04());
-        manualDescList.add(recipe.getMANUAL05());
-        manualDescList.add(recipe.getMANUAL06());
+        List<String> manualDescList = Arrays.asList(
+                recipe.getMANUAL01(),
+                recipe.getMANUAL02(),
+                recipe.getMANUAL03(),
+                recipe.getMANUAL04(),
+                recipe.getMANUAL05(),
+                recipe.getMANUAL06());
 
         // 방법의 이미지들을 리스트에 담음
-        List<String> manualImgList = new ArrayList<>();
-        manualImgList.add(recipe.getMANUAL_IMG01());
-        manualImgList.add(recipe.getMANUAL_IMG02());
-        manualImgList.add(recipe.getMANUAL_IMG03());
-        manualImgList.add(recipe.getMANUAL_IMG04());
-        manualImgList.add(recipe.getMANUAL_IMG05());
-        manualImgList.add(recipe.getMANUAL_IMG06());
+        List<String> manualImgList = Arrays.asList(
+                recipe.getMANUAL_IMG01(),
+                recipe.getMANUAL_IMG02(),
+                recipe.getMANUAL_IMG03(),
+                recipe.getMANUAL_IMG04(),
+                recipe.getMANUAL_IMG05(),
+                recipe.getMANUAL_IMG06()
+        );
 
         RecipeDetailResponseDto detailResponseDto = RecipeDetailResponseDto.builder()
                 .id(id)
@@ -273,13 +271,12 @@ public class RecipeService {
         List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
 
         for (LikeRecipe likeRecipe : likeRecipeList) {
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(likeRecipe.getRecipe().getRCP_PARTS_DTLS());
+            List<String> mainIngredientsList = Arrays.asList(likeRecipe.getRecipe().getMAIN_INGREDIENTS().split(","));
             recipeBookmarkResponseDtoList.add(
                     RecipeBookmarkResponseDto.builder()
                             .id(likeRecipe.getRecipe().getId())
                             .recipe_name(likeRecipe.getRecipe().getRCP_NM())
-                            .ingredients(ingredientsList)
+                            .ingredients(mainIngredientsList)
                             .final_img(likeRecipe.getRecipe().getATT_FILE_NO_MK())
                             .method(likeRecipe.getRecipe().getRCP_WAY2())
                             .category(likeRecipe.getRecipe().getRCP_PAT2())
@@ -298,32 +295,9 @@ public class RecipeService {
         return recipeResponseDto;
     }
 
-    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
-        for (Recipe recipe : recipes){
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
-            recipeAllResponseDtoList.add(
-                    RecipeAllResponseDto.builder()
-                            .id(recipe.getId())
-                            .recipe_name(recipe.getRCP_NM())
-                            .ingredients(ingredientsList)
-                            .final_img(recipe.getATT_FILE_NO_MK())
-                            .method(recipe.getRCP_WAY2())
-                            .category(recipe.getRCP_PAT2())
-                            .calorie(recipe.getINFO_ENG())
-                            .build()
-            );
-        }
-        return recipeAllResponseDtoList;
-    }
-
     // 검색어 자동완성
     @Transactional(readOnly = true)
     public AutoCompleteResultResponseDto getAutoComplete(AutoCompleteRequestDto requestDto) {
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
-            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
-        });
 
         List<Recipe> recipeList = recipeRepository.findAllByRCP_NM(requestDto.getKeyword());
         List<AutoCompleteResponseDto> autoCompleteResponseList = new ArrayList<>();
@@ -347,6 +321,25 @@ public class RecipeService {
                 .empty(empty)
                 .recipes(autoCompleteResponseList)
                 .build();
+    }
+
+    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
+        for (Recipe recipe : recipes){
+            List<String> mainIngredientsList = Arrays.asList(recipe.getMAIN_INGREDIENTS().split(","));
+            recipeAllResponseDtoList.add(
+                    RecipeAllResponseDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .ingredients(mainIngredientsList)
+                            .final_img(recipe.getATT_FILE_NO_MK())
+                            .method(recipe.getRCP_WAY2())
+                            .category(recipe.getRCP_PAT2())
+                            .calorie(recipe.getINFO_ENG())
+                            .build()
+            );
+        }
+        return recipeAllResponseDtoList;
     }
 
 }

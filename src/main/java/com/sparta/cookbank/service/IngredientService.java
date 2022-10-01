@@ -45,7 +45,7 @@ public class IngredientService {
 
         // Token 유효성 검사 없음
 
-        // 분기 처리
+        // 분기 처리.
         // 빈배열이면 fail
         if(food_name.isEmpty()){
             return ResponseDto.fail(null,"내용을 입력하세요.");
@@ -459,7 +459,7 @@ public class IngredientService {
             String match = "[^0-9]";
             int exp_date = Integer.parseInt(myIngredients.getExpDate().replaceAll(match,""));
             int in_date = Integer.parseInt(myIngredients.getInDate().replaceAll(match,""));
-            if ((exp_date - in_date) < 5 && (exp_date - in_date) > 0) { // 남은 유통기한이 5일 미만일 때 = inHurry
+            if ((exp_date - in_date) < 5 && (exp_date - in_date) >= 0) { // 남은 유통기한이 5일 미만일 때 = inHurry
                 inHurryCount++;
             }  else if ((exp_date - in_date) >= 5) { // 남은 유통기한이 5일 이상일때
                 fineCount++;

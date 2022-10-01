@@ -286,7 +286,25 @@ public class ChatService {
         return session.createConnection(connectionProperties).getToken();
     }
 
-    public void CloseClass(Long classId){
+    //클래스 삭제 메소드
+    public void RemoveClass(Room ClassRoom){
+        //채팅 기록 삭제
+        List<ChatMessage> chats = chatRoomRepository.findAllMessageByRoom(ClassRoom.getRedisClassId());
+        for(ChatMessage chat : chats) chatRoomRepository.removeChat(ClassRoom.getRedisClassId(),chat.getRedis_chat_id());
+        log.info("채팅기록 삭제: {}",chats.size());
+        //시청자수 기록 삭제
+        chatRoomRepository.removeCount(ClassRoom.getRedisClassId());
+        log.info("시청자수 기록 삭제");
+        //방 삭제
+        chatRoomRepository.removeChatRoom(ClassRoom.getRedisClassId());
+        log.info("방 삭제");
+
+        //DB 방 삭제
+        roomRepository.delete(ClassRoom);
+    }
+
+    //클래스를 방장이 나갔을때 삭제
+    public void ApiRemoveClass(Long classId){
         Room ClassRoom = roomRepository.findById(classId).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다");
         });
@@ -295,17 +313,10 @@ public class ChatService {
         });
         if(ClassRoom.getHost() != member) throw new RuntimeException("호스트가 아닙니다.");
 
-        //채팅기록 삭제
-        chatRoomRepository.removeChat(ClassRoom.getRedisClassId());
-        //시청자수 기록 삭제
-        chatRoomRepository.removeCount(ClassRoom.getRedisClassId());
-        //방 삭제
-        chatRoomRepository.removeChatRoom(ClassRoom.getRedisClassId());
-
-        //DB 방 삭제
-        roomRepository.delete(ClassRoom);
+        RemoveClass(ClassRoom);
     }
 
+    //매일 안쓰는 클래스 삭제
     public void DailyRemoveClass(){
         List<Room> rooms = roomRepository.findAll();
 
@@ -316,14 +327,7 @@ public class ChatService {
 
         for(Room room : rooms) {
             if(!sessions.contains(room.getSessionId())) {
-                chatRoomRepository.removeChat(room.getRedisClassId());
-                //시청자수 기록 삭제
-                chatRoomRepository.removeCount(room.getRedisClassId());
-                //방 삭제
-                chatRoomRepository.removeChatRoom(room.getRedisClassId());
-
-                //DB 방 삭제
-                roomRepository.delete(room);
+                RemoveClass(room);
             }
         }
     }

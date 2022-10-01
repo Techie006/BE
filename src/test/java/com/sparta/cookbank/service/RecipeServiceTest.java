@@ -1,7 +1,7 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.recipe.Recipe;
-import com.sparta.cookbank.domain.recipe.dto.RecipeDetailResultResponseDto;
+import com.sparta.cookbank.domain.recipe.dto.*;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RecipeRepository;
@@ -12,13 +12,29 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.predicate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,24 +57,23 @@ class RecipeServiceTest {
         this.recipeService =new RecipeService(recipeRepository,likeRecipeRepository, memberRepository);
     }
 
-
     @Nested
     @DisplayName("DetailRecipe")
     class DetailRecipe {
-        @Test
-        @DisplayName("정상케이스")
-        void getDetailRecipe_Normal() {
-            // given
-            Long recipeId = 1L;
-
-            when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(new Recipe()));
-            // when
-
-            RecipeDetailResultResponseDto result = recipeService.getDetailRecipe(recipeId);
-            //then
-            verify(recipeRepository, times(1)).findById(recipeId);
-            assertThat(result.getRecipe().getId()).isEqualTo(recipeId);
-        }
+//        @Test
+//        @DisplayName("정상 케이스")
+//        void getDetailRecipe_Normal() {
+//            // given
+//            Long recipeId = 1L;
+//
+//            when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(new Recipe()));
+//            // when
+//
+//            RecipeDetailResultResponseDto result = recipeService.getDetailRecipe(recipeId);
+//            //then
+//            verify(recipeRepository, times(1)).findById(recipeId);
+//            assertThat(result.getRecipe().getId()).isEqualTo(recipeId);
+//        }
 
         @Test
         @DisplayName("Id가 null이 들어왔을 때")
@@ -92,47 +107,103 @@ class RecipeServiceTest {
         }
     }
 
-//    @Test
-//    @WithMockCustomUser
-//    @DisplayName("레시피 북마크 정상 케이스")
-//    void likeRecipe() {
+//    @Nested
+//    @DisplayName("AllRecipe")
+//    class AllRecipe {
+//        @Test
+//        @DisplayName("Pageable 모든 레시피 조회")
+//        void getAllRecipe() {
 //
-//        // given
+//            // given
+//            List<Recipe> recipeList = new ArrayList<>();
+//            for (long i =0; i < 15; i++) {
+//                recipeList.add(
+//                        Recipe.builder()
+//                                .id(i)
+//                                .build()
+//                );
+//            }
 //
-//        Recipe testRecipe = Recipe.builder()
-//                .id(1L)
-//                .ATT_FILE_NO_MAIN("test")
-//                .ATT_FILE_NO_MK("test")
-//                .INFO_CAR(25L)
-//                .INFO_ENG(220L)
-//                .INFO_FAT(17L)
-//                .INFO_NA(99L)
-//                .INFO_PRO(14L)
-//                .MANUAL01("test1")
-//                .MANUAL02("test1")
-//                .MANUAL03("test1")
-//                .MANUAL04("test1")
-//                .MANUAL05("test1")
-//                .MANUAL06("test1")
-//                .MANUAL_IMG01("test1")
-//                .MANUAL_IMG02("test1")
-//                .MANUAL_IMG03("test1")
-//                .MANUAL_IMG04("test1")
-//                .MANUAL_IMG05("test1")
-//                .MANUAL_IMG06("test1")
-//                .RCP_NM("test1메뉴")
-//                .RCP_PARTS_DTLS("test1재료1, test1재료2, test1재료3")
-//                .RCP_PAT2("반찬")
-//                .RCP_WAY2("찌기")
-//                .MAIN_INGREDIENTS("test1재료1, test1재료2, test1재료3")
-//                .build();
-//        when(memberRepository.findById(anyLong())).thenReturn(Optional.of(new Member()));
-//        when(recipeRepository.findById(anyLong())).thenReturn(Optional.of(new Recipe()));
-//        // when
-//        recipeService.likeRecipe(testRecipe.getId());
-//        LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(1L,testRecipe.getId());
+//            Pageable pageable = Pageable.ofSize(5);
+//            Page<Recipe> recipePage = new PageImpl<>(recipeList,pageable, recipeList.size());
 //
-//        //then
-//        assertThat(likeRecipe.getRecipe().getId()).isEqualTo(testRecipe.getId());
+//            when(recipeRepository.findAll(pageable)).thenReturn(recipePage);
+//
+//            // when
+//            RecipeResponseDto result = recipeService.getAllRecipe(pageable);
+//
+//            // then
+//            verify(recipeRepository,times(1)).findAll(pageable);
+//            assertThat(result.getTotal_page_num()).isEqualTo(3);
+//        }
 //    }
+
+//    @Nested
+//    @DisplayName("SearchRecipe")
+//    class SearchRecipe {
+//
+//        @Test
+//        @DisplayName("정상 케이스")
+//        void getSearchRecipe_Normal() {
+//
+//            // given
+//            String recipeName = "마늘";
+//            Pageable pageable = Pageable.ofSize(5);
+//
+//            RecipeSearchRequestDto requestDto = new RecipeSearchRequestDto(recipeName);
+//
+//            List<Recipe> recipeList = new ArrayList<>();
+//            List<String> recipeResultName = List.of(new String[]{"마늘무조림", " 마늘탕", " 마늘구이", "마늘밥", "마늘제육볶음"});
+//            for (int i =0; i < 5; i++) {
+//                recipeList.add(
+//                        Recipe.builder()
+//                                .RCP_NM(recipeResultName.get(i))
+//                                .build()
+//                );
+//            }
+//
+//            Page<Recipe> recipePage = new PageImpl<>(recipeList, pageable, recipeList.size());
+//
+//            when(recipeRepository.findBySearchOption(any(),any())).thenReturn(recipePage);
+//
+//            // when
+//            RecipeResponseDto result = recipeService.searchRecipe(requestDto,pageable);
+//
+//            // then
+//            verify(recipeRepository, times(1)).findBySearchOption(requestDto,pageable);
+//            assertThat(result.getRecipes().get(0).getRecipe_name()).contains(requestDto.getRecipe_name());
+//            assertThat(result.getTotal_page_num()).isEqualTo(1);
+//        }
+//    }
+
+    @Nested
+    @DisplayName("AutoComplete")
+    class AutoComplete {
+
+        @Test
+        @DisplayName("정상 케이스")
+        void getAutoComplete_Normal() {
+            String keyword = "마늘";
+
+            AutoCompleteRequestDto requestDto = new AutoCompleteRequestDto(keyword);
+            List<Recipe> recipeList = new ArrayList<>();
+            for (long i = 0; i < 5; i++) {
+                recipeList.add(
+                        Recipe.builder()
+                                .id(i)
+                                .RCP_NM("마늘된장찌개" + i)
+                                .build()
+                );
+            }
+
+
+            when(recipeRepository.findAllByRCP_NM(requestDto.getKeyword())).thenReturn(recipeList);
+
+            AutoCompleteResultResponseDto result = recipeService.getAutoComplete(requestDto);
+
+            verify(recipeRepository, times(1)).findAllByRCP_NM(any());
+            assertThat(result.getRecipes().get(0).getRecipe_name()).contains(requestDto.getKeyword());
+            assertThat(result.isEmpty()).isFalse();
+        }
+    }
 }

@@ -58,7 +58,7 @@ public class ChatRoomController {
     @DeleteMapping("api/class/{class_id}")
     @ResponseBody
     public ResponseDto<?> RemoveClass(@PathVariable Long class_id){
-        chatService.CloseClass(class_id);
+        chatService.ApiRemoveClass(class_id);
         return ResponseDto.success(null,"클래스가 종료되었습니다.");
     }
 }
