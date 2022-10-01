@@ -199,7 +199,7 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
         //전체 갯수 조회
-        List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
         List<MyIngredientResponseDto> dtoList = new ArrayList<>();
         long total_nums = totalMyIngredients.size();
 
@@ -261,7 +261,7 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+        List<MyIngredients> myIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
         List<MyIngredientResponseDto> outList = new ArrayList<>();
         List<MyIngredientResponseDto> hurryList = new ArrayList<>();
 
@@ -618,7 +618,7 @@ public class IngredientService {
         if(category.isEmpty()){
 
             //전체 갯수 조회
-            List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberId(member.getId());
+            List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
             List<MyIngredientResponseDto> dtoList = new ArrayList<>();
             long total_nums = totalMyIngredients.size();
 

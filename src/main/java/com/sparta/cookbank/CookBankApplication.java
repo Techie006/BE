@@ -23,7 +23,9 @@ public class CookBankApplication {
                 registry.addMapping("/**")
                         .allowedMethods("*")
                         .allowedHeaders("*")
-                        .allowedOrigins("http://localhost:3000", "http://frigo.kr", "https://frigo.kr")
+                        .allowedOrigins("http://localhost:3000", "http://frigo.kr", "https://frigo.kr"
+                        ,"https://frigo-three.vercel.app/", " https://frigo-techie006.vercel.app"
+                        , "https://frigo-git-vercel-techie006.vercel.app/")
                         .exposedHeaders("Authorization","Refresh_Token")
                         .allowCredentials(true);
             }
