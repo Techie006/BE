@@ -10,4 +10,5 @@ public interface MyIngredientsRepository extends JpaRepository<MyIngredients, Lo
     List<MyIngredients> findByMemberIdAndStorageOrderByExpDate(Long id, Storage storage);
 
     List<MyIngredients> findAllByMemberId(Long id);
+    List<MyIngredients> findAllByMemberIdOrderByExpDate(Long id);
 }
