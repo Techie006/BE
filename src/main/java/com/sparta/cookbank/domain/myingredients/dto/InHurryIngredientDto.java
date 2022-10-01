@@ -9,4 +9,5 @@ import lombok.*;
 @EqualsAndHashCode
 public class InHurryIngredientDto {
     private String mark_name;
+    private String food_name;
 }
