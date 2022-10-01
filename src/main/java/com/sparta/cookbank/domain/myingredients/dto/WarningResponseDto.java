@@ -17,6 +17,6 @@ public class WarningResponseDto {
     private int out_dated_num;
     private int in_hurry_num;
     private List<MyIngredientResponseDto> out_dated;
-    private List<MyIngredientResponseDto> in_hurry;
+    private List<InHurryIngredientDto> in_hurry;
 
 }
