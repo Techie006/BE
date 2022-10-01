@@ -329,12 +329,19 @@ public class RecipeService {
     }
 
     private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
+        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
+            throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
+        });
         List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
         for (Recipe recipe : recipes){
             List<String> mainIngredientsList = new ArrayList<>();
             if (!(recipe.getMAIN_INGREDIENTS() == null)) {
                 mainIngredientsList = Arrays.asList(recipe.getMAIN_INGREDIENTS().split(","));
             }
+
+            LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
+            boolean liked = !(likeRecipe == null);
+
             recipeAllResponseDtoList.add(
                     RecipeAllResponseDto.builder()
                             .id(recipe.getId())
@@ -344,6 +351,7 @@ public class RecipeService {
                             .method(recipe.getRCP_WAY2())
                             .category(recipe.getRCP_PAT2())
                             .calorie(recipe.getINFO_ENG())
+                            .liked(liked)
                             .build()
             );
         }
