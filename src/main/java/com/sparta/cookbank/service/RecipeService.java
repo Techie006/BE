@@ -71,11 +71,9 @@ public class RecipeService {
                 liked = true;
             }
             // 메인 재료들을  리스트에 담음
-            List<String> mainIngredientsList = new ArrayList<>();
-            mainIngredientsList.add(entry.getKey().getMAIN_INGREDIENTS());
+            List<String> mainIngredientsList = Arrays.asList(entry.getKey().getMAIN_INGREDIENTS().split(","));
             // 모든 재료들을 리스트에 담음
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(entry.getKey().getRCP_PARTS_DTLS());
+            List<String> ingredientsList = Arrays.asList(entry.getKey().getRCP_PARTS_DTLS().split(","));
             recipeRecommendResponseDto.add(
                     RecipeRecommendResponseDto.builder()
                             .id(entry.getKey().getId())
@@ -302,13 +300,12 @@ public class RecipeService {
     private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
         List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
         for (Recipe recipe : recipes){
-            List<String> ingredientsList = new ArrayList<>();
-            ingredientsList.add(recipe.getRCP_PARTS_DTLS());
+            List<String> mainIngredientsList = Arrays.asList(recipe.getMAIN_INGREDIENTS().split(","));
             recipeAllResponseDtoList.add(
                     RecipeAllResponseDto.builder()
                             .id(recipe.getId())
                             .recipe_name(recipe.getRCP_NM())
-                            .ingredients(ingredientsList)
+                            .ingredients(mainIngredientsList)
                             .final_img(recipe.getATT_FILE_NO_MK())
                             .method(recipe.getRCP_WAY2())
                             .category(recipe.getRCP_PAT2())
