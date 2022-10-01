@@ -294,6 +294,7 @@ public class IngredientService {
                 d_day ="-"+diffDays.toString();
                 hurryList.add(InHurryIngredientDto.builder()
                         .mark_name(myIngredient.getIngredient().getMarkName())
+                        .food_name(myIngredient.getIngredient().getFoodName())
                         .build());
             }
         }
