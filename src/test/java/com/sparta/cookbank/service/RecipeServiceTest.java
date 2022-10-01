@@ -2,6 +2,7 @@ package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
+import com.sparta.cookbank.redis.recipe.RedisRecipeRepo;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
 import com.sparta.cookbank.repository.RecipeRepository;
@@ -52,9 +53,12 @@ class RecipeServiceTest {
     @InjectMocks
     RecipeService recipeService;
 
+    @InjectMocks
+    RedisRecipeRepo redisRecipeRepo;
+
     @BeforeEach
     void setup() {
-        this.recipeService =new RecipeService(recipeRepository,likeRecipeRepository, memberRepository);
+        this.recipeService =new RecipeService(recipeRepository,likeRecipeRepository, memberRepository,redisRecipeRepo);
     }
 
     @Nested
