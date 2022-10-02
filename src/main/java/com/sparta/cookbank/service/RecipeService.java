@@ -215,6 +215,7 @@ public class RecipeService {
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
                 .recipes(recipeAllResponseDtoList)
+                .search_name(searchRequestDto.getRecipe_name())
                 .build();
 
         return recipeResponseDto;
