@@ -50,6 +50,7 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
         if (requestDto.getRecipe_name() == null || requestDto.getRecipe_name().isEmpty()) {
             throw new InvalidDataAccessApiUsageException("검색어를 입력해주세요!");
         }
+
         return recipe.RCP_NM.containsIgnoreCase(requestDto.getRecipe_name());
     }
 

@@ -15,4 +15,5 @@ public class RecipeResponseDto {
     private int current_page_num;
     private int total_page_num;
     private List<RecipeAllResponseDto> recipes;
+    private String search_name;
 }
