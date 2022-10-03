@@ -32,17 +32,17 @@ public class CalendarController {
         return calendarService.updateSpecificDayDiet(id, requestDto, request);
     }
 
-    @DeleteMapping("/api/calendar/{id}")
+    @DeleteMapping("/api/calendar/{id}") // 캘린더 삭제
     public ResponseDto<?> deleteSpecificDayDiet(@PathVariable Long id,HttpServletRequest request){
         return calendarService.deleteSpecificDayDiet(id,request);
     }
 
-    @GetMapping("/api/calendar/week")
+    @GetMapping("/api/calendar/week") // 주별 캘린더 조회
     public ResponseDto<?> getSpecificWeekDiet(@RequestParam("day") String day,HttpServletRequest request ) throws ParseException {
         return calendarService.getSpecificWeekDiet(day, request);
     }
 
-    @GetMapping("/api/calendar/all")
+    @GetMapping("/api/calendar/all") //전체조회
     public ResponseDto<?> getSpecificMonthDiet(HttpServletRequest request) throws ParseException {
         return calendarService.getSpecificMonthDiet(request);
     }

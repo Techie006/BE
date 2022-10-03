@@ -18,7 +18,7 @@ import java.io.IOException;
 public class MemberController {
     private final MemberService memberService;
 
-    @PostMapping("/api/user/signup")
+    @PostMapping("/api/user/signup") //회원가입
     public ResponseDto<?> signup(
             @RequestBody SignupRequestDto requestDto
     ) {
@@ -26,7 +26,7 @@ public class MemberController {
         return ResponseDto.success(memberId,"회원가입에 성공했습니다.");
     }
 
-    @PostMapping("/api/user/signin")
+    @PostMapping("/api/user/signin") //로그인
     public ResponseDto<?> login(
             @RequestBody LoginRequestDto requestDto
             ,HttpServletResponse response
@@ -36,13 +36,13 @@ public class MemberController {
         return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
     }
 
-    @PostMapping("/api/reissue")
+    @PostMapping("/api/reissue") //AccessToken 재발급
     public ResponseDto<?> reissue(HttpServletRequest request, HttpServletResponse response){
         Member member = memberService.reissue(request,response);
         return ResponseDto.success(null,member.getUsername() + "님 환영합니다.");
     }
 
-    @DeleteMapping("/api/user/signout")
+    @DeleteMapping("/api/user/signout") //로그아웃
     public ResponseDto<?> logout(
     ) {
         memberService.logout();
@@ -50,48 +50,44 @@ public class MemberController {
     }
 
 
-    @GetMapping("/user/kakao/callback")
+    @GetMapping("/user/kakao/callback") //카카오 로그인
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         MemberResponseDto member = memberService.kakaoLogin(code,response);
         return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
-    @GetMapping("/user/google/callback")
+    @GetMapping("/user/google/callback") //구글 로그인
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
         MemberResponseDto member = memberService.googleLogin(code, response);
         return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
     }
 
-    @GetMapping("/api/user/email")
+    @GetMapping("/api/user/email") //이메일 인증
     public void emailConfirm(@RequestParam String memberEmail, @RequestParam String key, HttpServletResponse response)throws Exception{
         response.sendRedirect(memberService.emailCheck(memberEmail,key));
     }
 
-    // 비밀번호 변경
-    @PutMapping("/api/my/password")
+    @PutMapping("/api/my/password") // 비밀번호 변경
     public ResponseDto<?> changePassword(@RequestBody ChangePasswordRequestDto requestDto) {
         memberService.changePassword(requestDto);
         return ResponseDto.success(null, "비밀번호 변경이 성공적으로 완료되었습니다.");
     }
 
-
-    // 프로필 사진 업로드
-    @PutMapping("/api/my/profile")
+    @PutMapping("/api/my/profile") // 프로필 사진 업로드
     public ResponseDto<?> uploadProfile(@RequestPart(value = "image")MultipartFile multipartFile) throws IOException {
         ProfileResponseDto profileResponseDto = memberService.uploadProfile(multipartFile);
 
         return ResponseDto.success(profileResponseDto, "성공적으로 프로필 사진이 변경되었습니다.");
     }
 
-    // 비밀번호 변경
-    @DeleteMapping("/api/my/profile")
+    @DeleteMapping("/api/my/profile") //기본 프로필사진으로 변경
     public ResponseDto<?> deleteProfile() {
         ProfileResponseDto profileResponseDto = memberService.deleteProfile();
 
         return ResponseDto.success(profileResponseDto, "성공적으로 기본 프로필 사진으로 변경되었습니다.");
     }
 
-    @PatchMapping("api/password")
+    @PatchMapping("api/password") //임시비밀번호 발급
     public ResponseDto<?> reissuePassword(@RequestBody EmailRequestDto requestDto){
         memberService.sendPassword(requestDto);
         return ResponseDto.success(null,"임시 비밀번호가 이메일로 전송되었습니다.");

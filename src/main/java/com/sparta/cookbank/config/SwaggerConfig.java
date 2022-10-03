@@ -23,8 +23,8 @@ public class SwaggerConfig{
     //스웨거 페이지에 소개될 설명들
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("천개의레시피")
-                .description("집에서 해먹자")
+                .title("Frigo")
+                .description("우리집 식재료 동반자")
                 .build();
     }
 

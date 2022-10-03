@@ -30,7 +30,5 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 "    }\n" +
                 "}"
         );
-//      사용자가 누군지 모름..
-//        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
     }
 }

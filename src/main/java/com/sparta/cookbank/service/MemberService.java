@@ -63,10 +63,6 @@ public class MemberService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-
-
-
-
     @Value("${kakao.redirect.url}")
     private String KAKAO_REDIRECT_URI;
 

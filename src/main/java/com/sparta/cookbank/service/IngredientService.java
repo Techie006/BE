@@ -133,15 +133,7 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-        //  request 유효성감사
-        // 1. 재료이름
-//        String pattern = "^[가-힣]*$";
-//        boolean result = Pattern.matches(pattern,food_name);
-//        if(!result){
-//            return ResponseDto.fail(null, "한글만 입력가능합니다.");
-//        }
-
-        // 2. Storage 검사
+        // Storage 검사
         switch (requestDto.getStorage()) {
             case "freeze":
                 break;
@@ -153,14 +145,12 @@ public class IngredientService {
                 throw new IllegalArgumentException("보관방법을 선택해주세요!");
         }
 
-
-
-        //3. 입주날짜 검사
+        //입주날짜 검사
         if(requestDto.getIn_date().isEmpty()||requestDto.getExp_date().isEmpty()){
             throw new IllegalArgumentException("입주날짜 혹은 유통기한을 추가해주세요!");
         }
 
-        //4. 입주 유통기한 비교
+        //입주 유통기한 비교
         Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(requestDto.getIn_date());
         Date expDay = new SimpleDateFormat("yyyy-MM-dd").parse( requestDto.getExp_date());
         int result = expDay.compareTo(inPutDay);
@@ -168,8 +158,6 @@ public class IngredientService {
         if(result<0){
             throw new IllegalArgumentException("입주날짜가 유통기한보다 이전날짜입니다.");
         }
-
-
 
 
         //재료찾기
@@ -279,7 +267,7 @@ public class IngredientService {
             String d_day;
             if(diffDays < 0){  // 유통기한 넘을시 추가..
                 diffDays = -diffDays;
-                d_day ="+"+diffDays.toString();
+                d_day ="+"+diffDays;
                 outList.add(MyIngredientResponseDto.builder()
                         .id(myIngredient.getId())
                         .icon_image(myIngredient.getIngredient().getIconImage())
@@ -291,7 +279,6 @@ public class IngredientService {
                         .build());
 
             }else if(diffDays < 5) {     // 7일 미만 HurryList 추가.
-                d_day ="-"+diffDays.toString();
                 hurryList.add(InHurryIngredientDto.builder()
                         .mark_name(myIngredient.getIngredient().getMarkName())
                         .food_name(myIngredient.getIngredient().getFoodName())
@@ -362,10 +349,9 @@ public class IngredientService {
     }
 
     private Member getMember() {
-        Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
+        return memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(
                 () -> new IllegalArgumentException("해당 유저가 존재하지 않습니다.")
         );
-        return member;
     }
 
 
@@ -384,7 +370,7 @@ public class IngredientService {
         for (MyIngredients myIngredient : myIngredients) {
             Date outDay = new SimpleDateFormat("yyyy-MM-dd").parse(myIngredient.getExpDate());
             Date nowDay = new SimpleDateFormat("yyyy-MM-dd").parse(nowString);
-            Long diffSec= (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
+            Long diffSec = (outDay.getTime()-nowDay.getTime())/1000;  //밀리초로 나와서 1000을 나눠야지 초 차이로됨
             Long diffDays = diffSec / (24*60*60); // 일자수 차이
             String d_day;
             if(diffDays < 0){  //"유통기간만료"를 출력.
@@ -426,12 +412,11 @@ public class IngredientService {
 
         }
 
-        StorageResponseDto responseDto = StorageResponseDto.builder()
+        return StorageResponseDto.builder()
                 .empty(false)
                 .total_nums(total_nums)// 넣기
                 .storage(dtoList)
                 .build();
-        return responseDto;
     }
 
     // 나만의 냉장고 상태 표시
@@ -473,11 +458,10 @@ public class IngredientService {
         countList.add(warningCount);
         countList.add(fineCount);
 
-        IngredientsRatioResponseDto refrigeratorStateResponseDto = IngredientsRatioResponseDto.builder()
+        return IngredientsRatioResponseDto.builder()
                 .empty(empty)
                 .count(countList)
                 .build();
-        return refrigeratorStateResponseDto;
     }
 
     // 제품류 나눠서 보여주기
@@ -538,11 +522,10 @@ public class IngredientService {
         countList.add(etcNum);
 
 
-        IngredientsRatioResponseDto ingredientsByCategoryResponseDto = IngredientsRatioResponseDto.builder()
+        return IngredientsRatioResponseDto.builder()
                 .empty(empty)
                 .count(countList)
                 .build();
-        return ingredientsByCategoryResponseDto;
     }
 
     @Transactional(readOnly = true)

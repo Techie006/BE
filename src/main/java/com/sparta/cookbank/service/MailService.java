@@ -43,8 +43,8 @@ public class MailService {
         try {
             message.setFrom(new InternetAddress("food531335@gmail.com"));
             message.addRecipient(MimeMessage.RecipientType.TO, new InternetAddress(member.getEmail()));
-            message.setSubject("회원가입 인증메일");
-            String htmlContent = "<h1>메일인증</h1>" +
+            message.setSubject("임시 비밀번호 발급메일");
+            String htmlContent = "<h1>Frigo 메일인증</h1>" +
                     "<br/>"+member.getUsername()+"님 "+
                     "<br/>임시 비밀번호입니다. : "+
                     "<br/><strong>"+ password + "</strong>" +

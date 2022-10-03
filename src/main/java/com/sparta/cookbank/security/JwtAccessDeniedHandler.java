@@ -28,9 +28,5 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                 "    }\n" +
                 "}"
         );
-
-// 사용자가 누군지는 알지만 권한이 없다는 것임...
-
-//        response.sendError(HttpServletResponse.SC_FORBIDDEN);
     }
 }

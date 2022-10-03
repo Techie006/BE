@@ -24,7 +24,7 @@ public class ChatRoomController {
     private final ChatService chatService;
 
 
-    @GetMapping("api/class")
+    @GetMapping("api/class") // 쿠킹클래스 전체 조회
     @ResponseBody
     public ResponseDto<?> room() {
         List<RoomResponseDto> Rooms = chatService.findAllRoom();
@@ -33,7 +33,7 @@ public class ChatRoomController {
         return ResponseDto.success(new ClassDto(empty, Rooms),"성공적으로 클래스를 가져왔습니다.");
     }
 
-    @PostMapping("/api/class")
+    @PostMapping("/api/class") //쿠킹클래스 생성
     @ResponseBody
     public ResponseDto<?> CreateClass(@ModelAttribute RoomRequestDto requestDto) throws IOException, OpenViduJavaClientException, OpenViduHttpException {
         ViduRoomResponseDto room = chatService.CreateRoom(requestDto);
@@ -41,21 +41,21 @@ public class ChatRoomController {
     }
 
 
-    @GetMapping("api/class/enter/{class_id}")
+    @GetMapping("api/class/enter/{class_id}") //쿠킹클래스 입장(이전채팅 불러오기)
     @ResponseBody
     public ResponseDto<?> EnterClass(@PathVariable Long class_id) throws OpenViduJavaClientException, OpenViduHttpException {
         MessageResponseDto responseDto = chatService.EnterRoom(class_id);
         return ResponseDto.success(responseDto,"성공적으로 이전 채팅을 가져왔습니다.");
     }
 
-    @GetMapping("api/class/{class_id}")
+    @GetMapping("api/class/{class_id}") //쿠킹클래스 레시피 조회
     @ResponseBody
     public ResponseDto<?> RecipeInfo(@PathVariable Long class_id){
         RecipeAllResponseDto recipe = chatService.ClassRecipeInfo(class_id);
         return ResponseDto.success(recipe,"성공적으로 레시피를 가져왔습니다.");
     }
 
-    @DeleteMapping("api/class/{class_id}")
+    @DeleteMapping("api/class/{class_id}") //쿠킹클래스 종료
     @ResponseBody
     public ResponseDto<?> RemoveClass(@PathVariable Long class_id){
         chatService.ApiRemoveClass(class_id);
