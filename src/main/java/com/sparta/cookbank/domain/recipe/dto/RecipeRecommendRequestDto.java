@@ -18,7 +18,4 @@ public class RecipeRecommendRequestDto {
     // 추천 레시피의 서브 재료
     private List<String> foods = new ArrayList<>();
 
-    public void setBase(String base){
-        this.base = base;
-    }
 }

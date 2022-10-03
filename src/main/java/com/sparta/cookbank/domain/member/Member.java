@@ -1,8 +1,9 @@
 package com.sparta.cookbank.domain.member;
 
-import com.sparta.cookbank.domain.member.dto.ChangePasswordRequestDto;
-import lombok.*;
-import org.springframework.security.core.userdetails.UserDetails;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 

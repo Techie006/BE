@@ -8,8 +8,6 @@ import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.redis.calendar.RedisDayCalendar;
 import com.sparta.cookbank.redis.calendar.RedisDayCalendarRepo;
-import com.sparta.cookbank.redis.recipe.RedisRecipe;
-import com.sparta.cookbank.redis.recipe.RedisRecipeRepo;
 import com.sparta.cookbank.repository.CalendarRepository;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
@@ -40,7 +38,6 @@ public class CalendarService {
     private final MemberRepository memberRepository;
     private final TokenProvider tokenProvider;
     private final CalendarRepository calendarRepository;
-    private final RedisRecipeRepo redisRecipeRepo;
     private final RedisDayCalendarRepo redisDayCalendarRepo;
 
     @Transactional(readOnly = true)
@@ -355,31 +352,6 @@ public class CalendarService {
         // 멤버 유효성 검사
         Member member = getMember();
 
-//        // date 구하기      2022-09
-//        int year = Integer.parseInt(day.substring(0, 4));
-//        int month = Integer.parseInt(day.substring(5, 7));
-//        int dayOfMonth = 1;
-//        // 해당월의 일수 구하기
-//        YearMonth yearMonth = YearMonth.of(year, month);
-//        int daysInMonth = yearMonth.lengthOfMonth();
-//
-//
-//        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");  // 날짜형식
-//        List<List> list = new ArrayList<>();
-//
-//        for(int i =1 ; i<daysInMonth+1 ; i++){
-//            String stringDay = String.valueOf(i);
-//            Date inPutDay = new SimpleDateFormat("yyyy-MM-dd").parse(day+"-"+stringDay);
-//            String oneDay = df.format(inPutDay);
-//            // 해당월 캘린더 들고오기
-//            List<CalendarResponseDto> dtoList = getCalendar(oneDay, member);
-//
-//            if(!dtoList.isEmpty()){
-//                list.add(dtoList);
-//            }
-//
-//        }
-
         List<Calendar> calendarList = calendarRepository.findAllByMember_Id(member.getId());
         List<CalendarResponseDto> dtoList = new ArrayList<>();
         for(int i = 0 ; i < calendarList.size() ; i++){
@@ -448,12 +420,9 @@ public class CalendarService {
 
     private List<CalendarResponseDto> getCalendar(String day, Member member, List<CalendarResponseDto> dtoList) {
         List<Calendar> calendarList = calendarRepository.findAllByMealDayAndMember_Id(day, member.getId());
-//        List<CalendarResponseDto> dtoList = new ArrayList<>();
-
 
         for(int i = 0 ; i < calendarList.size() ; i++){
 
-            //나의 레시피 찾기
             //나의 레시피 찾기
             Optional<Recipe> recipeOptional = recipeRepository.findById(calendarList.get(i).getRecipe().getId());
             if (recipeOptional.isEmpty()){

@@ -1,7 +1,6 @@
 package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.LikeRecipe;
-import com.sparta.cookbank.domain.ingredient.Ingredient;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.*;
@@ -34,11 +33,6 @@ public class RecipeService {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
-
-        // base 재료가 포함된 모든 레시피를 가져옴 (삭제예정)
-//        String base = requestDto.getBase().split(",")[0];
-//        String input = base.split(" ")[0];
-//        requestDto.setBase(input);
 
         //레디스에서 찾기
         String redisKey = requestDto.getBase()+requestDto.getFoods(); // 고유키
@@ -176,11 +170,9 @@ public class RecipeService {
                 .manual_imgs(manualImgList)
                 .build();
 
-        RecipeDetailResultResponseDto resultResponseDto = RecipeDetailResultResponseDto.builder()
+        return RecipeDetailResultResponseDto.builder()
                 .recipe(detailResponseDto)
                 .build();
-
-        return resultResponseDto;
     }
 
     // 레시피 전체 조회
@@ -191,13 +183,11 @@ public class RecipeService {
 
         List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
 
-        RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
+        return RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
                 .recipes(recipeAllResponseDtoList)
                 .build();
-
-        return recipeResponseDto;
     }
 
     // 레시피 검색
@@ -211,14 +201,13 @@ public class RecipeService {
         List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
 
         // api 설계형식에 맞게 담아줌
-        RecipeResponseDto recipeResponseDto = RecipeResponseDto.builder()
+
+        return RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
                 .recipes(recipeAllResponseDtoList)
                 .search_name(searchRequestDto.getRecipe_name())
                 .build();
-
-        return recipeResponseDto;
     }
 
     // 북마크 On
@@ -291,14 +280,12 @@ public class RecipeService {
             );
         }
 
-        RecipeAllBookmarkResponseDto recipeResponseDto = RecipeAllBookmarkResponseDto.builder()
+        return RecipeAllBookmarkResponseDto.builder()
                 .user_name(member.getUsername())
                 .current_page_num(likeRecipeList.getPageable().getPageNumber())
                 .total_page_num(likeRecipeList.getTotalPages())
                 .recipes(recipeBookmarkResponseDtoList)
                 .build();
-
-        return recipeResponseDto;
     }
 
     // 검색어 자동완성

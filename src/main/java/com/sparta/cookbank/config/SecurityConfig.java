@@ -80,18 +80,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET,"/api/class/**").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/chat/**").permitAll()
                 //stomp
-                .antMatchers("/sub/**").permitAll()
-                .antMatchers("/pub/**").permitAll()
+                .antMatchers("/api/sub/**").permitAll()
+                .antMatchers("/api/pub/**").permitAll()
                 .antMatchers("/ws/**").permitAll()
                 .antMatchers("/stomp/**").permitAll()
                 .antMatchers("/websocket/**").permitAll()
-                // 나중에 지우기
-                .antMatchers("/api/recipes/recommend").permitAll()
-                .antMatchers("/api/recipe/{id}").permitAll()
-                .antMatchers("/api/recipes").permitAll()
-                .antMatchers("/api/recipes/search").permitAll()
-                .antMatchers("/chat/**").permitAll()
-                .antMatchers("/api/mapping").permitAll()
+//                // 나중에 지우기
+//                .antMatchers("/api/recipes/recommend").permitAll()
+//                .antMatchers("/api/recipe/{id}").permitAll()
+//                .antMatchers("/api/recipes").permitAll()
+//                .antMatchers("/api/recipes/search").permitAll()
                 .anyRequest().authenticated()   // 나머지 API 는 전부 인증 필요
 
                 // JwtFilter 를 addFilterBefore 로 등록했던 JwtSecurityConfig 클래스를 적용
