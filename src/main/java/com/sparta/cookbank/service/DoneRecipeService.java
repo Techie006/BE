@@ -5,7 +5,6 @@ import com.sparta.cookbank.domain.donerecipe.dto.*;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.recipe.Recipe;
-import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeFixResponseDto;
 import com.sparta.cookbank.redis.ingredient.RedisIngredientRepo;
@@ -19,8 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;

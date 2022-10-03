@@ -161,7 +161,7 @@ public class RecipeService {
                 .method(recipe.getRCP_WAY2())
                 .category(recipe.getRCP_PAT2())
                 .calorie(recipe.getINFO_ENG())
-                .calbohydrates(recipe.getINFO_CAR())
+                .carbohydrates(recipe.getINFO_CAR())
                 .proteins(recipe.getINFO_PRO())
                 .fats(recipe.getINFO_FAT())
                 .sodium(recipe.getINFO_NA())

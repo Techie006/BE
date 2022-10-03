@@ -3,7 +3,10 @@ package com.sparta.cookbank.service;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.Storage;
 import com.sparta.cookbank.domain.ingredient.Ingredient;
-import com.sparta.cookbank.domain.ingredient.dto.*;
+import com.sparta.cookbank.domain.ingredient.dto.AutoIngredientResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.IngredientResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.IngredientsRatioResponseDto;
+import com.sparta.cookbank.domain.ingredient.dto.TotalIngredientResponseDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.myingredients.MyIngredients;
 import com.sparta.cookbank.domain.myingredients.dto.*;
@@ -17,8 +20,6 @@ import com.sparta.cookbank.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +28,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
