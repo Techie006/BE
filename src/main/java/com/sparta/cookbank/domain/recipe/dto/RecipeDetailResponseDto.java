@@ -18,7 +18,7 @@ public class RecipeDetailResponseDto {
     private String method;
     private String category;
     private Long calorie;
-    private Long calbohydrates;
+    private Long carbohydrates;
     private Long proteins;
     private Long fats;
     private Long sodium;
