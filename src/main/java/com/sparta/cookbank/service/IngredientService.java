@@ -210,7 +210,7 @@ public class IngredientService {
             StorageResponseDto responseDto = StorageResponseDto.builder()
                     .empty(true)
                     .total_nums(0)
-                    .storage(null)
+                    .storage(dtoList)
                     .build();
             return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
         }
@@ -305,7 +305,7 @@ public class IngredientService {
                     .out_dated_num(outList.size())
                     .in_hurry_num(0)
                     .out_dated(outList)
-                    .in_hurry(null)
+                    .in_hurry(hurryList)
                     .build();
 
             return ResponseDto.success(responseDto,"리스트 제공에 성공하였습니다");
@@ -658,7 +658,7 @@ public class IngredientService {
                 StorageResponseDto responseDto = StorageResponseDto.builder()
                         .empty(true)
                         .total_nums(0)
-                        .storage(null)
+                        .storage(dtoList)
                         .build();
                 return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
             }
