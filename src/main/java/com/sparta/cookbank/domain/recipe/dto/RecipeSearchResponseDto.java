@@ -8,10 +8,12 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class AutoCompleteResultResponseDto {
-    private boolean empty;
-    private List<AutoCompleteResponseDto> recipes;
+public class RecipeSearchResponseDto {
+    private int current_page_num;
+    private int total_page_num;
+    private List<RecipeBasicDto> recipes;
+    private String search_name;
 }

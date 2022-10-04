@@ -12,7 +12,6 @@ import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,7 @@ public class RecipeService {
 
     // 추천 레시피 조회
     @Transactional(readOnly = true)
-    public RecipeRecommendResultResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
+    public RecipeRecommendResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -42,7 +41,7 @@ public class RecipeService {
         if(redisRecipe.isEmpty()){ // 레디스 캐시 없을시
 
             List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
-            List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+            List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
 
             HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
 
@@ -77,8 +76,8 @@ public class RecipeService {
             List<String> mainIngredientsList = Arrays.asList(entry.getKey().getMAIN_INGREDIENTS().split(","));
             // 모든 재료들을 리스트에 담음
             List<String> ingredientsList = Arrays.asList(entry.getKey().getRCP_PARTS_DTLS().split(","));
-            recipeRecommendResponseDto.add(
-                    RecipeRecommendResponseDto.builder()
+            recipeRecommendDto.add(
+                    RecipeRecommendDto.builder()
                             .id(entry.getKey().getId())
                             .recipe_name(entry.getKey().getRCP_NM())
                             .recipe_image(entry.getKey().getATT_FILE_NO_MAIN())
@@ -95,20 +94,20 @@ public class RecipeService {
             //레디스 캐시 저장
             RedisRecipe saveRedisRecipe = RedisRecipe.builder()
                     .id(redisKey)
-                    .recipes(recipeRecommendResponseDto)
+                    .recipes(recipeRecommendDto)
                     .build();
             redisRecipeRepo.save(saveRedisRecipe);
 
-            return RecipeRecommendResultResponseDto.builder()
-                    .recipes(recipeRecommendResponseDto)
+            return RecipeRecommendResponseDto.builder()
+                    .recipes(recipeRecommendDto)
                     .build();
 
         }else{ // 레디스 캐시 있을시 출력
             RedisRecipe recipes =  redisRecipe.get();
-            List<RecipeRecommendResponseDto> recipeRecommendResponseDto = recipes.getRecipes();
+            List<RecipeRecommendDto> recipeRecommendDto = recipes.getRecipes();
 
-            return RecipeRecommendResultResponseDto.builder()
-                    .recipes(recipeRecommendResponseDto)
+            return RecipeRecommendResponseDto.builder()
+                    .recipes(recipeRecommendDto)
                     .build();
 
         }
@@ -117,7 +116,7 @@ public class RecipeService {
 
     // 레시피 상세 조회
     @Transactional(readOnly = true)
-    public RecipeDetailResultResponseDto getDetailRecipe(Long id) {
+    public RecipeDetailResponseDto getDetailRecipe(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("id를 입력해주세요!");
         }
@@ -155,7 +154,7 @@ public class RecipeService {
                 recipe.getMANUAL_IMG06()
         );
 
-        RecipeDetailResponseDto detailResponseDto = RecipeDetailResponseDto.builder()
+        RecipeDetailDto detailResponseDto = RecipeDetailDto.builder()
                 .id(id)
                 .recipe_name(recipe.getRCP_NM())
                 .ingredients(ingredientsList)
@@ -171,7 +170,7 @@ public class RecipeService {
                 .manual_imgs(manualImgList)
                 .build();
 
-        return RecipeDetailResultResponseDto.builder()
+        return RecipeDetailResponseDto.builder()
                 .recipe(detailResponseDto)
                 .build();
     }
@@ -182,45 +181,60 @@ public class RecipeService {
 
         Page<Recipe> recipePage = recipeRepository.findAll(pageable);
 
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
+        List<RecipeBasicDto> recipeBasicDtoList = converterAllResponseDto(recipePage);
 
         return RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
-                .recipes(recipeAllResponseDtoList)
+                .recipes(recipeBasicDtoList)
                 .build();
     }
 
     @Transactional(readOnly = true) // 레시피 종류별 요리방법별 분류
     public RecipeResponseDto getRecipeByCategory(RecipeByCategoryRequestDto requestDto, Pageable pageable) {
 
+        List<String> wayByCategoryList = Arrays.asList("굽기", "끓이기", "볶기", "찌기", "튀기기", "기타");
+        List<String> patByCategoryList = Arrays.asList("국&찌개", "반찬", "밥", "일품", "후식", "기타");
+
+        if (!(requestDto.getType().equals("방법") || requestDto.getType().equals("종류"))) {
+            throw new IllegalArgumentException("type이 잘못되었습니다!(방법 or 종류)");
+        } else if (requestDto.getType().equals("방법")) {
+            if (!wayByCategoryList.contains(requestDto.getCategory())) {
+                throw new IllegalArgumentException("type에 맞는 category 형식이 아닙니다! " + requestDto.getType() + " : " + requestDto.getCategory());
+            }
+        } else if (requestDto.getType().equals("종류")) {
+            if (!patByCategoryList.contains(requestDto.getCategory())) {
+                throw new IllegalArgumentException("type에 맞는 category 형식이 아닙니다! " + requestDto.getType() + " : " + requestDto.getCategory());
+            }
+        }
+
         Page<Recipe> recipePage = recipeRepository.findByCategoryRecipeOption(requestDto, pageable);
 
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
+        List<RecipeBasicDto> recipeBasicDtoList = converterAllResponseDto(recipePage);
 
         return RecipeResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
-                .recipes(recipeAllResponseDtoList)
+                .recipes(recipeBasicDtoList)
                 .build();
     }
 
     // 레시피 검색
     @Transactional(readOnly = true)
-    public RecipeResponseDto searchRecipe(RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
+    public RecipeSearchResponseDto searchRecipe(RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
 
         // pageable과 requestdto를 이용해서 조회
         Page<Recipe> recipePage = recipeRepository.findBySearchOption(searchRequestDto,pageable);
 
         // List형태로 각각 분리
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
+        List<RecipeBasicDto> recipeBasicDtoList = converterAllResponseDto(recipePage);
 
         // api 설계형식에 맞게 담아줌
 
-        return RecipeResponseDto.builder()
+        return RecipeSearchResponseDto.builder()
                 .current_page_num(recipePage.getPageable().getPageNumber())
                 .total_page_num(recipePage.getTotalPages())
-                .recipes(recipeAllResponseDtoList)
+                .recipes(recipeBasicDtoList)
                 .search_name(searchRequestDto.getRecipe_name())
                 .build();
     }
@@ -264,7 +278,7 @@ public class RecipeService {
 
     // 북마크 조회
     @Transactional(readOnly = true)
-    public RecipeAllBookmarkResponseDto getBookmark(Pageable pageable) {
+    public RecipeBookmarkResponseDto getBookmark(Pageable pageable) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
@@ -277,12 +291,12 @@ public class RecipeService {
             throw new IllegalArgumentException("사용자가 북마크한 레시피가 없습니다.");
         }
 
-        List<RecipeBookmarkResponseDto> recipeBookmarkResponseDtoList = new ArrayList<>();
+        List<RecipeBasicDto> recipeBookmarkResponseDtoList = new ArrayList<>();
 
         for (LikeRecipe likeRecipe : likeRecipeList) {
             List<String> mainIngredientsList = Arrays.asList(likeRecipe.getRecipe().getMAIN_INGREDIENTS().split(","));
             recipeBookmarkResponseDtoList.add(
-                    RecipeBookmarkResponseDto.builder()
+                    RecipeBasicDto.builder()
                             .id(likeRecipe.getRecipe().getId())
                             .recipe_name(likeRecipe.getRecipe().getRCP_NM())
                             .ingredients(mainIngredientsList)
@@ -295,7 +309,7 @@ public class RecipeService {
             );
         }
 
-        return RecipeAllBookmarkResponseDto.builder()
+        return RecipeBookmarkResponseDto.builder()
                 .user_name(member.getUsername())
                 .current_page_num(likeRecipeList.getPageable().getPageNumber())
                 .total_page_num(likeRecipeList.getTotalPages())
@@ -305,10 +319,10 @@ public class RecipeService {
 
     // 검색어 자동완성
     @Transactional(readOnly = true)
-    public AutoCompleteResultResponseDto getAutoComplete(AutoCompleteRequestDto requestDto) {
+    public AutoCompleteResponseDto getAutoComplete(AutoCompleteRequestDto requestDto) {
 
         List<Recipe> recipeList = recipeRepository.findAllByRCP_NM(requestDto.getKeyword());
-        List<AutoCompleteResponseDto> autoCompleteResponseList = new ArrayList<>();
+        List<AutoCompleteDto> autoCompleteResponseList = new ArrayList<>();
 
         boolean empty = false;
 
@@ -318,24 +332,24 @@ public class RecipeService {
 
         for (Recipe recipe : recipeList) {
             autoCompleteResponseList.add(
-                    AutoCompleteResponseDto.builder()
+                    AutoCompleteDto.builder()
                             .id(recipe.getId())
                             .recipe_name(recipe.getRCP_NM())
                             .build()
             );
         }
         
-        return AutoCompleteResultResponseDto.builder()
+        return AutoCompleteResponseDto.builder()
                 .empty(empty)
                 .recipes(autoCompleteResponseList)
                 .build();
     }
 
-    private List<RecipeAllResponseDto> converterAllResponseDto(Page<Recipe> recipes) {
+    private List<RecipeBasicDto> converterAllResponseDto(Page<Recipe> recipes) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
-        List<RecipeAllResponseDto> recipeAllResponseDtoList = new ArrayList<>();
+        List<RecipeBasicDto> recipeBasicDtoList = new ArrayList<>();
         for (Recipe recipe : recipes){
             List<String> mainIngredientsList = new ArrayList<>();
             if (!(recipe.getMAIN_INGREDIENTS() == null)) {
@@ -345,8 +359,8 @@ public class RecipeService {
             LikeRecipe likeRecipe = likeRecipeRepository.findByMember_IdAndRecipe_Id(member.getId(),recipe.getId());
             boolean liked = !(likeRecipe == null);
 
-            recipeAllResponseDtoList.add(
-                    RecipeAllResponseDto.builder()
+            recipeBasicDtoList.add(
+                    RecipeBasicDto.builder()
                             .id(recipe.getId())
                             .recipe_name(recipe.getRCP_NM())
                             .ingredients(mainIngredientsList)
@@ -358,6 +372,6 @@ public class RecipeService {
                             .build()
             );
         }
-        return recipeAllResponseDtoList;
+        return recipeBasicDtoList;
     }
 }

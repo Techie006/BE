@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.cookbank.config.SecurityConfig;
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
+import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendResponseDto;
-import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendResultResponseDto;
 import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,14 +98,14 @@ class RecipeControllerTest {
     void RecommendRecipe() throws Exception {
         // given
         List<Recipe> recipeList = recipeSetUp();
-        List<RecipeRecommendResponseDto> recipeRecommendResponseDto = new ArrayList<>();
+        List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
         for (Recipe recipe : recipeList) {
             List<String> mainIngredientsList = new ArrayList<>();
             mainIngredientsList.add(recipe.getMAIN_INGREDIENTS());
             List<String> ingredientsList = new ArrayList<>();
             ingredientsList.add(recipe.getRCP_PARTS_DTLS());
-            recipeRecommendResponseDto.add(
-                    RecipeRecommendResponseDto.builder()
+            recipeRecommendDto.add(
+                    RecipeRecommendDto.builder()
                             .id(recipe.getId())
                             .recipe_name(recipe.getRCP_NM())
                             .recipe_image(recipe.getATT_FILE_NO_MAIN())
@@ -123,8 +123,8 @@ class RecipeControllerTest {
         List<String> foods = List.of(new String[]{"양파", "마늘", "간장", "고추", "파"});
         RecipeRecommendRequestDto requestDto = new RecipeRecommendRequestDto(base, foods);
 
-        RecipeRecommendResultResponseDto resultResponseDto = RecipeRecommendResultResponseDto.builder()
-                .recipes(recipeRecommendResponseDto)
+        RecipeRecommendResponseDto resultResponseDto = RecipeRecommendResponseDto.builder()
+                .recipes(recipeRecommendDto)
                 .build();
 
         given(recipeService.getRecommendRecipe(requestDto)).willReturn(resultResponseDto);

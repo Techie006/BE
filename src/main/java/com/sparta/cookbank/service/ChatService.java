@@ -10,11 +10,14 @@ import com.sparta.cookbank.domain.chat.ChatMessage;
 import com.sparta.cookbank.domain.chat.dto.MessageResponseDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
-import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
+import com.sparta.cookbank.domain.recipe.dto.RecipeBasicDto;
 import com.sparta.cookbank.domain.room.ChatRoom;
 import com.sparta.cookbank.domain.room.Room;
 import com.sparta.cookbank.domain.room.dto.*;
-import com.sparta.cookbank.repository.*;
+import com.sparta.cookbank.repository.ChatRoomRepository;
+import com.sparta.cookbank.repository.MemberRepository;
+import com.sparta.cookbank.repository.RecipeRepository;
+import com.sparta.cookbank.repository.RoomRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import io.openvidu.java.client.*;
 import lombok.RequiredArgsConstructor;
@@ -220,7 +223,7 @@ public class ChatService {
         });
         Recipe recipe = room.getRecipe();
         List<String> ingredients = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
-        return new RoomInfoResponseDto(room.getName(), RecipeAllResponseDto.builder()
+        return new RoomInfoResponseDto(room.getName(), RecipeBasicDto.builder()
                 .id(recipe.getId())
                 .recipe_name(recipe.getRCP_NM())
                 .ingredients(ingredients)
