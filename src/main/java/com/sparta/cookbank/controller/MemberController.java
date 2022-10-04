@@ -22,8 +22,9 @@ public class MemberController {
     public ResponseDto<?> signup(
             @RequestBody SignupRequestDto requestDto
     ) {
-        Long memberId = memberService.signup(requestDto);
-        return ResponseDto.success(memberId,"회원가입에 성공했습니다.");
+        return memberService.signup(requestDto);
+//        Long memberId = memberService.signup(requestDto);
+//        return ResponseDto.success(memberId,"회원가입에 성공했습니다.");
     }
 
     @PostMapping("/api/user/signin") //로그인
@@ -31,9 +32,9 @@ public class MemberController {
             @RequestBody LoginRequestDto requestDto
             ,HttpServletResponse response
     ) {
-        MemberResponseDto responseDto = memberService.login(requestDto,response);
-
-        return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
+        return  memberService.login(requestDto,response);
+//        MemberResponseDto responseDto = memberService.login(requestDto,response);
+//        return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
     }
 
     @PostMapping("/api/reissue") //AccessToken 재발급
