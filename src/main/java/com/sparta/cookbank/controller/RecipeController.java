@@ -62,4 +62,12 @@ public class RecipeController {
 
         return ResponseDto.success(autoCompleteResponseDto,"레시피 자동완성에 성공하였습니다.");
     }
+
+    @PostMapping("/api/recipes/category") // 레시피 종류별 요리방법별 분류
+    public ResponseDto<?> getRecipeByCategory(@RequestBody RecipeByCategoryRequestDto requestDto,
+                                              Pageable pageable) {
+        RecipeResponseDto responseDto = recipeService.getRecipeByCategory(requestDto, pageable);
+
+        return ResponseDto.success(responseDto, "카테고리별 레시피 제공에 성공하였습니다.");
+    }
 }

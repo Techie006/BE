@@ -12,6 +12,7 @@ import com.sparta.cookbank.repository.RecipeRepository;
 import com.sparta.cookbank.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -190,6 +191,20 @@ public class RecipeService {
                 .build();
     }
 
+    @Transactional(readOnly = true) // 레시피 종류별 요리방법별 분류
+    public RecipeResponseDto getRecipeByCategory(RecipeByCategoryRequestDto requestDto, Pageable pageable) {
+
+        Page<Recipe> recipePage = recipeRepository.findByCategoryRecipeOption(requestDto, pageable);
+
+        List<RecipeAllResponseDto> recipeAllResponseDtoList = converterAllResponseDto(recipePage);
+
+        return RecipeResponseDto.builder()
+                .current_page_num(recipePage.getPageable().getPageNumber())
+                .total_page_num(recipePage.getTotalPages())
+                .recipes(recipeAllResponseDtoList)
+                .build();
+    }
+
     // 레시피 검색
     @Transactional(readOnly = true)
     public RecipeResponseDto searchRecipe(RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
@@ -345,5 +360,4 @@ public class RecipeService {
         }
         return recipeAllResponseDtoList;
     }
-
 }
