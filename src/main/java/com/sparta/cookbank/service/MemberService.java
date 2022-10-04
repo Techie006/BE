@@ -9,6 +9,7 @@ import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sparta.cookbank.FileUtils;
+import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.member.dto.*;
 import com.sparta.cookbank.domain.refreshToken.RefreshToken;
@@ -37,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -80,24 +82,33 @@ public class MemberService {
     private String DEFAULT_PROFILE_IMG;
 
     @Transactional
-    public Long signup(SignupRequestDto requestDto) {
-        if(memberRepository.existsByEmail(requestDto.getEmail())) throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+    public ResponseDto<?> signup(SignupRequestDto requestDto) {
+        if(memberRepository.existsByEmail(requestDto.getEmail())) {
+            return ResponseDto.fail("201","이미 존재하는 이메일입니다.");
+        }
+        //패스워드 검증 o
+        String passwordPattern ="^(?=.*[A-za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d$@$!%*?&]{8,15}";
+
+        if(!Pattern.matches(passwordPattern,requestDto.getPassword())){
+            return ResponseDto.fail("210","적절하지 않은 패스워드 형식입니다.");
+        }
+
         // 패스워드 인코딩
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         String key = UUID.randomUUID().toString();
 
-        String emailPattern = "^[a-z\\d(.)(_)]+@\\w+\\.\\w+(\\.\\w)?$";
+        String emailPattern = "^[a-z\\d._]+@\\w+\\.\\w+(\\.\\w)?$";
 
         // 기존
         if(!Pattern.matches(emailPattern,requestDto.getEmail())){
-            throw new IllegalArgumentException("적절하지 않은 이메일 형식입니다.");
+            return ResponseDto.fail("202","적절하지 않은 이메일 형식입니다.");
         }
         String userPattern = "^[a-zA-Z\\d]*$";
-        if(requestDto.getUsername().length()<2 || requestDto.getUsername().length()>16){
-            throw new IllegalArgumentException("사용자 이름이 너무 깁니다.");
+        if(requestDto.getUsername().length()<3 || requestDto.getUsername().length()>10){
+            return ResponseDto.fail("203","사용자 이름이 너무 깁니다.");
         }
         if(!Pattern.matches(userPattern,requestDto.getUsername())){
-            throw new IllegalArgumentException("적절하지 않은 사용자 이름 형식입니다.");
+            return ResponseDto.fail("204","적절하지 않은 사용자 이름 형식입니다.");
         }
         Member member = Member.builder()
                 .email(requestDto.getEmail())
@@ -108,19 +119,24 @@ public class MemberService {
                 .mail_key(key)
                 .build();
         mailService.sendSimpleMessage(requestDto,key);
-        return memberRepository.save(member).getId();
+
+        return ResponseDto.success(memberRepository.save(member).getId(),"회원가입에 성공했습니다.");
     }
     @Transactional
-    public MemberResponseDto login(LoginRequestDto requestDto, HttpServletResponse response) {
-        Member member = memberRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+    public ResponseDto<?> login(LoginRequestDto requestDto, HttpServletResponse response) {
+        Optional<Member> optionalMember = memberRepository.findByEmail(requestDto.getEmail());
+        if(optionalMember.isEmpty()){
+            return ResponseDto.fail("205","가입되지 않은 이메일입니다");
+        }
 
-        if (member.getKakaoId() != null) throw new IllegalArgumentException("카카오로 가입된 유저입니다.");
+        Member member = optionalMember.get();
+        if (member.getKakaoId() != null)  return ResponseDto.fail("206","카카오로 가입된 유저입니다.");
+        if(member.getGoogleId() != null)  return  ResponseDto.fail("207", "구글로 가입된 유저입니다.");
         // 비밀번호 검증
         if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호를 잘못 입력하셨습니다.");
+            return ResponseDto.fail("208","비밀번호를 잘못 입력하셨습니다.");
         }
-        if (!member.isMail_auth()) throw new IllegalArgumentException("이메일 인증을 완료해주세요.");
+        if (!member.isMail_auth()) return ResponseDto.fail("209","이메일 인증을 완료해주세요.");
         TokenDto tokenDto = tokenProvider.generateTokenDto(member);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
@@ -128,11 +144,13 @@ public class MemberService {
         //레디스 저장 600초 동안 캐시에 저장..
         redisTemplate.opsForValue().set("RT:"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
 
-        return MemberResponseDto.builder()
+        MemberResponseDto memberResponseDto = MemberResponseDto.builder()
                 .member_id(member.getId())
                 .username(member.getUsername())
                 .profile_img(member.getImage())
                 .build();
+
+        return ResponseDto.success(memberResponseDto,memberResponseDto.getUsername()+ "님 환영합니다.");
     }
     @Transactional
     public Member reissue(HttpServletRequest request, HttpServletResponse response){
