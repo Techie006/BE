@@ -323,7 +323,11 @@ public class ChatService {
         //오픈비두에 활성화된 세션을 모두 가져와 리스트에 담음
         List<Session> activeSessionList = openVidu.getActiveSessions();
         List<String> sessions = new ArrayList<>();
-        for(Session session : activeSessionList) sessions.add(session.getSessionId());
+        for(Session session : activeSessionList) {
+            sessions.add(session.getSessionId());
+            log.info("session아이디: {}",session.getSessionId());
+        }
+
 
         for(Room room : rooms) {
             if(!sessions.contains(room.getSessionId())) {

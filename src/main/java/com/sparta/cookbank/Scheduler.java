@@ -18,7 +18,7 @@ public class Scheduler {
 
 
     // 초, 분, 시, 일, 월, 주 순서
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 0 0 * *")
     public void deleteRoom(){
         chatService.DailyRemoveClass();
         log.info("안쓰는 방이 사라졌습니다.");
