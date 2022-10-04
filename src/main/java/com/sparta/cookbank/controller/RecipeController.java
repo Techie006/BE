@@ -3,14 +3,36 @@ package com.sparta.cookbank.controller;
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.recipe.dto.*;
 import com.sparta.cookbank.service.RecipeService;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
 
 @RestController
 @RequiredArgsConstructor
 public class RecipeController {
     private final RecipeService recipeService;
+
+    private final Bucket bucket;
+
+    @Autowired
+    public RecipeController(RecipeService recipeService){
+        this.recipeService = recipeService;
+
+        //Refill.intervally token = 1000, 1회충전시 1000개의 토큰을 충전
+        //Duration.ofSeconds = 1, 1초마다 토큰을 충전
+        //Duration.ofMinutes = 1, 1분마다 토큰을 충전
+        //Bandwidth capacity = Bucket의 총 크기는 1000
+        Bandwidth limit = Bandwidth.classic(1000, Refill.intervally(1000, Duration.ofMinutes(1)));
+        this.bucket = Bucket.builder()
+                .addLimit(limit)
+                .build();
+    }
 
     @PostMapping("/api/recipes/recommend") // 추천 레시피 조회
     public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto) {
