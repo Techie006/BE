@@ -2,11 +2,7 @@ package com.sparta.cookbank.controller;
 
 import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.chat.dto.MessageResponseDto;
-import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
-import com.sparta.cookbank.domain.room.dto.ClassDto;
-import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
-import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
-import com.sparta.cookbank.domain.room.dto.ViduRoomResponseDto;
+import com.sparta.cookbank.domain.room.dto.*;
 import com.sparta.cookbank.service.ChatService;
 import io.openvidu.java.client.OpenViduHttpException;
 import io.openvidu.java.client.OpenViduJavaClientException;
@@ -51,7 +47,7 @@ public class ChatRoomController {
     @GetMapping("api/class/{class_id}") //쿠킹클래스 레시피 조회
     @ResponseBody
     public ResponseDto<?> RecipeInfo(@PathVariable Long class_id){
-        RecipeAllResponseDto recipe = chatService.ClassRecipeInfo(class_id);
+        RoomInfoResponseDto recipe = chatService.ClassRecipeInfo(class_id);
         return ResponseDto.success(recipe,"성공적으로 레시피를 가져왔습니다.");
     }
 
