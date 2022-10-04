@@ -4,6 +4,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sparta.cookbank.domain.recipe.Recipe;
+import com.sparta.cookbank.domain.recipe.dto.RecipeByCategoryRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeSearchRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.sparta.cookbank.domain.recipe.QRecipe.recipe;
 
@@ -31,8 +33,8 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
         JPQLQuery<Recipe> query = queryFactory
                 .selectFrom(recipe)
                 .where(eqName(searchRequestDto));
-        List<Recipe> recipes = this.getQuerydsl().applyPagination(pageable, query).fetch();
-        return new PageImpl<Recipe>(recipes, pageable, query.fetchCount());
+        List<Recipe> recipes = Objects.requireNonNull(this.getQuerydsl()).applyPagination(pageable, query).fetch();
+        return new PageImpl<>(recipes, pageable, query.fetchCount());
     }
 
     @Override
@@ -41,8 +43,32 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
                 .selectFrom(recipe)
                 .where(eqBaseName(baseName));
 
-        List<Recipe> recipeList = query.fetch();
-        return recipeList;
+        return query.fetch();
+    }
+
+    @Override
+    public Page<Recipe> findByCategoryRecipeOption(RecipeByCategoryRequestDto requestDto, Pageable pageable) {
+        JPQLQuery<Recipe> query = queryFactory
+                .selectFrom(recipe)
+                .where(eqCategory(requestDto));
+
+        List<Recipe> recipeList = Objects.requireNonNull(this.getQuerydsl()).applyPagination(pageable, query).fetch();
+        return new PageImpl<>(recipeList, pageable, query.fetchCount());
+    }
+
+    private BooleanExpression eqCategory(RecipeByCategoryRequestDto requestDto) {
+        if (requestDto.getType() == null || requestDto.getType().isEmpty() || requestDto.getCategory() == null || requestDto.getCategory().isEmpty()) {
+            throw new InvalidDataAccessApiUsageException("잘못된 요청입니다!");
+        }
+        Boolean condition = null;
+        if (requestDto.getType().equals("방법")) {
+            condition = true;
+        } else if (requestDto.getType().equals("종류")) {
+            condition = false;
+        } else if (!(requestDto.getType().equals("방법") || requestDto.getType().equals("종류"))){
+            throw new IllegalArgumentException("type이 잘못되었습니다!(방법 or 종류)");
+        }
+        return (Boolean.TRUE.equals(condition))? recipe.RCP_WAY2.eq(requestDto.getCategory()) : recipe.RCP_PAT2.eq(requestDto.getCategory());
     }
 
     // 검색 조건
