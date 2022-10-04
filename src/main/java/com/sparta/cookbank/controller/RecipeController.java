@@ -14,13 +14,13 @@ public class RecipeController {
 
     @PostMapping("/api/recipes/recommend") // 추천 레시피 조회
     public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto) {
-        RecipeRecommendResultResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
+        RecipeRecommendResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
         return ResponseDto.success(resultResponseDto,"추천레시피 제공에 성공하였습니다.");
     }
 
     @GetMapping("/api/recipe/{id}") // 레시피 상세 조회
     public ResponseDto<?> getDetailRecipe(@PathVariable Long id) {
-        RecipeDetailResultResponseDto detailResponseDto = recipeService.getDetailRecipe(id);
+        RecipeDetailResponseDto detailResponseDto = recipeService.getDetailRecipe(id);
         return ResponseDto.success(detailResponseDto,"레시피 제공에 성공하였습니다.");
     }
 
@@ -32,8 +32,8 @@ public class RecipeController {
 
     @PostMapping("/api/recipes/search") // 레시피 검색
     public ResponseDto<?> searchRecipe(@RequestBody RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
-        RecipeResponseDto ResponseDtoPage = recipeService.searchRecipe(searchRequestDto,pageable);
-        return ResponseDto.success(ResponseDtoPage,"레시피 검색에 성공하였습니다.");
+        RecipeSearchResponseDto ResponseSearchDtoPage = recipeService.searchRecipe(searchRequestDto,pageable);
+        return ResponseDto.success(ResponseSearchDtoPage,"레시피 검색에 성공하였습니다.");
     }
 
     @PostMapping("/api/recipe/like") // 북마크 On
@@ -51,14 +51,14 @@ public class RecipeController {
 
     @GetMapping("/api/my/bookmark") // 북마크한 레시피 조회
     public ResponseDto<?> getBookmark(Pageable pageable){
-        RecipeAllBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
+        RecipeBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
 
         return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
     }
 
     @PostMapping("/api/recipes/autocomplete") // 레시피 자동완성
     public ResponseDto<?> getAutoComplete(@RequestBody AutoCompleteRequestDto requestDto) {
-        AutoCompleteResultResponseDto autoCompleteResponseDto = recipeService.getAutoComplete(requestDto);
+        AutoCompleteResponseDto autoCompleteResponseDto = recipeService.getAutoComplete(requestDto);
 
         return ResponseDto.success(autoCompleteResponseDto,"레시피 자동완성에 성공하였습니다.");
     }

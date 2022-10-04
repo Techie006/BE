@@ -7,17 +7,22 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class RecipeAllResponseDto {
+@AllArgsConstructor
+@Builder
+@Getter
+public class RecipeDetailDto {
     private Long id;
     private String recipe_name;
     private List<String> ingredients;
-    private String final_img;
     private String method;
     private String category;
     private Long calorie;
-    private boolean liked;
+    private Long carbohydrates;
+    private Long proteins;
+    private Long fats;
+    private Long sodium;
+    private String final_img;
+    private List<String> manual_desc;
+    private List<String> manual_imgs;
 }

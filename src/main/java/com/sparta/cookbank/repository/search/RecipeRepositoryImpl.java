@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -60,13 +61,12 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
         if (requestDto.getType() == null || requestDto.getType().isEmpty() || requestDto.getCategory() == null || requestDto.getCategory().isEmpty()) {
             throw new InvalidDataAccessApiUsageException("잘못된 요청입니다!");
         }
+
         Boolean condition = null;
         if (requestDto.getType().equals("방법")) {
             condition = true;
         } else if (requestDto.getType().equals("종류")) {
             condition = false;
-        } else if (!(requestDto.getType().equals("방법") || requestDto.getType().equals("종류"))){
-            throw new IllegalArgumentException("type이 잘못되었습니다!(방법 or 종류)");
         }
         return (Boolean.TRUE.equals(condition))? recipe.RCP_WAY2.eq(requestDto.getCategory()) : recipe.RCP_PAT2.eq(requestDto.getCategory());
     }

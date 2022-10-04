@@ -7,17 +7,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RecipeBookmarkResponseDto {
-    private Long id;
-    private String recipe_name;
-    private List<String> ingredients;
-    private String final_img;
-    private String method;
-    private String category;
-    private Long calorie;
-    private boolean liked;
+    private int current_page_num;
+    private int total_page_num;
+    private String user_name;
+    private List<RecipeBasicDto> recipes;
 }

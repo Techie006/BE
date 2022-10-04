@@ -2,8 +2,8 @@ package com.sparta.cookbank.service;
 
 import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.AutoCompleteRequestDto;
-import com.sparta.cookbank.domain.recipe.dto.AutoCompleteResultResponseDto;
-import com.sparta.cookbank.domain.recipe.dto.RecipeDetailResultResponseDto;
+import com.sparta.cookbank.domain.recipe.dto.AutoCompleteResponseDto;
+import com.sparta.cookbank.domain.recipe.dto.RecipeDetailResponseDto;
 import com.sparta.cookbank.redis.recipe.RedisRecipeRepo;
 import com.sparta.cookbank.repository.LikeRecipeRepository;
 import com.sparta.cookbank.repository.MemberRepository;
@@ -61,7 +61,7 @@ class RecipeServiceTest {
             when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(new Recipe()));
             // when
 
-            RecipeDetailResultResponseDto result = recipeService.getDetailRecipe(recipeId);
+            RecipeDetailResponseDto result = recipeService.getDetailRecipe(recipeId);
             //then
             verify(recipeRepository, times(1)).findById(recipeId);
             assertThat(result.getRecipe().getId()).isEqualTo(recipeId);
@@ -122,7 +122,7 @@ class RecipeServiceTest {
 
             when(recipeRepository.findAllByRCP_NM(requestDto.getKeyword())).thenReturn(recipeList);
 
-            AutoCompleteResultResponseDto result = recipeService.getAutoComplete(requestDto);
+            AutoCompleteResponseDto result = recipeService.getAutoComplete(requestDto);
 
             verify(recipeRepository, times(1)).findAllByRCP_NM(any());
             assertThat(result.getRecipes().get(0).getRecipe_name()).contains(requestDto.getKeyword());
