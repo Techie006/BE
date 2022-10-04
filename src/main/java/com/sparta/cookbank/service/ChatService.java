@@ -13,10 +13,7 @@ import com.sparta.cookbank.domain.recipe.Recipe;
 import com.sparta.cookbank.domain.recipe.dto.RecipeAllResponseDto;
 import com.sparta.cookbank.domain.room.ChatRoom;
 import com.sparta.cookbank.domain.room.Room;
-import com.sparta.cookbank.domain.room.dto.OpenviduResponseDto;
-import com.sparta.cookbank.domain.room.dto.RoomRequestDto;
-import com.sparta.cookbank.domain.room.dto.RoomResponseDto;
-import com.sparta.cookbank.domain.room.dto.ViduRoomResponseDto;
+import com.sparta.cookbank.domain.room.dto.*;
 import com.sparta.cookbank.repository.*;
 import com.sparta.cookbank.security.SecurityUtil;
 import io.openvidu.java.client.*;
@@ -217,13 +214,13 @@ public class ChatService {
         return room.FixViewrs(num);
     }
 
-    public RecipeAllResponseDto ClassRecipeInfo(Long classId){
+    public RoomInfoResponseDto ClassRecipeInfo(Long classId){
         Room room = roomRepository.findById(classId).orElseThrow(() -> {
             throw new IllegalArgumentException("해당 클래스를 찾을 수 없습니다.");
         });
         Recipe recipe = room.getRecipe();
         List<String> ingredients = Arrays.asList(recipe.getRCP_PARTS_DTLS().split(","));
-        return RecipeAllResponseDto.builder()
+        return new RoomInfoResponseDto(room.getName(), RecipeAllResponseDto.builder()
                 .id(recipe.getId())
                 .recipe_name(recipe.getRCP_NM())
                 .ingredients(ingredients)
@@ -231,7 +228,7 @@ public class ChatService {
                 .method(recipe.getRCP_WAY2())
                 .category(recipe.getRCP_PAT2())
                 .calorie(recipe.getINFO_ENG())
-                .build();
+                .build());
     }
 
     // 채팅방 생성 시 토큰 발급

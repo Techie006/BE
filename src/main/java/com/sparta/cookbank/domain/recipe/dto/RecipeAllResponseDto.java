@@ -1,6 +1,5 @@
 package com.sparta.cookbank.domain.recipe.dto;
 
-import com.sparta.cookbank.domain.recipe.Recipe;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
