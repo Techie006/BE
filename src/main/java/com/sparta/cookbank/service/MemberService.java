@@ -185,7 +185,7 @@ public class MemberService {
     }
 
 
-    public MemberResponseDto kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public ResponseDto<?> kakaoLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getKakaoAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -199,7 +199,7 @@ public class MemberService {
         if (kakaoUser == null) {
             //이미 가입된 이메일인지 확인
             if(memberRepository.existsByEmail(kakaoUserInfo.getEmail())){
-                throw new IllegalArgumentException("기존에 다른 방법으로 가입된 회원입니다.");
+               return ResponseDto.fail("213","기존에 다른 방법으로 가입된 회원입니다.");
             }
             // 회원가입
             if(memberRepository.existsByEmail(kakaoUserInfo.getEmail()))
@@ -218,11 +218,11 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(kakaoUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
-        return MemberResponseDto.builder()
+        return ResponseDto.success(MemberResponseDto.builder()
                 .member_id(kakaoUser.getId())
                 .username(kakaoUser.getUsername())
                 .profile_img(kakaoUser.getImage())
-                .build();
+                .build(),kakaoUser.getUsername() + "님 환영합니다.");
     }
 
     private String getKakaoAccessToken(String code) throws JsonProcessingException {
@@ -268,7 +268,7 @@ public class MemberService {
         return new KakaoUserInfoDto(id, nickname, email, image);
     }
 
-    public MemberResponseDto googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
+    public ResponseDto<?> googleLogin(String code, HttpServletResponse response) throws JsonProcessingException {
         // 1. "인가 코드"로 "액세스 토큰" 요청
         String accessToken = getGoogleAccessToken(code);
         // 2. 토큰으로 카카오 API 호출
@@ -281,7 +281,7 @@ public class MemberService {
         if(googleUser == null){
             //이미 가입된 이메일인지 확인
             if(memberRepository.existsByEmail(googleUserInfo.getEmail())){
-                throw new IllegalArgumentException("기존에 다른 방법으로 가입된 회원입니다.");
+                ResponseDto.fail("213","기존에 다른 방법으로 가입된 회원입니다.");
             }
             // 회원가입
             Member member = Member.builder()
@@ -298,11 +298,11 @@ public class MemberService {
         TokenDto tokenDto = tokenProvider.generateTokenDto(googleUser);
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
-        return MemberResponseDto.builder()
+        return ResponseDto.success(MemberResponseDto.builder()
                 .member_id(googleUser.getId())
                 .username(googleUser.getUsername())
                 .profile_img(googleUser.getImage())
-                .build();
+                .build(),googleUser.getUsername() + "님 환영합니다.");
     }
 
     private String getGoogleAccessToken(String code) throws JsonProcessingException {

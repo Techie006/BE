@@ -53,14 +53,12 @@ public class MemberController {
 
     @GetMapping("/user/kakao/callback") //카카오 로그인
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        MemberResponseDto member = memberService.kakaoLogin(code,response);
-        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
+        return memberService.kakaoLogin(code,response);
     }
 
     @GetMapping("/user/google/callback") //구글 로그인
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        MemberResponseDto member = memberService.googleLogin(code, response);
-        return ResponseDto.success(member,member.getUsername() + "님 환영합니다.");
+        return memberService.googleLogin(code, response);
     }
 
     @GetMapping("/api/user/email") //이메일 인증
