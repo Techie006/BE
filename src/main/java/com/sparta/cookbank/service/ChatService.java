@@ -325,7 +325,6 @@ public class ChatService {
         List<String> sessions = new ArrayList<>();
         for(Session session : activeSessionList) {
             sessions.add(session.getSessionId());
-            log.info("session아이디: {}",session.getSessionId());
         }
 
 
