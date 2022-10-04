@@ -197,6 +197,10 @@ public class MemberService {
         Member kakaoUser = memberRepository.findByKakaoId(kakaoId)
                 .orElse(null);
         if (kakaoUser == null) {
+            //이미 가입된 이메일인지 확인
+            if(memberRepository.existsByEmail(kakaoUserInfo.getEmail())){
+                throw new IllegalArgumentException("기존에 다른 방법으로 가입된 회원입니다.");
+            }
             // 회원가입
             if(memberRepository.existsByEmail(kakaoUserInfo.getEmail()))
                 throw new IllegalArgumentException("이미 가입된 이메일입니다.");
@@ -270,11 +274,15 @@ public class MemberService {
         // 2. 토큰으로 카카오 API 호출
         GoogleUserInfoDto googleUserInfo = getGoogleUserInfo(accessToken);
 
-        // DB 에 중복된 Kakao Id 가 있는지 확인
+        // DB 에 중복된 Google Id 가 있는지 확인
         String googleId = googleUserInfo.getId();
         Member googleUser = memberRepository.findByGoogleId(googleId)
                 .orElse(null);
         if(googleUser == null){
+            //이미 가입된 이메일인지 확인
+            if(memberRepository.existsByEmail(googleUserInfo.getEmail())){
+                throw new IllegalArgumentException("기존에 다른 방법으로 가입된 회원입니다.");
+            }
             // 회원가입
             Member member = Member.builder()
                     .email(googleUserInfo.getEmail())
@@ -337,7 +345,10 @@ public class MemberService {
         String name = response.get("name").toString();
         String email = response.get("email").toString();
         String image = response.get("picture").toString();
-        return new GoogleUserInfoDto(id,name,email,image);
+        return new GoogleUserInfoDto(id.substring(1,id.length()-1),
+                name.substring(1,name.length()-1),
+                email.substring(1,email.length()-1),
+                image.substring(1,image.length()-1));
     }
 
     @Transactional
