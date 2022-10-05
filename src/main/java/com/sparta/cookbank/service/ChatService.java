@@ -116,7 +116,7 @@ public class ChatService {
                 .recipe(recipe)
                 .redisClassId(chatRoom.getRedis_class_id())
                 .sessionId(viduToken.getSessionId())
-                .viewrs(1L)
+                .viewrs(0L)
                 .build());
         return ViduRoomResponseDto.builder()
                 .class_id(room.getClass_id())
@@ -153,7 +153,6 @@ public class ChatService {
                 chatMessage.setProfile_img(member.getImage());
             }
         }
-
         //입장 퇴장일 시
         if (ChatMessage.MessageType.ENTER.equals(chatMessage.getType())) {
             chatMessage.setMessage(chatMessage.getNickname() + "님이 방에 입장했습니다.");
@@ -174,16 +173,18 @@ public class ChatService {
         for(Room room : Rooms){
             ChatRoom chatRoom = chatRoomRepository.findRoomById(room.getRedisClassId());
             if(chatRoom != null) {
-                chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedisClassId()));
-                responseDtos.add(RoomResponseDto.builder()
-                        .class_id(room.getClass_id())
-                        .redis_class_id(room.getRedisClassId())
-                        .session_id(room.getSessionId())
-                        .class_name(room.getName())
-                        .viewer_nums(room.getViewrs())
-                        .class_img(room.getImage())
-                        .ingredients(Arrays.asList(room.getRecipe().getMAIN_INGREDIENTS().split(", ")))
-                        .build());
+                if(chatRoom.getUserCount() != 0) {
+                    chatRoom.setUserCount(chatRoomRepository.getUserCount(room.getRedisClassId()));
+                    responseDtos.add(RoomResponseDto.builder()
+                            .class_id(room.getClass_id())
+                            .redis_class_id(room.getRedisClassId())
+                            .session_id(room.getSessionId())
+                            .class_name(room.getName())
+                            .viewer_nums(room.getViewrs())
+                            .class_img(room.getImage())
+                            .ingredients(Arrays.asList(room.getRecipe().getMAIN_INGREDIENTS().split(", ")))
+                            .build());
+                }
             }
         }
         return responseDtos;
