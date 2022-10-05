@@ -36,14 +36,22 @@ public class RecipeController {
 
     @PostMapping("/api/recipes/recommend") // 추천 레시피 조회
     public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto) {
-        RecipeRecommendResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
-        return ResponseDto.success(resultResponseDto,"추천레시피 제공에 성공하였습니다.");
+        if(bucket.tryConsume(1)) {
+            RecipeRecommendResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
+            return ResponseDto.success(resultResponseDto,"추천레시피 제공에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @GetMapping("/api/recipe/{id}") // 레시피 상세 조회
     public ResponseDto<?> getDetailRecipe(@PathVariable Long id) {
-        RecipeDetailResponseDto detailResponseDto = recipeService.getDetailRecipe(id);
-        return ResponseDto.success(detailResponseDto,"레시피 제공에 성공하였습니다.");
+        if(bucket.tryConsume(1)) {
+            RecipeDetailResponseDto detailResponseDto = recipeService.getDetailRecipe(id);
+            return ResponseDto.success(detailResponseDto,"레시피 제공에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @GetMapping("/api/recipes") // 레시피 전체 조회
@@ -58,8 +66,12 @@ public class RecipeController {
 
     @PostMapping("/api/recipes/search") // 레시피 검색
     public ResponseDto<?> searchRecipe(@RequestBody RecipeSearchRequestDto searchRequestDto, Pageable pageable) {
-        RecipeSearchResponseDto ResponseSearchDtoPage = recipeService.searchRecipe(searchRequestDto,pageable);
-        return ResponseDto.success(ResponseSearchDtoPage,"레시피 검색에 성공하였습니다.");
+        if(bucket.tryConsume(1)) {
+            RecipeSearchResponseDto ResponseSearchDtoPage = recipeService.searchRecipe(searchRequestDto,pageable);
+            return ResponseDto.success(ResponseSearchDtoPage,"레시피 검색에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/recipe/like") // 북마크 On
@@ -84,23 +96,35 @@ public class RecipeController {
 
     @GetMapping("/api/my/bookmark") // 북마크한 레시피 조회
     public ResponseDto<?> getBookmark(Pageable pageable){
-        RecipeBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
+        if(bucket.tryConsume(1)) {
+            RecipeBookmarkResponseDto recipeResponseDto = recipeService.getBookmark(pageable);
 
-        return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
+            return ResponseDto.success(recipeResponseDto, "성공적으로 북마크한 레시피를 가져왔습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/recipes/autocomplete") // 레시피 자동완성
     public ResponseDto<?> getAutoComplete(@RequestBody AutoCompleteRequestDto requestDto) {
-        AutoCompleteResponseDto autoCompleteResponseDto = recipeService.getAutoComplete(requestDto);
+        if(bucket.tryConsume(1)) {
+            AutoCompleteResponseDto autoCompleteResponseDto = recipeService.getAutoComplete(requestDto);
 
-        return ResponseDto.success(autoCompleteResponseDto,"레시피 자동완성에 성공하였습니다.");
+            return ResponseDto.success(autoCompleteResponseDto,"레시피 자동완성에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/recipes/category") // 레시피 종류별 요리방법별 분류
     public ResponseDto<?> getRecipeByCategory(@RequestBody RecipeByCategoryRequestDto requestDto,
                                               Pageable pageable) {
-        RecipeResponseDto responseDto = recipeService.getRecipeByCategory(requestDto, pageable);
+        if(bucket.tryConsume(1)) {
+            RecipeResponseDto responseDto = recipeService.getRecipeByCategory(requestDto, pageable);
 
-        return ResponseDto.success(responseDto, "카테고리별 레시피 제공에 성공하였습니다.");
+            return ResponseDto.success(responseDto, "카테고리별 레시피 제공에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 }

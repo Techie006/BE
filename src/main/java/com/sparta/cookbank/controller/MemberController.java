@@ -42,9 +42,11 @@ public class MemberController {
     public ResponseDto<?> signup(
             @RequestBody SignupRequestDto requestDto
     ) {
-        return memberService.signup(requestDto);
-//        Long memberId = memberService.signup(requestDto);
-//        return ResponseDto.success(memberId,"회원가입에 성공했습니다.");
+        if(bucket.tryConsume(1)) {
+            return memberService.signup(requestDto);
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/user/signin") //로그인
@@ -52,9 +54,11 @@ public class MemberController {
             @RequestBody LoginRequestDto requestDto
             ,HttpServletResponse response
     ) {
-        return  memberService.login(requestDto,response);
-//        MemberResponseDto responseDto = memberService.login(requestDto,response);
-//        return ResponseDto.success(responseDto,responseDto.getUsername() + "님 환영합니다.");
+        if(bucket.tryConsume(1)) {
+            return  memberService.login(requestDto,response);
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/reissue") //AccessToken 재발급
@@ -81,12 +85,20 @@ public class MemberController {
 
     @GetMapping("/user/kakao/callback") //카카오 로그인
     public ResponseDto<?> kakaoLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        return memberService.kakaoLogin(code,response);
+        if(bucket.tryConsume(1)) {
+            return memberService.kakaoLogin(code,response);
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @GetMapping("/user/google/callback") //구글 로그인
     public ResponseDto<?> oauthLogin(@RequestParam String code, HttpServletResponse response) throws JsonProcessingException {
-        return memberService.googleLogin(code, response);
+        if(bucket.tryConsume(1)) {
+            return memberService.googleLogin(code, response);
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @GetMapping("/api/user/email") //이메일 인증
