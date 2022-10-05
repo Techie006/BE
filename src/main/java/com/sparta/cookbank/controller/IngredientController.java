@@ -64,7 +64,7 @@ public class IngredientController {
 
     @GetMapping("/api/statistics/state") // 우리집 냉장고 상태표시
     public ResponseDto<?> MyRefrigeratorState(){
-        IngredientsRatioResponseDto stateResponseDto =ingredientService.MyRefrigeratorState();
+        IngredientsRatioResponseDto stateResponseDto = ingredientService.MyRefrigeratorState();
 
         return ResponseDto.success(stateResponseDto, "냉장고 상태 제공에 성공하였습니다.");
     }
