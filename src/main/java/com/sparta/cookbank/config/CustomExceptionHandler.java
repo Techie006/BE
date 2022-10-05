@@ -15,21 +15,18 @@ import java.io.IOException;
 @RestControllerAdvice     // 글로벌로 적용된다.
 public class CustomExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleIllegalArgumentException(IllegalArgumentException exception) {
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("221",errorMessage);
     }
 
     @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleRuntimeException(RuntimeException exception){
         String errorMessage = exception.getMessage();
         return ResponseDto.fail("222",errorMessage);
     }
     
     @ExceptionHandler(JsonProcessingException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseDto<?> handleJsonProcessingException(JsonProcessingException exception){
         String errorMessage = "readTree Fail" + exception.getMessage();
         return ResponseDto.fail("223",errorMessage);
