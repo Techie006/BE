@@ -84,6 +84,9 @@ dependencies {
     implementation group: 'io.openvidu', name: 'openvidu-java-client', version: '2.22.0'
     implementation group: 'junit', name: 'junit', version: '4.13.1'
     implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+
+    //Bucket4J
+    implementation group: 'com.github.vladimir-bukhtoyarov', name: 'bucket4j-core', version: '7.0.0'
 }
 
 tasks.named('test') {
