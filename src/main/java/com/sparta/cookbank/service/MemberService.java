@@ -413,6 +413,7 @@ public class MemberService {
         member.changeProfileImage(amazonS3Client.getUrl(bucketName,fileName).toString());
 
         return ProfileResponseDto.builder()
+                .user_name(member.getUsername())
                 .profile_img(member.getImage())
                 .build();
     }

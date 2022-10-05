@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Getter
 public class ProfileResponseDto {
+    private String user_name;
     private String profile_img;
 }

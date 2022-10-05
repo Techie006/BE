@@ -132,6 +132,11 @@ public class IngredientService {
         // 멤버 유효성 검사
         Member member = getMember();
 
+        //재료 id 검사
+        if(requestDto.getId() == null){
+            return ResponseDto.fail("214","재료를 선택해주세요!");
+        }
+
         // Storage 검사
         switch (requestDto.getStorage()) {
             case "freeze":
