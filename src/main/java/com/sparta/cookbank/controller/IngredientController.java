@@ -107,7 +107,7 @@ public class IngredientController {
     }
 
     @DeleteMapping("/api/ingredient") //나의 냉장고 식재료 삭제
-    public ResponseDto<?> deleteMyIngredient(@RequestParam("id") Long myIngredientId,HttpServletRequest request){
+    public ResponseDto<?> deleteMyIngredient(@RequestParam("id") Long myIngredientId,HttpServletRequest request) throws ParseException {
         if(bucket.tryConsume(1)) {
             return ingredientService.deleteMyIngredient(myIngredientId,request);
         }else{
