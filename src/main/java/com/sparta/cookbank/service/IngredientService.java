@@ -734,7 +734,7 @@ public class IngredientService {
             Long diffDays = diffSec / (24*60*60); // 일자수 차이
             String d_day;
             if(diffDays < 0){
-                d_day ="유통기간만료";
+                d_day ="기한 만료";
                 dtoList.add(TotalMyIngredientDto.builder()
                         .id(myIngredient.getId())
                         .icon_image(myIngredient.getIngredient().getIconImage())
