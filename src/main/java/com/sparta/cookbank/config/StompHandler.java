@@ -41,18 +41,23 @@ public class StompHandler implements ChannelInterceptor {
                 log.info("TOKEN {}",token);
                 if(token != null) token = token.substring(7);
                 memberId = tokenProvider.getMemberId(token);
+                log.info("memberId {}",memberId);
             }
             // header정보에서 구독 destination정보를 얻고, roomId를 추출한다.
             String roomId = chatService.getRoomId(Optional.ofNullable((String) message.getHeaders().get("simpDestination")).orElse("InvalidRoomId"));
+            log.info("roomId {}",roomId);
             // 채팅방에 들어온 클라이언트 sessionId를 roomId와 맵핑해 놓는다.(나중에 특정 세션이 어떤 채팅방에 들어가 있는지 알기 위함)
             String sessionId = (String) message.getHeaders().get("simpSessionId");
+            log.info("sessionId {}",sessionId);
             chatRoomRepository.setUserEnterInfo(sessionId, roomId);
             // 채팅방의 인원수를 +1한다.
             chatRoomRepository.plusUserCount(roomId);
             Long viewers = chatService.PlusMinusViewrs(roomId,1L);
+            log.info("viewrs {}",viewers);
             // 클라이언트 입장 메시지를 채팅방에 발송한다.(redis publish)
             chatService.sendChatMessage(ChatMessage.builder()
-                    .type(ChatMessage.MessageType.ENTER).redis_class_id(roomId).member_id(memberId).viewer_num(viewers).build());
+                    .type(ChatMessage.MessageType.ENTER).redis_class_id(roomId).member_id(memberId).viewer_num(viewers)
+                    .notice(false).build());
             log.info("SUBSCRIBED {}, {}, {}, {}", sessionId, memberId, roomId, viewers);
         } else if (StompCommand.DISCONNECT == accessor.getCommand()) { // Websocket 연결 종료
             //토큰 까기
@@ -74,7 +79,7 @@ public class StompHandler implements ChannelInterceptor {
                     .type(ChatMessage.MessageType.LEAVE).redis_class_id(roomId).member_id(memberId).viewer_num(viewers).build());
             // 퇴장한 클라이언트의 roomId 맵핑 정보를 삭제한다.
             chatRoomRepository.removeUserEnterInfo(sessionId);
-            log.info("SUBSCRIBED {}, {}, {}", sessionId, memberId, roomId);
+            log.info("UNSUBSCRIBED {}, {}, {}", sessionId, memberId, roomId);
         }
         return message;
     }
