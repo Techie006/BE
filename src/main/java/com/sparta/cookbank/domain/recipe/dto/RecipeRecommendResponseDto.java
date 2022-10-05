@@ -12,5 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecipeRecommendResponseDto {
+    private int current_page_num;
+    private int total_page_num;
     private List<RecipeRecommendDto> recipes;
 }

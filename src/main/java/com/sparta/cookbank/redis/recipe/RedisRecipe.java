@@ -15,6 +15,8 @@ public class RedisRecipe {
 
     @Id
     private String id;
+    private int current_page_num;
+    private int total_page_num;
     private List<RecipeRecommendDto> recipes;
 
 }

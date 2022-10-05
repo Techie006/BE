@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -55,12 +56,13 @@ class RecipeRepositoryTest {
             setRecipe();
             entityManager.clear();
             String base = "고등어";
+            Pageable pageable = PageRequest.of(0,5);
 
             // when
-            List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(base);
+            Page<Recipe> recipePage = recipeRepository.findByRecommendRecipeOption(base,pageable);
 
             // then
-            assertThat(recipeList.get(0).getRCP_PARTS_DTLS()).contains(base);
+            assertThat(recipePage.getContent().get(0).getRCP_PARTS_DTLS()).contains(base);
         }
     }
 

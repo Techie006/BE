@@ -3,8 +3,8 @@ package com.sparta.cookbank.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.cookbank.config.SecurityConfig;
 import com.sparta.cookbank.domain.recipe.Recipe;
-import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendDto;
+import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
 import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendResponseDto;
 import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
@@ -16,6 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -97,9 +101,17 @@ class RecipeControllerTest {
     @DisplayName("[API][POST] 추천 레시피")
     void RecommendRecipe() throws Exception {
         // given
+        String base = "고등어";
+        List<String> foods = List.of(new String[]{"양파", "마늘", "간장", "고추", "파"});
+        RecipeRecommendRequestDto requestDto = new RecipeRecommendRequestDto(base, foods);
+
         List<Recipe> recipeList = recipeSetUp();
+        // custom pageable 등록하려면..?
+        Pageable pageable = PageRequest.of(0,20);
+        Page<Recipe> pageResult = new PageImpl<Recipe>(recipeList, pageable, recipeList.size());
+
         List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
-        for (Recipe recipe : recipeList) {
+        for (Recipe recipe : pageResult) {
             List<String> mainIngredientsList = new ArrayList<>();
             mainIngredientsList.add(recipe.getMAIN_INGREDIENTS());
             List<String> ingredientsList = new ArrayList<>();
@@ -119,15 +131,13 @@ class RecipeControllerTest {
             );
         }
 
-        String base = "고등어";
-        List<String> foods = List.of(new String[]{"양파", "마늘", "간장", "고추", "파"});
-        RecipeRecommendRequestDto requestDto = new RecipeRecommendRequestDto(base, foods);
-
         RecipeRecommendResponseDto resultResponseDto = RecipeRecommendResponseDto.builder()
+                .current_page_num(pageResult.getPageable().getPageNumber())
+                .total_page_num(pageResult.getTotalPages())
                 .recipes(recipeRecommendDto)
                 .build();
 
-        given(recipeService.getRecommendRecipe(requestDto)).willReturn(resultResponseDto);
+        given(recipeService.getRecommendRecipe(requestDto, pageable)).willReturn(resultResponseDto);
 
         String content = objectMapper.writeValueAsString(requestDto);
 
@@ -136,6 +146,8 @@ class RecipeControllerTest {
         final ResultActions actions = mockMvc.perform(post("/api/recipes/recommend") // perform 요청을 전송하는 역할
                         .content(content)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("pageNum", "0")
+                        .param("sizeLimit", "20")
                         .accept(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8"))
                 .andDo(print());
@@ -151,8 +163,6 @@ class RecipeControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.['status']['message']").value("추천레시피 제공에 성공하였습니다."))
                 .andDo(print());
 
-        verify(recipeService, times(1)).getRecommendRecipe(requestDto);
-
-
+        verify(recipeService, times(1)).getRecommendRecipe(requestDto,pageable);
     }
 }
