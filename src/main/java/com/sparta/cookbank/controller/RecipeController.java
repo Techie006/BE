@@ -48,8 +48,12 @@ public class RecipeController {
 
     @GetMapping("/api/recipes") // 레시피 전체 조회
     public ResponseDto<?> getAllRecipe(Pageable pageable) {
-        RecipeResponseDto recipeResponseDtoPage = recipeService.getAllRecipe(pageable);
-        return ResponseDto.success(recipeResponseDtoPage,"전체레시피 제공에 성공하였습니다.");
+        if(bucket.tryConsume(1)) {
+            RecipeResponseDto recipeResponseDtoPage = recipeService.getAllRecipe(pageable);
+            return ResponseDto.success(recipeResponseDtoPage,"전체레시피 제공에 성공하였습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @PostMapping("/api/recipes/search") // 레시피 검색
@@ -60,15 +64,22 @@ public class RecipeController {
 
     @PostMapping("/api/recipe/like") // 북마크 On
     public ResponseDto<?> likeRecipe(@RequestParam Long id) {
-        recipeService.likeRecipe(id);
-        return ResponseDto.success(null,"레시피를 성공적으로 북마크했습니다.");
+        if(bucket.tryConsume(1)) {
+            recipeService.likeRecipe(id);
+            return ResponseDto.success(null,"레시피를 성공적으로 북마크했습니다.");
+        }else{
+            return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @DeleteMapping("/api/recipe/unlike") // 북마크 Off
     public ResponseDto<?> unlikeRecipe(@RequestParam Long id) {
-        recipeService.unlikeRecipe(id);
-
-        return ResponseDto.success(null,"레시피 북마크 삭제되었습니다.");
+        if(bucket.tryConsume(1)) {
+            recipeService.unlikeRecipe(id);
+            return ResponseDto.success(null,"레시피 북마크 삭제되었습니다.");
+        }else{
+        return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
+        }
     }
 
     @GetMapping("/api/my/bookmark") // 북마크한 레시피 조회
