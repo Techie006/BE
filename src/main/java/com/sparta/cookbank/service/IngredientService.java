@@ -320,14 +320,12 @@ public class IngredientService {
     }
 
     @Transactional
-    public ResponseDto<?> deleteMyIngredient(Long myIngredientId, HttpServletRequest request) {
+    public ResponseDto<?> deleteMyIngredient(Long myIngredientId, HttpServletRequest request) throws ParseException {
         //토큰 유효성 검사
         extracted(request);
 
         // 멤버 유효성 검사
         Member member = getMember();
-
-
 
         //재료 유효성 검사
         MyIngredients myIngredients = myIngredientsRepository.findById(myIngredientId).orElseThrow(
@@ -338,12 +336,23 @@ public class IngredientService {
         if(!getMember().getId().equals(myIngredients.getMember().getId())){
             throw new RuntimeException("타인의 식재료를 삭제할 수 없습니다.");
         }
-
+        Storage storage = myIngredients.getStorage();
+       //재료삭제
         myIngredientsRepository.delete(myIngredients);
+        //재료삭제한 리스트 주기
+        List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
+        List<MyIngredients> myIngredientsList = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage);
+        List<MyIngredientResponseDto> dtoList = new ArrayList<>();
+        long total_nums = totalMyIngredients.size();
+
+        StorageResponseDto responseDto = getStorageResponseDto(myIngredientsList, dtoList,total_nums);
+
+
+
         // 레디스 캐시 초기화.
         String redisStorage = member.getEmail()+myIngredients.getStorage();
         redisIngredientRepo.deleteById(redisStorage);
-        return ResponseDto.success("","재료 삭제가 성공하였습니다.");
+        return ResponseDto.success(responseDto,"재료 삭제가 성공하였습니다.");
     }
 
     private void extracted(HttpServletRequest request) {
