@@ -13,7 +13,7 @@ import java.util.List;
 public interface RecipeRepositoryCustom {
     Page<Recipe> findBySearchOption(RecipeSearchRequestDto searchRequestDto, Pageable pageable);
 
-    List<Recipe> findByRecommendRecipeOption(String baseName);
+    Page<Recipe> findByRecommendRecipeOption(String baseName, Pageable pageable);
 
     Page<Recipe> findByCategoryRecipeOption(RecipeByCategoryRequestDto requestDto, Pageable pageable);
 }

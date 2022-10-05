@@ -1,5 +1,6 @@
 package com.sparta.cookbank.service;
 
+import com.sparta.cookbank.ResponseDto;
 import com.sparta.cookbank.domain.LikeRecipe;
 import com.sparta.cookbank.domain.member.Member;
 import com.sparta.cookbank.domain.recipe.Recipe;
@@ -29,23 +30,23 @@ public class RecipeService {
 
     // 추천 레시피 조회
     @Transactional(readOnly = true)
-    public RecipeRecommendResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto) {
+    public RecipeRecommendResponseDto getRecommendRecipe(RecipeRecommendRequestDto requestDto, Pageable pageable) {
         Member member = memberRepository.findById(SecurityUtil.getCurrentMemberId()).orElseThrow(() -> {
             throw new IllegalArgumentException("로그인한 유저를 찾을 수 없습니다.");
         });
 
         //레디스에서 찾기
-        String redisKey = requestDto.getBase() + requestDto.getFoods(); // 고유키
+        String redisKey = requestDto.getBase() + requestDto.getFoods() + pageable.getPageNumber() + pageable.getPageSize(); // 고유키
         Optional<RedisRecipe> redisRecipe = redisRecipeRepo.findById(redisKey);
 
         if (redisRecipe.isEmpty()) { // 레디스 캐시 없을시
 
-            List<Recipe> recipeList = recipeRepository.findByRecommendRecipeOption(requestDto.getBase());
+            Page<Recipe> recipePage = recipeRepository.findByRecommendRecipeOption(requestDto.getBase(), pageable);
             List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
 
             HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
 
-            for (Recipe recipe : recipeList) {
+            for (Recipe recipe : recipePage) {
                 int count = 0;
 
                 // 서브 재료의 개수만큼 반복문을 돌리는데
@@ -90,48 +91,32 @@ public class RecipeService {
                                 .build()
                 );
             }
-            // 일단 상위 10개로 잘라서 내보내기
-            // TODO: 추후 pageable 적용해야함
+
+            //레디스 캐시 저장
             RedisRecipe saveRedisRecipe = RedisRecipe.builder()
                     .id(redisKey)
-                    .recipes(recipeRecommendDto.subList(0, 10))
+                    .current_page_num(recipePage.getPageable().getPageNumber())
+                    .total_page_num(recipePage.getTotalPages())
+                    .recipes(recipeRecommendDto)
                     .build();
             redisRecipeRepo.save(saveRedisRecipe);
 
             return RecipeRecommendResponseDto.builder()
-                    .recipes(recipeRecommendDto.subList(0, 10))
+                    .current_page_num(recipePage.getPageable().getPageNumber())
+                    .total_page_num(recipePage.getTotalPages())
+                    .recipes(recipeRecommendDto)
                     .build();
 
-        } else {
-            RedisRecipe recipes = redisRecipe.get();
+        }else{ // 레디스 캐시 있을시 출력
+            RedisRecipe recipes =  redisRecipe.get();
             List<RecipeRecommendDto> recipeRecommendDto = recipes.getRecipes();
 
             return RecipeRecommendResponseDto.builder()
-                    .recipes(recipeRecommendDto.subList(0, 10))
+                    .current_page_num(recipes.getCurrent_page_num())
+                    .total_page_num(recipes.getTotal_page_num())
+                    .recipes(recipeRecommendDto)
                     .build();
         }
-
-//            //레디스 캐시 저장
-//            RedisRecipe saveRedisRecipe = RedisRecipe.builder()
-//                    .id(redisKey)
-//                    .recipes(recipeRecommendDto)
-//                    .build();
-//            redisRecipeRepo.save(saveRedisRecipe);
-//
-//            return RecipeRecommendResponseDto.builder()
-//                    .recipes(recipeRecommendDto)
-//                    .build();
-//
-//        }else{ // 레디스 캐시 있을시 출력
-//            RedisRecipe recipes =  redisRecipe.get();
-//            List<RecipeRecommendDto> recipeRecommendDto = recipes.getRecipes();
-//
-//            return RecipeRecommendResponseDto.builder()
-//                    .recipes(recipeRecommendDto)
-//                    .build();
-//
-//        }
-
     }
 
     // 레시피 상세 조회

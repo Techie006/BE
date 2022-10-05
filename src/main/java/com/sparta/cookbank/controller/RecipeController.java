@@ -35,9 +35,9 @@ public class RecipeController {
     }
 
     @PostMapping("/api/recipes/recommend") // 추천 레시피 조회
-    public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto) {
+    public ResponseDto<?> getRecommendRecipe(@RequestBody RecipeRecommendRequestDto requestDto, Pageable pageable) {
         if(bucket.tryConsume(1)) {
-            RecipeRecommendResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto);
+            RecipeRecommendResponseDto resultResponseDto = recipeService.getRecommendRecipe(requestDto, pageable);
             return ResponseDto.success(resultResponseDto,"추천레시피 제공에 성공하였습니다.");
         }else{
             return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");

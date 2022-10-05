@@ -39,12 +39,14 @@ public class RecipeRepositoryImpl extends QuerydslRepositorySupport implements R
     }
 
     @Override
-    public List<Recipe> findByRecommendRecipeOption(String baseName) {
+    public Page<Recipe> findByRecommendRecipeOption(String baseName, Pageable pageable) {
         JPQLQuery<Recipe> query = queryFactory
                 .selectFrom(recipe)
                 .where(eqBaseName(baseName));
 
-        return query.fetch();
+        List<Recipe> recipeList = Objects.requireNonNull(this.getQuerydsl()).applyPagination(pageable, query).fetch();
+
+        return new PageImpl<>(recipeList, pageable, query.fetchCount());
     }
 
     @Override
