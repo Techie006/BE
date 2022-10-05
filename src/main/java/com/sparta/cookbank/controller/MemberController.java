@@ -33,7 +33,7 @@ public class MemberController {
         //Duration.ofSeconds = 1, 1초마다 토큰을 충전
         //Duration.ofMinutes = 1, 1분마다 토큰을 충전
         //Bandwidth capacity = Bucket의 총 크기는 1000
-        Bandwidth limit = Bandwidth.classic(2000, Refill.intervally(2000, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.classic(1000, Refill.intervally(1000, Duration.ofMinutes(1)));
         this.bucket = Bucket.builder()
                 .addLimit(limit)
                 .build();
