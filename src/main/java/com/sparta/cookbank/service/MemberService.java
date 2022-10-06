@@ -282,7 +282,7 @@ public class MemberService {
         if(googleUser == null){
             //이미 가입된 이메일인지 확인
             if(memberRepository.existsByEmail(googleUserInfo.getEmail())){
-                ResponseDto.fail("213","기존에 다른 방법으로 가입된 회원입니다.");
+                return ResponseDto.fail("213","기존에 다른 방법으로 가입된 회원입니다.");
             }
             // 회원가입
             Member member = Member.builder()
