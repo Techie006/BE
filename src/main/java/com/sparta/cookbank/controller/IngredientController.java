@@ -9,6 +9,7 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -59,7 +60,6 @@ public class IngredientController {
             return ResponseDto.fail("233","트레픽 요청이 너무 많습니다.");
         }
     }
-
     @PostMapping("/api/ingredient")  // 식재료 작성
     public ResponseDto<?> saveMyIngredient(@RequestBody IngredientRequestDto requestDto, HttpServletRequest request) throws ParseException {
         if(bucket.tryConsume(1)) {
