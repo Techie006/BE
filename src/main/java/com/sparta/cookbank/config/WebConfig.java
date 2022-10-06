@@ -18,12 +18,4 @@ public class WebConfig implements WebMvcConfigurer {
         argumentResolvers.add(pageableArgumentResolver);
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("https://frigo.kr")
-                .allowedMethods("*")
-                .maxAge(3000);
-    }
-
 }
