@@ -222,6 +222,15 @@ public class IngredientService {
             if(ingredientList.isEmpty()){
                 Storage storage1 = Storage.valueOf(storage);
                 List<MyIngredients> myIngredients = myIngredientsRepository.findByMemberIdAndStorageOrderByExpDate(member.getId(), storage1);
+                if(myIngredients.isEmpty()){
+                    StorageResponseDto responseDto = StorageResponseDto.builder()
+                            .empty(true)
+                            .total_nums(0)
+                            .storage(dtoList)
+                            .build();
+                    return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
+                }
+
                 StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList,total_nums);
                 //레디스 캐시에 저장..
                 RedisIngredient redisIngredient = RedisIngredient.builder()
@@ -618,6 +627,15 @@ public class IngredientService {
                 long total_nums = 0;
                 List<MyIngredientResponseDto> dtoList1 = new ArrayList<>();
 
+                if(myIngredients.isEmpty()){
+                    StorageResponseDto responseDto = StorageResponseDto.builder()
+                            .empty(true)
+                            .total_nums(0)
+                            .storage(dtoList1)
+                            .build();
+                    return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
+                }
+
 
                 StorageResponseDto responseDto = getStorageResponseDto(myIngredients, dtoList1,total_nums);
                 //레디스 캐시에 저장..
@@ -643,9 +661,8 @@ public class IngredientService {
 
 
 
-        if(category.isEmpty()){
+        if(category.isEmpty()){ //전체 갯수 조회
 
-            //전체 갯수 조회
             List<MyIngredients> totalMyIngredients = myIngredientsRepository.findAllByMemberIdOrderByExpDate(member.getId());
             List<MyIngredientResponseDto> dtoList = new ArrayList<>();
             long total_nums = totalMyIngredients.size();
@@ -729,6 +746,15 @@ public class IngredientService {
                 getMyIngredientWithDday(etcList, dtoList, nowString);
                 break;
         }
+
+        if(dtoList.isEmpty()){
+            CategoryIngredientDto categoryIngredientDto = CategoryIngredientDto.builder()
+                    .empty(true)
+                    .storage(dtoList)
+                    .build();
+            return ResponseDto.success(categoryIngredientDto,"리스트 제공에 성공하였습니다.");
+        }
+
 
         CategoryIngredientDto categoryIngredientDto = CategoryIngredientDto.builder()
                 .empty(false)
