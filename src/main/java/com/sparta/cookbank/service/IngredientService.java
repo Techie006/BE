@@ -225,7 +225,7 @@ public class IngredientService {
                 if(myIngredients.isEmpty()){
                     StorageResponseDto responseDto = StorageResponseDto.builder()
                             .empty(true)
-                            .total_nums(0)
+                            .total_nums(total_nums)
                             .storage(dtoList)
                             .build();
                     return ResponseDto.success(responseDto,"리스트제공에 성공하였습니다.");
