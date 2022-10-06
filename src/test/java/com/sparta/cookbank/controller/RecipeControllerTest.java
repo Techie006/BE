@@ -3,9 +3,7 @@ package com.sparta.cookbank.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sparta.cookbank.config.SecurityConfig;
 import com.sparta.cookbank.domain.recipe.Recipe;
-import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendDto;
-import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendRequestDto;
-import com.sparta.cookbank.domain.recipe.dto.RecipeRecommendResponseDto;
+import com.sparta.cookbank.domain.recipe.dto.*;
 import com.sparta.cookbank.security.TokenProvider;
 import com.sparta.cookbank.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,25 +22,27 @@ import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 // JPA 기능 동작 x, Service, Repository 사용 x, securityconfig scan 에서 제외
 @WebMvcTest(controllers = RecipeController.class,
-        excludeFilters = { @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)})
+        excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = SecurityConfig.class)})
 @MockBean(JpaMetamodelMappingContext.class)
 class RecipeControllerTest {
 
@@ -69,11 +69,13 @@ class RecipeControllerTest {
     List<Recipe> recipeSetUp() {
         List<Recipe> recipeList = new ArrayList<>();
 
+        List<String> recipeNameList = Arrays.asList("고등어 무 조림", "마늘 장아찌", "간장 계란밥", "닭 칼국수", "마늘 덮밥");
+
         for (long i = 0; i < 5; i++) {
             recipeList.add(
                     Recipe.builder()
                             .id(i)
-                            .RCP_NM("고등어 무조림" + i)
+                            .RCP_NM(recipeNameList.get((int) i))
                             .RCP_WAY2("끓이기" + i)
                             .RCP_PAT2("반찬" + i)
                             .INFO_ENG(326 * i)
@@ -107,7 +109,7 @@ class RecipeControllerTest {
 
         List<Recipe> recipeList = recipeSetUp();
         // custom pageable 등록하려면..?
-        Pageable pageable = PageRequest.of(0,20);
+        Pageable pageable = PageRequest.of(0, 20);
         Page<Recipe> pageResult = new PageImpl<Recipe>(recipeList, pageable, recipeList.size());
 
         List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
@@ -157,12 +159,163 @@ class RecipeControllerTest {
         actions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.['result']").value(true))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.['content']['recipes'][0]['ingredients'][0]").value(containsString("고등어")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.['status']['code']").value("200"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.['status']['message']").value("추천레시피 제공에 성공하였습니다."))
-                .andDo(print());
+                .andExpect(jsonPath("$.['result']").value(true))
+                .andExpect(jsonPath("$.['content']['recipes'][0]['ingredients'][0]").value(containsString("고등어")))
+                .andExpect(jsonPath("$.['status']['code']").value("200"))
+                .andExpect(jsonPath("$.['status']['message']").value("추천레시피 제공에 성공하였습니다."));
 
-        verify(recipeService, times(1)).getRecommendRecipe(requestDto,pageable);
+        verify(recipeService, times(1)).getRecommendRecipe(requestDto, pageable);
+    }
+
+    @Test
+    @DisplayName("[API][GET] 레시피 상세 조회")
+    void DetailRecipe() throws Exception {
+
+        // given
+        Recipe recipe = recipeSetUp().get(0);
+
+        RecipeDetailDto recipeDetailDto = RecipeDetailDto.builder()
+                .id(recipe.getId())
+                .recipe_name(recipe.getRCP_NM())
+                .ingredients(null)
+                .method(recipe.getRCP_WAY2())
+                .category(recipe.getRCP_PAT2())
+                .calorie(recipe.getINFO_ENG())
+                .carbohydrates(recipe.getINFO_CAR())
+                .proteins(recipe.getINFO_PRO())
+                .fats(recipe.getINFO_FAT())
+                .sodium(recipe.getINFO_NA())
+                .final_img(recipe.getATT_FILE_NO_MK())
+                .manual_desc(null)
+                .manual_imgs(null)
+                .build();
+
+        given(recipeService.getDetailRecipe(anyLong())).willReturn(
+                RecipeDetailResponseDto.builder()
+                        .recipe(recipeDetailDto)
+                        .build()
+        );
+
+        // when & then
+        mockMvc.perform(get("/api/recipe/1"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.['result']").value(true))
+                .andExpect(jsonPath("$.['content']['recipe']['id']").value(0))
+                .andExpect(jsonPath("$.['status']['code']").value("200"))
+                .andExpect(jsonPath("$.['status']['message']").value("레시피 제공에 성공하였습니다."));
+
+        verify(recipeService, times(1)).getDetailRecipe(anyLong());
+    }
+
+    @Test
+    @DisplayName("[API][GET] 레시피 전체 조회")
+    void AllRecipe() throws Exception {
+        List<Recipe> recipeList = recipeSetUp();
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Recipe> recipePage = new PageImpl<>(recipeList, pageable, recipeList.size());
+        List<RecipeBasicDto> recipeBasicDtoList = new ArrayList<>();
+
+        for (Recipe recipe : recipePage) {
+            recipeBasicDtoList.add(
+                    RecipeBasicDto.builder()
+                            .id(recipe.getId())
+                            .recipe_name(recipe.getRCP_NM())
+                            .ingredients(null)
+                            .final_img(recipe.getATT_FILE_NO_MK())
+                            .method(recipe.getRCP_WAY2())
+                            .category(recipe.getRCP_PAT2())
+                            .calorie(recipe.getINFO_ENG())
+                            .liked(false)
+                            .build()
+            );
+        }
+
+        given(recipeService.getAllRecipe(pageable)).willReturn(
+                RecipeResponseDto.builder()
+                        .current_page_num(recipePage.getPageable().getPageNumber())
+                        .total_page_num(recipePage.getTotalPages())
+                        .recipes(recipeBasicDtoList)
+                        .build()
+        );
+
+        // when
+        final ResultActions actions = mockMvc.perform(get("/api/recipes")
+                .param("pageNum", "0")
+                .param("pageLimit", "20"));
+
+        //then
+        actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.['result']").value(true))
+                .andExpect(jsonPath("$.['content']['recipes']", hasSize(5)))
+                .andExpect(jsonPath("$.['status']['code']").value("200"))
+                .andExpect(jsonPath("$.['status']['message']").value("전체레시피 제공에 성공하였습니다."));
+
+        verify(recipeService, times(1)).getAllRecipe(pageable);
+    }
+
+    @Test
+    @DisplayName("[API][POST] 레시피 검색")
+    void SearchRecipe() throws Exception {
+        List<Recipe> recipeList = recipeSetUp();
+
+        Pageable pageable = PageRequest.of(0,20);
+        Page<Recipe> recipePage = new PageImpl<>(recipeList, pageable, recipeList.size());
+
+        String recipe_name = "마늘"; // 1, 4
+        RecipeSearchRequestDto searchRequestDto = new RecipeSearchRequestDto(recipe_name);
+
+        List<RecipeBasicDto> recipeBasicDtoList = new ArrayList<>();
+
+        for (Recipe recipe : recipeList) {
+            if (recipe.getRCP_NM().contains("마늘")){
+                recipeBasicDtoList.add(
+                        RecipeBasicDto.builder()
+                                .id(recipe.getId())
+                                .recipe_name(recipe.getRCP_NM())
+                                .ingredients(null)
+                                .final_img(recipe.getATT_FILE_NO_MK())
+                                .method(recipe.getRCP_WAY2())
+                                .category(recipe.getRCP_PAT2())
+                                .calorie(recipe.getINFO_ENG())
+                                .liked(false)
+                                .build()
+                );
+            }
+        }
+
+        given(recipeService.searchRecipe(searchRequestDto, pageable)).willReturn(
+                RecipeSearchResponseDto.builder()
+                        .current_page_num(recipePage.getPageable().getPageNumber())
+                        .total_page_num(recipePage.getTotalPages())
+                        .recipes(recipeBasicDtoList)
+                        .search_name(searchRequestDto.getRecipe_name())
+                        .build()
+        );
+
+        String content = objectMapper.writeValueAsString(searchRequestDto);
+
+        // when
+        final ResultActions actions = mockMvc.perform(post("/api/recipes/search")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("pageNum", "0")
+                .param("sizeLimit", "20")
+                .accept(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8"));
+
+        // then
+        actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.['result']").value(true))
+                .andExpect(jsonPath("$.['content']['recipes']", hasSize(2)))
+                .andExpect(jsonPath("$.['content']['recipes'][0]['recipe_name']").value(containsString("마늘")))
+                .andExpect(jsonPath("$.['content']['recipes'][1]['recipe_name']").value(containsString("마늘")))
+                .andExpect(jsonPath("$.['status']['code']").value("200"))
+                .andExpect(jsonPath("$.['status']['message']").value("레시피 검색에 성공하였습니다."));
+
+        verify(recipeService, times(1)).searchRecipe(searchRequestDto, pageable);
     }
 }

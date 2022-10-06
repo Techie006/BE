@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ChangePasswordRequestDto {
     private String present_password;
     private String change_password;
+    private String check_password;
 }
