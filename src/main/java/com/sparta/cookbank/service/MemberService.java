@@ -371,10 +371,16 @@ public class MemberService {
         );
 
         // password 검증
+
+        String passwordPattern = "^(?=.*[A-za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d$@$!%*?&]{8,15}";
         if (!passwordEncoder.matches(requestDto.getPresent_password(), member.getPassword())) {
             throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        } else if (!Pattern.matches(passwordPattern, requestDto.getChange_password())) {
+            throw new IllegalArgumentException("적절하지 않은 패스워드 입니다.");
         } else if (requestDto.getPresent_password().equals(requestDto.getChange_password())) {
             throw new IllegalArgumentException("변경할 비밀번호가 현재 비밀번호와 일치합니다.");
+        } else if (!requestDto.getChange_password().equals(requestDto.getCheck_password())) {
+            throw new IllegalArgumentException("변경할 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
 
         // 변경할 비밀번호 암호화

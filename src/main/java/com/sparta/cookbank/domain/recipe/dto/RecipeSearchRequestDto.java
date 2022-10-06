@@ -1,14 +1,12 @@
 package com.sparta.cookbank.domain.recipe.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
+@EqualsAndHashCode
 public class RecipeSearchRequestDto {
     private String recipe_name;
 }
