@@ -97,7 +97,8 @@ public class MemberService {
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         String key = UUID.randomUUID().toString();
 
-        String emailPattern = "^[a-z\\d._]+@\\w+\\.\\w+(\\.\\w)?$";
+        String emailPattern = "^[a-z\\d._]+@[\\w.]{2,}$";
+        //^[a-z\d._]+@\w+\.\w+(\.\w+)?$
 
         // 기존
         if(!Pattern.matches(emailPattern,requestDto.getEmail())){
