@@ -44,6 +44,13 @@ public class RecipeService {
             Page<Recipe> recipePage = recipeRepository.findByRecommendRecipeOption(requestDto.getBase(), pageable);
             List<RecipeRecommendDto> recipeRecommendDto = new ArrayList<>();
 
+            if(recipePage.isEmpty()){
+                return RecipeRecommendResponseDto.builder()
+                        .empty(true)
+                        .recipes(recipeRecommendDto)
+                        .build();
+            }
+
             HashMap<Recipe, Integer> recipeMap = new LinkedHashMap<>();
 
             for (Recipe recipe : recipePage) {
@@ -102,6 +109,7 @@ public class RecipeService {
             redisRecipeRepo.save(saveRedisRecipe);
 
             return RecipeRecommendResponseDto.builder()
+                    .empty(false)
                     .current_page_num(recipePage.getPageable().getPageNumber())
                     .total_page_num(recipePage.getTotalPages())
                     .recipes(recipeRecommendDto)
@@ -112,6 +120,7 @@ public class RecipeService {
             List<RecipeRecommendDto> recipeRecommendDto = recipes.getRecipes();
 
             return RecipeRecommendResponseDto.builder()
+                    .empty(false)
                     .current_page_num(recipes.getCurrent_page_num())
                     .total_page_num(recipes.getTotal_page_num())
                     .recipes(recipeRecommendDto)
