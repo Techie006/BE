@@ -360,7 +360,7 @@ public class MemberService {
         if(member.getMail_key().equals(key)) {
             if (!member.isMail_auth()) member.EmailCheck();
         }
-        return "http://localhost:3000/auth";
+        return "https://www.frigo.kr/auth";
     }
 
     // 비밀번호 변경
