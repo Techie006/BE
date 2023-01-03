@@ -1,6 +1,14 @@
 # Frigo ! (냉장고 재료 기반 레시피 추천서비스)
 
 
+## 서비스 아키덱처
+![Untitled (2)](https://user-images.githubusercontent.com/108961843/210395071-744e7485-0a0d-45d7-8a9e-d6ed682d5e36.png)
+
+
+
+
+
+
 
 ![image](https://user-images.githubusercontent.com/108961843/202452391-a4921cc4-9b8c-4a3a-bbf4-7d8d942c1223.png)
 
