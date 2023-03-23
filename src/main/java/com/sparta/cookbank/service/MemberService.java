@@ -127,8 +127,8 @@ public class MemberService {
         response.setHeader("Authorization","Bearer " + tokenDto.getAccessToken());
         response.setHeader("Refresh_Token",tokenDto.getRefreshToken());
 
-        //레디스 저장 600초 동안 캐시에 저장..
-        redisTemplate.opsForValue().set("RT:"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
+//        //레디스 저장 600초 동안 캐시에 저장..
+//        redisTemplate.opsForValue().set("RT:"+requestDto.getEmail(),tokenDto.getRefreshToken(),600, TimeUnit.SECONDS);
 
         return MemberResponseDto.builder()
                 .member_id(member.getId())
